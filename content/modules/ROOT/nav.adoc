@@ -1,7 +1,7 @@
-* xref:module-01.adoc[1. RPM Native Container]
-** xref:module-01.adoc#repositories[Repositories]
-** xref:module-01.adoc#software[Software]
+* xref:module-01.adoc[1. How to use omc]
+** xref:module-01.adoc#omcintro[It's just like oc, but on a must-gather!]
 
-* xref:module-02.adoc[2. GitHub Sourced Container]
-** xref:module-02.adoc#prerequisites[Install Prerequisites]
-** xref:module-02.adoc#container[Enable Container]
+* xref:module-02.adoc[2. vSphere IPI - I can not scale up any new nodes]
+** xref:module-02.adoc#checknodes[Check the nodes and the machines]
+** xref:module-02.adoc#checkmachineapi[Check the Machine API]
+** xref:module-02.adoc#checkserver[Check the Server]
