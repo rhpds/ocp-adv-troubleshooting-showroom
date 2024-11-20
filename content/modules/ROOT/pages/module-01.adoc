@@ -1,5 +1,48 @@
-= How to use omc
+= Tools of the trade
+
+There are many tools available to speed up debugging, issue resolution and problem identification when analyzing an issue with your OpenShift cluster.
+
+
+[#intro]
+== Tools we will use
+
+During this lab, we will run through a number of exercises that show the power and effective use of the following 7 tools.
 
 [#omcintro]
-== It's just like oc, but on a must-gather!
+=== `omc`
 
+It's just like `oc`, but on a `must-gather`!
+
+
+[#kcdevtoolintro]
+=== `kubectl-dev_tool`
+
+Inspect your `audit logs` with ease
+
+
+[#koffintro]
+=== `koff`
+
+Read objects from the `etcd` snapshot
+
+[#yqjqintro]
+=== `yq` and `jq`
+
+Process and parse `YAML` and `JSON`
+
+[#gronintro]
+=== `gron`
+
+Making `JSON` greppable
+
+
+[#etcddiagintro]
+=== `etcd-ocp-diag`
+
+Find `etcd` issue in your `must-gather`
+
+
+[#ocpinsightsintro]
+=== `ocp_insights`
+
+Parse and view your `Insights` data from the `Insights Operator`
