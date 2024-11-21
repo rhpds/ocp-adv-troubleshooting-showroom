@@ -11,7 +11,7 @@ In this module we will at a subset of the features in omc that allow you to quic
 
 . Then run the `omc get clusterversion` to verify that you are using the must-gather
 
-.Example
+.omc use
 ====
 [source,bash]
 ----
@@ -45,7 +45,7 @@ version   4.14.37   True        False         40d     Cluster version is 4.14.37
 
 . Additionally, the command also highlights CertificateSigngingRequest which can help resolve issues related to nodes joinging a cluster.
 
-.Example
+.certs
 ====
 [source,bash]
 ----
@@ -61,7 +61,7 @@ csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=sys
 
 . It includes two options, `etcd health` and `etcd status`
 
-.Example
+.etcd
 ====
 [source,bash]
 ----
@@ -92,7 +92,7 @@ $ omc etcd status
 == omc `haproxy` command
 . The `haproxy inspect` command displays all of the haproxy configured backends
 
-.Example
+.haproxy
 ====
 [source,bash]
 ----
@@ -109,7 +109,7 @@ ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthro
 
 . The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two machine-configs to help quickly identify all changes.
 
-.Example
+.machine-config
 ====
 [source,bash]
 ----
@@ -136,7 +136,7 @@ $ omc get machine-config diff rendered-master-01920f36fb2065cdf5c8311d30d9ddeb r
 
 . By running `omc node-logs crio`, for example, will then output crio-logs for all of the control-plane nodes.
 
-.Example
+.node-logs
 ====
 [source,bash]
 ----
@@ -178,7 +178,7 @@ Aug 07 15:25:56.028592 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.0
 == omc `ovn` command
 . The `omc ovn subnets` command will output all of the ovn subnets on the cluster.
 
-.Example
+.ovn
 ====
 [source,bash]
 ----
@@ -192,7 +192,7 @@ control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192
 == omc `prometheus` command
 . The `omc prometheus` command provides several options to output Prometheus `alertgroup`, `alertrule`, and `target`.
 
-.Example
+.prometheus
 ====
 [source,bash]
 ----
