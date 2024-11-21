@@ -1,4 +1,92 @@
-= 3
+= Intro to omc
 :prewrap!:
 
-temp
+In this module we will at a subset of the features in omc that allow you to quickly review an OpenShift Must-Gather. omc has similar commands as the `oc` client so those will not be covered and instead we will cover the omc specific commands.
+
+[#gettingstarted]
+== omc `use` command
+. To get started you want to verify that omc is installed in your path and working
+
+. Once you have confirmed this, you want to call the `use` command to tell omc the must-gather to utilize for review
+
+. Then run the `omc get clusterversion` to verify that you are using the must-gather
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+$ omc version
+omc version: v3.7.4
+hash: 45e91af
+https://github.com/gmeghnag/omc
+----
+
+[source,bash]
+----
+$ omc use must-gather.local
+Must-Gather  : /home/example-user/must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3
+Project      : default
+ApiServerURL : https://api.ocp-cluster-1.paas.is.exampledev.com:6443
+Platform     : VSphere
+ClusterID    : 3bdf9a64-4e53-4c63-9f32-1e64eda92c13
+----
+
+[source,bash]
+----
+$ omc get clusterversion
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.14.37   True        False         40d     Cluster version is 4.14.37
+----
+====
+
+[#certs]
+== omc `certs inspect` command
+. The `certs inspect` command allows you to inspect all certificates in ConfigMaps and Secrets that are in the must-gather
+
+. Additionally, the command also highlights CertificateSigngingRequest which can help resolve issues related to nodes joinging a cluster.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+$ omc certs inspect
+NAME                     KIND                        AGE    CERTTYPE      SUBJECT                                                                                        NOTBEFORE                       NOTAFTER
+csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=system:multus:ocpprd-2nvq7-worker-xdwch,O=system:multus                                     2024-08-14 14:27:20 +0000 UTC   2024-08-15 14:27:20 +0000 UTC
+----
+====
+
+[#etcd]
+== omc `ectd` command
+. The `etcd` command allows you to view the health and the status of your etcd cluster.
+
+. It includes two options, `etcd health` and `etcd status`
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+$ omc etcd health
++---------------------------+--------+-------------+-------+
+|         ENDPOINT          | HEALTH |    TOOK     | ERROR |
++---------------------------+--------+-------------+-------+
+| https://10.36.18.138:2379 | true   | 26.26127ms  |       |
+| https://10.36.18.23:2379  | true   | 24.586699ms |       |
+| https://10.36.18.22:2379  | true   | 28.410291ms |       |
++---------------------------+--------+-------------+-------+
+----
+
+[source,bash]
+----
+$ omc etcd status
++---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
+|         ENDPOINT          |        ID        | VERSION | DB SIZE/IN USE | NOT USED | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
+| https://10.36.18.138:2379 | 39ddb61a8f3bee1d | 3.5.13  | 325 MB/207 MB  | 37%      | true      | false      |       176 |  873809134 |          873809134 |        |
+| https://10.36.18.22:2379  | a2b2eb5b34d6a292 | 3.5.13  | 323 MB/207 MB  | 36%      | false     | false      |       176 |  873809136 |          873809136 |        |
+| https://10.36.18.23:2379  | dbb6cf331005ae32 | 3.5.13  | 291 MB/207 MB  | 30%      | false     | false      |       176 |  873809138 |          873809138 |        |
++---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
+----
+====
