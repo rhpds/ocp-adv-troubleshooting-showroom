@@ -8,13 +8,13 @@
 *** xref:module-01.adoc#etcddiagintro[etcd-ocp-diag - Find etcd issue in your must-gather]
 *** xref:module-01.adoc#ocpinsightsintro[ocp_insights - Parse and view your Insights data from the Insights Operator]
 
-* xref:module-02.adoc[2. vSphere IPI - I can not scale up any new nodes]
-** xref:module-02.adoc#checknodes[Check the nodes and the machines]
-** xref:module-02.adoc#checkmachineapi[Check the Machine API]
-** xref:module-02.adoc#checkserver[Check the Server]
-** xref:module-02.adoc#findtheissue[Finding the Issue]
+* xref:module-02.adoc[2. ]
 
-* xref:module-03.adoc[3. ]
+* xref:module-03.adoc[2. vSphere IPI - I can not scale up any new nodes]
+** xref:module-03.adoc#checknodes[Check the nodes and the machines]
+** xref:module-03.adoc#checkmachineapi[Check the Machine API]
+** xref:module-03.adoc#checkserver[Check the Server]
+** xref:module-03.adoc#findtheissue[Finding the Issue]
 
 * xref:module-04.adoc[4. ]
 
