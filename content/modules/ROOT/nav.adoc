@@ -17,7 +17,7 @@
 ** xref:module-03.adoc#findtheissue[Finding the Issue]
 
 * xref:module-04.adoc[4. What is overloading my API?]
-** xref:module-04.adoc#checknodes[Check the nodes and the machines]
+** xref:module-04.adoc#theapi[What is hitting my API?]
 
 * xref:module-05.adoc[5. ]
 
