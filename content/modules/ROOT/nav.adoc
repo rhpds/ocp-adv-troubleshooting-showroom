@@ -10,7 +10,7 @@
 
 * xref:module-02.adoc[2. ]
 
-* xref:module-03.adoc[2. vSphere IPI - I can not scale up any new nodes]
+* xref:module-03.adoc[3. vSphere IPI - I can not scale up any new nodes]
 ** xref:module-03.adoc#checknodes[Check the nodes and the machines]
 ** xref:module-03.adoc#checkmachineapi[Check the Machine API]
 ** xref:module-03.adoc#checkserver[Check the Server]
