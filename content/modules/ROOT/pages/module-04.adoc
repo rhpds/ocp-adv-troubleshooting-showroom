@@ -1,4 +1,27 @@
-= 3
+= What is overloading my API?
 :prewrap!:
 
-temp
+A customer reported an issue where access to the OpenShift API was intermittent or slow. +
+
+.The customer provided the following information:
+************************************************
+While upgrading from OpenShift v4.12 to 4.13, we saw a spike in `Readiness probe for <pod> failed` logs. We usually see a few hundered iof these per minutei, but it has spiked to 11,000 in one minute from 09:55 PST / 17:55 UTC.
+
+These probe failures caused several pods in a deployment or statefulset to restart at the same time, causing application downtimes as the pods recovered.
+************************************************
+
+[#theapi]
+== What is hitting my API?
+
+How do we check who, what and how often somthing is hitting the API of an OpenShift cluster?
+
+In addition to the stadard must-gather, there are a number of additional variants for collecting data for special use cases.
+
+For this exercise, we asked the customer to collect the audit logs from their cluster so we can analyze every request going to the API.
+
+[TIP]
+=====
+Use the following command to collect an `audit log` `must-gather`:
+
+oc adm must-gather -- /usr/bin/gather_audit_logs 
+=====
