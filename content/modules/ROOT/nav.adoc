@@ -8,13 +8,16 @@
 *** xref:module-01.adoc#etcddiagintro[etcd-ocp-diag - Find etcd issue in your must-gather]
 *** xref:module-01.adoc#ocpinsightsintro[ocp_insights - Parse and view your Insights data from the Insights Operator]
 
-* xref:module-02.adoc[2. ]
+* xref:module-02.adoc[2. Intro to omc]
 
 * xref:module-03.adoc[3. vSphere IPI - I can not scale up any new nodes]
-** xref:module-03.adoc#checknodes[Check the nodes and the machines]
-** xref:module-03.adoc#checkmachineapi[Check the Machine API]
-** xref:module-03.adoc#checkserver[Check the Server]
-** xref:module-03.adoc#findtheissue[Finding the Issue]
+** xref:module-03.adoc#gettingstarted[Getting Started]
+** xref:module-03.adoc#certs[Checking Cluster Certs]
+** xref:module-03.adoc#etcd[Reviewing etcd]
+** xref:module-03.adoc#haproxy[Reviewing HAProxy Backends]
+** xref:module-03.adoc#node-logs[Reviewing Control Plane Node-Logs]
+** xref:module-03.adoc#ovn[Reviewing OVN Subnets]
+** xref:module-03.adoc#prometheus[Reviewing Prometheus Alert Groups, Rules, and Targets]
 
 * xref:module-04.adoc[4. What is overloading my API?]
 ** xref:module-04.adoc#theapi[What is hitting my API?]

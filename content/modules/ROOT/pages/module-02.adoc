@@ -7,12 +7,11 @@ In this module we will at a subset of the features in omc that allow you to quic
 == omc `use` command
 . To get started you want to verify that omc is installed in your path and working
 
-. Once you have confirmed this, you want to call the `use` command to tell omc the must-gather to utilize for review
+. Once you have confirmed this, you want to call the `omc use` command to tell omc the must-gather to utilize for review
 
 . Then run the `omc get clusterversion` to verify that you are using the must-gather
 
-.Click to show some commands if you need a hint
-[%collapsible]
+.Example
 ====
 [source,bash]
 ----
@@ -42,18 +41,17 @@ version   4.14.37   True        False         40d     Cluster version is 4.14.37
 
 [#certs]
 == omc `certs inspect` command
-. The `certs inspect` command allows you to inspect all certificates in ConfigMaps and Secrets that are in the must-gather
+. The `omc certs inspect` command allows you to inspect all certificates in ConfigMaps and Secrets that are in the must-gather
 
 . Additionally, the command also highlights CertificateSigngingRequest which can help resolve issues related to nodes joinging a cluster.
 
-.Click to show some commands if you need a hint
-[%collapsible]
+.Example
 ====
 [source,bash]
 ----
 $ omc certs inspect
 NAME                     KIND                        AGE    CERTTYPE      SUBJECT                                                                                        NOTBEFORE                       NOTAFTER
-csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=system:multus:ocpprd-2nvq7-worker-xdwch,O=system:multus                                     2024-08-14 14:27:20 +0000 UTC   2024-08-15 14:27:20 +0000 UTC
+csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=system:multus:ocp4-2nvq7-worker-xdwch,O=system:multus                                     2024-08-14 14:27:20 +0000 UTC   2024-08-15 14:27:20 +0000 UTC
 ----
 ====
 
@@ -63,8 +61,7 @@ csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=sys
 
 . It includes two options, `etcd health` and `etcd status`
 
-.Click to show some commands if you need a hint
-[%collapsible]
+.Example
 ====
 [source,bash]
 ----
@@ -88,5 +85,157 @@ $ omc etcd status
 | https://10.36.18.22:2379  | a2b2eb5b34d6a292 | 3.5.13  | 323 MB/207 MB  | 36%      | false     | false      |       176 |  873809136 |          873809136 |        |
 | https://10.36.18.23:2379  | dbb6cf331005ae32 | 3.5.13  | 291 MB/207 MB  | 30%      | false     | false      |       176 |  873809138 |          873809138 |        |
 +---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
+----
+====
+
+[#haproxy]
+== omc `haproxy` command
+. The `haproxy inspect` command displays all of the haproxy configured backends
+
+.Example
+====
+[source,bash]
+----
+$ omc haproxy backends
+NAMESPACE		NAME					INGRESSCONTROLLER	SERVICES				    PORT		TERMINATION
+aap			    frost-prod				default			    frost-prod-service			http(8052)	edge/Redirect
+ecomm			app-api-blue-p4lb5		default			    ecomm-api-blue				https(8443)	reencrypt/Redirect
+ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthrough/Redirect
+----
+
+[#machine-config]
+== omc `machine-config` command
+. The `omc machine-config diff` command allows you to compare two machine-configs. This is different from the built in `omc get machine-configs` which will display machine-configs .
+
+. The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two machine-configs to help quickly identify all changes.
+
+.Example
+====
+[source,bash]
+----
+$ omc get machine-configs -n openshift-machineconfig-operator
+NAME                                                    GENERATEDBYCONTROLLER                      IGNITIONVERSION   AGE
+00-master                                               83d66a9228fef00885826e00ad3d392c5525bfab   3.4.0             1y
+00-worker                                               83d66a9228fef00885826e00ad3d392c5525bfab   3.4.0             1y
+...
+99-worker-ssh                                                                                      3.2.0             1y
+masters-chrony-configuration                                                                       2.2.0             1y
+rendered-master-01920f36fb2065cdf5c8311d30d9ddeb        b82f3adc9b102d2d4eba20168075a26b2d359f87   3.2.0             125d
+rendered-master-0aa9b0deb0a8e4189d1dc8848ca5aaca        60746a843e7ef8855ae00f2ffcb655c53e0e8296   3.2.0             1y
+rendered-master-229db957890af898907e9cbf91dc5915        b82f3adc9b102d2d4eba20168075a26b2d359f87   3.2.0             155d
+----
+
+[source,bash]
+----
+$ omc get machine-config diff rendered-master-01920f36fb2065cdf5c8311d30d9ddeb rendered-master-0aa9b0deb0a8e4189d1dc8848ca5aaca
+----
+
+[#node-logs]
+== omc `node-logs` command
+. The `omc node-logs` command lists the node-logs collected from the OpenShift control-plane nodes and are in the must-gather.
+
+. By running `omc node-logs crio`, for example, will then output crio-logs for all of the control-plane nodes.
+
+.Example
+====
+[source,bash]
+----
+$ omc node-logs
+The following node services logs are available to be read:
+
+- NetworkManager
+- crio
+- kubelet
+- machine-config-daemon-firstboot
+- machine-config-daemon-host
+- openvswitch
+- ostree-finalize-staged
+- ovs-configuration
+- ovs-vswitchd
+- ovsdb-server
+- rpm-ostreed
+
+is it possible to read the content by executing 'omc node-logs <SERVICE>'.
+----
+
+[source,bash]
+----
+$ omc node-logs kubelet | head -n 10
+Aug 07 15:25:30.970016 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.969893    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-apiserver/kube-apiserver-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.970016 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970031    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/coredns-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970074    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/haproxy-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970121    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-controller-manager/kube-controller-manager-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970159    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-machine-config-operator/kube-rbac-proxy-crio-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970180    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/keepalived-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970216    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-scheduler/openshift-kube-scheduler-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970240    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-etcd/etcd-ocp4-2nvq7-master-0" status=Running
+Aug 07 15:25:56.027736 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.027649    1927 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-controller-manager/kube-controller-manager-ocp4-2nvq7-master-1" status=Running
+Aug 07 15:25:56.028592 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.027867    1927 kubelet_getters.go:187] "Pod status updated" pod="openshift-machine-config-operator/kube-rbac-proxy-crio-ocp4-2nvq7-master-1" status=Running
+----
+====
+
+[#ovn]
+== omc `ovn` command
+. The `omc ovn subnets` command will output all of the ovn subnets on the cluster.
+
+.Example
+====
+[source,bash]
+----
+$ omc ovn subnets
+HOST/NODE                       ROLE                          HOST IP-ADDRESSES               PRIMARY IF-ADDRESS   HOST GATEWAY-IP   NODE SUBNET
+control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192.168.1.2/24   10.10.10.10/24       10.10.10.1        10.132.0.0/23
+----
+====
+
+[#prometheus]
+== omc `prometheus` command
+. The `omc prometheus` command provides several options to output Prometheus `alertgroup`, `alertrule`, and `target`.
+
+.Example
+====
+[source,bash]
+----
+$ omc prometheus alertgroup | head -n 10
+GROUP                                               FILENAME                                                                                                                AGE
+CloudCredentialOperator                             openshift-cloud-credential-operator-cloud-credential-operator-alerts-2b1b6efc-359d-41f1-910c-f759091ea8db.yaml          27s
+cluster-machine-approver.rules                      openshift-cluster-machine-approver-machineapprover-rules-559e1f58-cf67-435f-8e25-8fe67acc824f.yaml                      14s
+node-tuning-operator.rules                          openshift-cluster-node-tuning-operator-node-tuning-operator-2ed91e6f-a85e-48fe-bc8d-1df61349ecb2.yaml                   1s
+SamplesOperator                                     openshift-cluster-samples-operator-samples-operator-alerts-07e868fe-c246-493c-b948-963979fb222e.yaml                    28s
+default-storage-classes.rules                       openshift-cluster-storage-operator-prometheus-39ea760b-44d6-4c6d-b9c8-698cfed53b24.yaml                                 7s
+storage-operations.rules                            openshift-cluster-storage-operator-prometheus-39ea760b-44d6-4c6d-b9c8-698cfed53b24.yaml                                 7s
+storage-selinux.rules                               openshift-cluster-storage-operator-prometheus-39ea760b-44d6-4c6d-b9c8-698cfed53b24.yaml                                 11s
+cluster-operators                                   openshift-cluster-version-cluster-version-operator-af01a96b-d635-43af-935d-8c09f1b4ef0e.yaml                            24s
+cluster-version                                     openshift-cluster-version-cluster-version-operator-af01a96b-d635-43af-935d-8c09f1b4ef0e.yaml                            26s
+----
+
+[source,bash]
+----
+$ omc prometheus alertrule | head -n 10
+RULE                                                    SEVERITY   STATE      AGE   ALERTS   ACTIVE SINCE
+CloudCredentialOperatorTargetNamespaceMissing           warning    inactive   27s   0        ----
+CloudCredentialOperatorProvisioningFailed               warning    inactive   27s   0        ----
+CloudCredentialOperatorDeprovisioningFailed             warning    inactive   27s   0        ----
+CloudCredentialOperatorInsufficientCloudCreds           warning    inactive   27s   0        ----
+CloudCredentialOperatorStaleCredentials                 warning    inactive   27s   0        ----
+MachineApproverMaxPendingCSRsReached                    warning    inactive   14s   0        ----
+NTOPodsNotReady                                         warning    inactive   1s    0        ----
+NTODegraded                                             warning    inactive   1s    0        ----
+SamplesRetriesMissingOnImagestreamImportFailing         warning    inactive   28s   0        ----
+----
+
+[source,bash]
+----
+$ omc prometheus target | head -n 10
+TARGET                                                   SCRAPE URL                                        HEALTH   LAST ERROR
+openshift-apiserver-operator-5b89bd7bb8-z69dz            https://10.132.0.12:8443/metrics                  up
+apiserver-66dcdc546c-vxms2                               https://10.132.0.144:17698/metrics                up
+apiserver-66dcdc546c-vxms2                               https://10.132.0.144:8443/metrics                 up
+authentication-operator-595d65667-92gcg                  https://10.132.0.26:8443/metrics                  up
+oauth-openshift-545bf7bdf7-6n8xd                         https://10.132.0.253:6443/metrics                 up
+cloud-credential-operator-65d6f5df6d-wknks               https://10.132.0.47:8443/metrics                  up
+machine-approver-7d57ddd485-f6cv6                        https://10.10.10.10:9192/metrics                  up
+cluster-node-tuning-operator-56f7cbd8bc-k8qgq            https://10.132.0.24:60000/metrics                 up
+cluster-samples-operator-dbfb4c7b-jhqz6                  https://10.132.0.48:60000/metrics                 up
 ----
 ====
