@@ -9,7 +9,7 @@ In this module we will at a subset of the features in omc that allow you to quic
 
 . Once you have confirmed this, you want to call the `omc use` command to tell omc the must-gather to utilize for review
 
-. Then run the `omc get clusterversion` to verify that you are using the must-gather
+. Then run the `omc get clusterversion` to verify that you are using the `must-gather`
 
 .omc use
 ====
@@ -41,9 +41,9 @@ version   4.14.37   True        False         40d     Cluster version is 4.14.37
 
 [#certs]
 == omc `certs inspect` command
-. The `omc certs inspect` command allows you to inspect all certificates in ConfigMaps and Secrets that are in the must-gather
+. The `omc certs inspect` command allows you to inspect all certificates in `ConfigMaps` and `Secrets` that are in the `must-gather`
 
-. Additionally, the command also highlights CertificateSigngingRequest which can help resolve issues related to nodes joinging a cluster.
+. Additionally, the command also highlights `CertificateSigngingRequest` which can help resolve issues related to nodes joining a cluster.
 
 .certs
 ====
@@ -57,7 +57,7 @@ csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=sys
 
 [#etcd]
 == omc `ectd` command
-. The `etcd` command allows you to view the health and the status of your etcd cluster.
+. The `etcd` command allows you to view the health and the status of your `etcd` cluster.
 
 . It includes two options, `etcd health` and `etcd status`
 
@@ -90,7 +90,7 @@ $ omc etcd status
 
 [#haproxy]
 == omc `haproxy` command
-. The `haproxy inspect` command displays all of the haproxy configured backends
+. The `haproxy inspect` command displays all of the `haproxy` configured backends
 
 .haproxy
 ====
@@ -106,9 +106,9 @@ ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthro
 
 [#machine-config]
 == omc `machine-config` command
-. The `omc machine-config diff` command allows you to compare two machine-configs. This is different from the built in `omc get machine-configs` which will display machine-configs .
+. The `omc machine-config diff` command allows you to compare two `machine-configs`. This is different from the built-in `omc get machine-configs` which will display `machine-configs`.
 
-. The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two machine-configs to help quickly identify all changes.
+. The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two `machine-configs` to help quickly identify all changes.
 
 .machine-config
 ====
@@ -134,9 +134,9 @@ $ omc get machine-config diff rendered-master-01920f36fb2065cdf5c8311d30d9ddeb r
 
 [#node-logs]
 == omc `node-logs` command
-. The `omc node-logs` command lists the node-logs collected from the OpenShift control-plane nodes and are in the must-gather.
+. The `omc node-logs` command lists the node-logs collected from the OpenShift `control-plane` nodes and are in the `must-gather`.
 
-. By running `omc node-logs crio`, for example, will then output crio-logs for all of the control-plane nodes.
+. By running `omc node-logs crio`, for example, will then output `crio-logs` for all of the `control-plane` nodes.
 
 .node-logs
 ====

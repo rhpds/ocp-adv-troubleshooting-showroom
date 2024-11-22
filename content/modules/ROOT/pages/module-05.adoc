@@ -1,7 +1,7 @@
 = Using OpenShift Insights to Proactively Analyze a Cluster
 :prewrap!:
 
-OpenShift Insights is a free tool offered to our Customers that collects specific data every 2 hours, anonimizes that data, and then sends it to Red Hat to be reviewed. Those archives are stored on SupportShell allowing Support Engineers and Technical Account Managers to review that data.
+OpenShift Insights is a free tool offered to our Customers that collects specific data every 2 hours, anonymizes that data, and then sends it to Red Hat to be reviewed. Those archives are stored on SupportShell allowing Support Engineers and Technical Account Managers to review that data.
 
 In this module we will be reviewing how to look at a script that parses an OpenShift Insights archive to allow you to proactively analyze a cluster.
 
@@ -144,7 +144,7 @@ To see all Alerts run: jq -r . insights-2024-08-14-144858/config/alerts.json
 
 [#customermemory]
 == Customer Namespace Memory Usage
-. The Insights Operator, when installed, collects data about the cluster every two hours. Some of that data collected is `container_memory_usage_bytes` which can then convert to see total MB/GB usage of that namespace.
+. The Insights Operator, when installed, collects data about the cluster every two hours. Some of that data collected is `container_memory_usage_bytes` which can then be converted to see total MB/GB usage of that namespace.
 
 . You can review what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_most_recent_metrics.go[GitHub: Insights Operator - gather_most_recent_metrics.go]
 

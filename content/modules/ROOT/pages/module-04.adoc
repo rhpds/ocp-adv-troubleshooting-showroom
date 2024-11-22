@@ -5,21 +5,21 @@ A customer reported an issue where access to the OpenShift API was intermittent 
 
 .The customer provided the following information:
 ************************************************
-While upgrading from OpenShift v4.12 to 4.13, we saw a spike in `Readiness probe for <pod> failed` logs. We usually see a few hundered iof these per minutei, but it has spiked to 11,000 in one minute from 09:55 PST / 17:55 UTC.
+While upgrading from OpenShift v4.12 to 4.13, we saw a spike in `Readiness probe for <pod> failed` logs. We usually see a few hundred of these per minute, but it has spiked to 11,000 in one minute from 09:55 PST / 17:55 UTC.
 
-These probe failures caused several pods in a deployment or statefulset to restart at the same time, causing application downtimes as the pods recovered.
+These probe failures caused several pods in a `Deployment` or `StatefulSet` to restart at the same time, causing application downtimes as the pods recovered.
 ************************************************
 
 [#theapi]
 == What is hitting my API?
 
-How do we check who, what and how often somthing is hitting the API of an OpenShift cluster?
+How do we check who, what and how often something is hitting the API of an OpenShift cluster?
 
 In this lab we are going to explore the usage of the `OpenShift Cluster Debug Tools`, specifically `kubectl-dev_tool` and the `kubectl-dev_tool audit` subcommand.
 
 https://github.com/openshift/cluster-debug-tools/
 
-In addition to the stadard must-gather, there are a number of additional variants for collecting data for special use cases.
+In addition to the standard must-gather, there are a number of additional variants for collecting data for special use cases.
 
 For this exercise, we asked the customer to collect the audit logs from their cluster so we can analyze every request going to the API.
 
@@ -35,7 +35,7 @@ oc adm must-gather -- /usr/bin/gather_audit_logs
 
 Lets take a look at the `kubectl-dev_tool audit` subcommand by running it with the `-h` flag to look at the help screen.
 
-On this screen, you will find a 5 examples to give you some understanding of how to use the tool.
+On this screen, you will find 5 examples to give you some understanding of how to use the tool.
 
 [TIP]
 ====
@@ -47,7 +47,7 @@ When using the `-f` flag, you can pass a single file, as in the example, or the 
 [#firstrun]
 == Run a command
 
-Let's running a command against the `kube-apiserver` and see what kind of information we get back. 
+Let's run a command against the `kube-apiserver` and see what kind of information we get back. 
 
 Depending on the amount of data and the complexity of the search, it can take some time to process.
 
@@ -57,7 +57,7 @@ Using the example from the help page, we can run a command like this:
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --verb=get --resource='*.*' --resource='-subjectaccessreviews.*' --resource='-tokenreviews.*' | more
 ====
 
-The first thing you will see is a log outlining the `count` (number of records), followed by a timerange and duration for the period the audit logs cover.
+The first thing you will see is a log outlining the `count` (number of records), followed by a time range and duration for the period the audit logs cover.
 
 ====
 count: 1149712, first: 2022-02-07T17:15:16-05:00, last: 2022-02-07T19:59:59-05:00, duration: 2h44m42.591072s
@@ -89,7 +89,7 @@ Now that we know a little bit about the `kubectl-dev_tool`, let's look at our `m
 There is a helpful flag you can use `-o top` which will count, group and display the top 10 entries for your search. 
 ====
 
-Start by taking a high level view. You can be both broad and granular with audit logs, but unless you know exactly what you're looking for, it's best to case a wide net.
+Start by taking a high level view. You can be both broad and granular with audit logs, but unless you know exactly what you're looking for, it's best to cast a wide net.
 
 Look at the top usage for the common `--by=` groups like `resource` and `user`
 
@@ -107,11 +107,11 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop
 [#thedata]
 == Evaluate and dig deeper
 
-We spotted something suspiscious, so let's drill down a little deeper.
+We spotted something suspicious, so let's drill down a little deeper.
 
 [TIP]
 ====
-We evaluating the data always factor in things like the total number of requests, time period and the number of nodes.
+When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
 ====
 
 .Click to show some details if you need a hint
@@ -148,7 +148,7 @@ The data for `configmaps` and `pods` looks pretty spread out across a variety of
 
 But for nodes, there is one big outlier. It aligns with the outlier we saw from the previous `--by=user` output.
 
-So lets take a look at that specific user and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
+So let's take a look at that specific user and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
 
 Let's try to answer the following:
 
@@ -174,7 +174,7 @@ Top 10 "GET" (of 440076 total hits):
    8308x [   270.327µs] [403-8307] /api/v1/nodes/cluster-app-02.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
 ----
 
-The conclusion is that there is an issue with the sysdig monitoring component that is causing it to fail authentication and spam the API server when trying to collect metrics.
+The conclusion is that there was an issue with the `SysDig`` monitoring component that was causing it to fail authentication when trying to collect `node` metrics and in turn spam the API server.
 ====
 
 I hope you found this introduction to the `kubectl-dev_tool` useful and can leverage it the next time you have an issue!
@@ -183,7 +183,7 @@ I hope you found this introduction to the `kubectl-dev_tool` useful and can leve
 ====
 You don't need to have an overloaded API or a performance issue to take a look at the audit logs. 
 
-The audit logs and `kubectl-dev_tool` are equally useful if you want to understand who or what did something  in your cluster.
+The audit logs and `kubectl-dev_tool` are equally useful if you want to understand who or what did something in your cluster.
 
 Something deleted your pod? That's in the audit logs! Use the `kubectl-dev_tool` to find out who did it and when!
 ====
