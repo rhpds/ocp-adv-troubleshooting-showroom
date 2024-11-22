@@ -132,7 +132,7 @@ Our top 3 users from the previous command were `sysdig-agent`, `apiserver` and `
 ----
 ====
 
-One of those sticks out a lot, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to drill on a specific resource.
+One of those sticks out a lot, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
 
 .Click to show some details if you need a hint
 [%collapsible]

@@ -6,8 +6,16 @@ image::openshift-logo.svg[openshift-logo,100%,100%]
 
 == Lab structure
 
-Wether you are writing a lab
+This lab is broken down into a set of 9 unique modules that explore a variety of tools. There is no spcific ordering or pre-requisit to move between each module, but we do recommend you review `Module 1` and `Module 2`. 
 
-* First, we will build a monolithic application already compiled as RPM packages and put it into a container. This will allow us to deploy the application, copy it between machines, and update it separately from the operating system. This process affords us a portable and easily maintained component instead of tightly coupling the application with your operating system maintenance.
+Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Module 3` or pick one that interests you the most.
 
-* In closing we will build a second container on a different operating system version that makes an application not packaged into RPMs. This will be similar to a web application deployment, positioning the correct files at the right locations. To do this, we will pull a project from GitHub and position the component files within our container image. The purpose of this is to achieve a portable application container that can deploy on several different versions of Red Hat Enterprise Linux. This also provides the benefit of decoupling your application maintenance, which would all happen by building new containers versus operating system maintenance. The container is no longer reliant on the operating system installed on the machine where the application is deployed.
+. Module 1 introduced all of the tools we will be using
+. Module 2 does a deeper dive on the functionality in the `omc` tool
+. Module 3 uses `omc` to explore an issue with a vSphere IPI cluster
+. Module 4 uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
+. Module 5 uses `ocp_insights.sh` to proactively look for performance issues with OpenShift Insights data
+. Module 6 
+. Module 7
+. Module 8
+. Module 9
