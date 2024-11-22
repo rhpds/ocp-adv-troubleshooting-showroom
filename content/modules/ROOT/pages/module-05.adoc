@@ -3,7 +3,7 @@
 
 OpenShift Insights is a free tool offered to our Customers that collects specific data every 2 hours, anonymizes that data, and then sends it to Red Hat to be reviewed. Those archives are stored on SupportShell allowing Support Engineers and Technical Account Managers to review that data.
 
-In this module we will be reviewing how to look at a script that parses an OpenShift Insights archive to allow you to proactively analyze a cluster.
+In this module we will be reviewing how to look at a script that parses an `OpenShift Insights` archive to allow you to proactively analyze a cluster.
 
 [#gettingstarted]
 == ocp_insights.sh
@@ -201,7 +201,7 @@ etcd-ocp4-2nvq7-master-1,22
 
 [#storageclasses]
 == Storage Classes
-. The Insights Operator, when installed, collects data about the cluster every two hours. We collect storage classes which is helpful to determine what storage is being used by the cluster.
+. The `Insights Operator`, when installed, collects data about the cluster every two hours. We collect storage classes which is helpful to determine what storage is being used by the cluster.
 
 . You can review what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_storageclass.go[GitHub: Insights Operator - gather_storageclass.go]
 
