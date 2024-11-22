@@ -37,7 +37,11 @@
 ** xref:module-05.adoc#etcd_metrics[etcd Metrics]
 ** xref:module-05.adoc#storageclasses[Storage Classes]
 
-* xref:module-06.adoc[6. ]
+* xref:module-06.adoc[6. Analyzing etcd Performance]
+** xref:module-06.adoc#gettingstarted[Getting Started]
+** xref:module-06.adoc#stats[etcd Error Stats]
+** xref:module-06.adoc#commonerrors[Common Errors]
+** xref:module-06.adoc#singleerrors[Searching for Specific Errors]
 
 * xref:module-07.adoc[7. ]
 
