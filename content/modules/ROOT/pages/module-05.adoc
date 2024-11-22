@@ -124,7 +124,7 @@ MachineSets:
 
 NAME                 DESIRED  CURRENT  READY  AVAILABLE
 ocp4-2nvq7-infra     2        2        2      2
-ocp4-2nvq7-worker  3        3        3      3
+ocp4-2nvq7-worker    3        3        3      3
 
 Cluster Namespace Memory Usage.
 
