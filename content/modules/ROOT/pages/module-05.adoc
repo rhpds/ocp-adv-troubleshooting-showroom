@@ -59,8 +59,6 @@ Options:
 ** Namespace Events
 ** PodNetworkConnectivityChecks
 
-
-
 .Output
 ====
 [source,bash]
