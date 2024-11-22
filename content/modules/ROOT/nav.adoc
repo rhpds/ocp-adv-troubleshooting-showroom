@@ -30,7 +30,12 @@
 ** xref:module-04.adoc#theissue[Checking for issues]
 ** xref:module-04.adoc#thedata[Evaluate and dig deeper]
 
-* xref:module-05.adoc[5. ]
+* xref:module-05.adoc[5. Using OpenShift Insights to Proactively Analyze a Cluster]
+** xref:module-05.adoc#gettingstarted[Getting Started]
+** xref:module-05.adoc#whatisoutput[What is Output]
+** xref:module-05.adoc#customermemory[Customer Namespace Memory Usage]
+** xref:module-05.adoc#etcd_metrics[etcd Metrics]
+** xref:module-05.adoc#storageclasses[Storage Classes]
 
 * xref:module-06.adoc[6. ]
 
