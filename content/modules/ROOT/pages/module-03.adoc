@@ -31,12 +31,12 @@ We recently patched this cluster to from *4.14.27* to *4.14.37*. Previous scale-
 ====
 [source,bash]
 ----
-cd Module1/module1-must-gather.local
+cd ~/Module3/
 ----
 
 [source,bash]
 ----
-omc use `PWD`
+omc use module3-must-gather.local/
 ----
 
 [source,bash]
@@ -91,7 +91,7 @@ Checking each `container` in each `pod` with `omc` can be tedious and time consu
 ====
 [source,bash]
 ----
-cd quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3/namespaces/openshift-machine-api
+cd ~/Module3/module3-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3/namespaces/openshift-machine-api
 ----
 
 [source,bash]

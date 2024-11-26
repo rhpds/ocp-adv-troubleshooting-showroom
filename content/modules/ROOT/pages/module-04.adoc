@@ -47,7 +47,11 @@ When using the `-f` flag, you can pass a single file, as in the example, or the 
 [#firstrun]
 == Run a command
 
-Let's run a command against the `kube-apiserver` and see what kind of information we get back. 
+Let's run a command against the `kube-apiserver` and see what kind of information we get back.
+
+----
+cd ~/Module4/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/audit_logs/
+----
 
 Depending on the amount of data and the complexity of the search, it can take some time to process.
 
@@ -99,7 +103,9 @@ Look at the top usage for the common `--by=` groups like `resource` and `user`
 [source,bash]
 ----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=resource -otop
-and
+----
+
+----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop
 ----
 ====
@@ -139,7 +145,13 @@ One of those sticks out a lot, but let's first take a look at our top 3 resource
 ====
 ----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=nodes -otop --by=user
+----
+
+----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps -otop --by=user
+----
+
+----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=pods -otop --by=user
 ----
 ====
@@ -152,7 +164,7 @@ So let's take a look at that specific user and see what they are doing. You can 
 
 Let's try to answer the following:
 
-What is the user doing?
+What is the user doing? +
 What is the problem?
 
 .Click to show some details if you need a hint

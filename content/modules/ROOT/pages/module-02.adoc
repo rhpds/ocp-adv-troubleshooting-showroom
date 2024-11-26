@@ -23,19 +23,24 @@ https://github.com/gmeghnag/omc
 
 [source,bash]
 ----
-$ omc use must-gather.local
-Must-Gather  : /home/example-user/must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3
+cd ~/Module2/
+----
+
+[source,bash]
+----
+$ omc use sno_demo
+Must-Gather  : /home/lab-user/Module2/sno_demo/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2de07af89683678ae6bb7a939615fc0d4ced7fe185add38b050f2c6f60023b6f
 Project      : default
-ApiServerURL : https://api.ocp-cluster-1.paas.is.exampledev.com:6443
-Platform     : VSphere
-ClusterID    : 3bdf9a64-4e53-4c63-9f32-1e64eda92c13
+ApiServerURL : https://api.cluster-6fmht.dynamic.redhatworkshops.io:6443
+Platform     : None
+ClusterID    : 1304b08d-2a73-410f-98ed-342233008cb0
 ----
 
 [source,bash]
 ----
 $ omc get clusterversion
 NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
-version   4.14.37   True        False         40d     Cluster version is 4.14.37
+version   4.16.20   True        False         20h     Cluster version is 4.16.20
 ----
 ====
 
@@ -90,7 +95,7 @@ $ omc etcd status
 
 [#haproxy]
 == omc `haproxy` command
-. The `haproxy inspect` command displays all of the `haproxy` configured backends
+. The `haproxy backends` command displays all of the `haproxy` configured backends
 
 .haproxy
 ====
