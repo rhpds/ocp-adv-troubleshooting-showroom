@@ -111,29 +111,27 @@ ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthro
 
 [#machine-config]
 == omc `machine-config` command
-. The `omc machine-config diff` command allows you to compare two `machine-configs`. This is different from the built-in `omc get machine-configs` which will display `machine-configs`.
+. The `omc machine-config diff` command allows you to compare two `MachineConfig` objects. This is different from the built-in `omc get machineconfigs` which will only display the `MachineConfigs`.
 
-. The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two `machine-configs` to help quickly identify all changes.
+. The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two `MachineConfigs` to help quickly identify all changes.
 
 .machine-config
 ====
 [source,bash]
 ----
-$ omc get machine-configs -n openshift-machineconfig-operator
-NAME                                                    GENERATEDBYCONTROLLER                      IGNITIONVERSION   AGE
-00-master                                               83d66a9228fef00885826e00ad3d392c5525bfab   3.4.0             1y
-00-worker                                               83d66a9228fef00885826e00ad3d392c5525bfab   3.4.0             1y
+$ omc get machineconfigs -n openshift-machineconfig-operator
+NAME                                               GENERATEDBYCONTROLLER                      IGNITIONVERSION   AGE
+00-master                                          20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
+00-worker                                          20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
 ...
-99-worker-ssh                                                                                      3.2.0             1y
-masters-chrony-configuration                                                                       2.2.0             1y
-rendered-master-01920f36fb2065cdf5c8311d30d9ddeb        b82f3adc9b102d2d4eba20168075a26b2d359f87   3.2.0             125d
-rendered-master-0aa9b0deb0a8e4189d1dc8848ca5aaca        60746a843e7ef8855ae00f2ffcb655c53e0e8296   3.2.0             1y
-rendered-master-229db957890af898907e9cbf91dc5915        b82f3adc9b102d2d4eba20168075a26b2d359f87   3.2.0             155d
+99-worker-generated-registries                     20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
+rendered-master-c5f327c05f9e70b9ef90ad15b0610341   20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
+rendered-worker-cf392af65e20a73197f046cacaf156e5   20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
 ----
 
 [source,bash]
 ----
-$ omc get machine-config diff rendered-master-01920f36fb2065cdf5c8311d30d9ddeb rendered-master-0aa9b0deb0a8e4189d1dc8848ca5aaca
+$ omc machine-config diff rendered-master-c5f327c05f9e70b9ef90ad15b0610341 rendered-worker-cf392af65e20a73197f046cacaf156e5
 ----
 ====
 
