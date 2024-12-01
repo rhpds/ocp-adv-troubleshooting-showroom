@@ -18,4 +18,4 @@ Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Modu
 . Module 6 used `etcd-ocp-diag.sh` to review etcd logs for performance related issues.
 . Module 7
 . Module 8
-. Module 9
+. Module 9 uses `omc` to explore an issue with an IngressController configuration

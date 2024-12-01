@@ -46,3 +46,10 @@
 * xref:module-07.adoc[7. ]
 
 * xref:module-08.adoc[8. ]
+
+* xref:module-09.adoc[9. OCP networking - Workload is not distributed among Pod replicas]
+** xref:module-09.adoc#configureomc[`omc` configuration]
+** xref:module-09.adoc#checkocpnetwork[OCP networking]
+** xref:module-09.adoc#collectinspect[Namespace "inspect"]
+** xref:module-09.adoc#checkappns[Check application]
+** xref:module-09.adoc#checkingressconfig[IngressController configuration]

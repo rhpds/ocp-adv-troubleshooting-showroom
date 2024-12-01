@@ -1,0 +1,165 @@
+= OCP networking - Workload is not distributed among Pod replicas 
+:prewrap!:
+
+A customer reported an issue where, for a specific application, only one Pod is receiving the external workload. +
+
+.The customer provided the following information:
+************************************************
+Workload is not distributed among 2 Pods of the `fsi-application` in namespace `fsi-project`, causing loss of parallelism.
+It seems that all connections are directed to the same single Pod.
+
+The application is stateless.
+
+We are on a _UPI_ cluster, with an external Load Balancer, which is using using a RoundRobin algorithm to direct traffic to the  ingresscontroller Pods.
+************************************************
+
+[#configureomc]
+== Configure `omc` to use the correct must-gather
+
+. Change directory into the provided `must-gather` in the `Module9` folder.
+
+. Using the `omc use` command, set the `Module9` `must-gather` to the current in use archive.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+cd ~/Module9/
+----
+
+[source,bash]
+----
+omc use module9-must-gather.local/
+----
+====
+
+[#checkocpnetwork]
+== Check the cluster basic network configurations
+
+Since it seems a networking issue, the first thing to do is to collect details about the cluster basic network configurations, in order to better understand the environment to be analyzed.
+
+* Check the cluster version.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc get ClusterVersion version
+----
+====
+
+[TIP]
+=====
+OCP might receive critical networking bugfixes between the different z-releases, therefore checking the full cluster version is essential in any OCP networking troubleshooting session.
+=====
+
+* Check which CNI is being used.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc get Network cluster -o json | yq '.spec.networkType'
+----
+====
+
+* Check what are the installed IncressControllers.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc get IngressController -n openshift-ingress-operator
+----
+====
+
+[NOTE]
+=====
+The `default` IngressController uses _HAProxy_ as reverse proxy technology.
+=====
+
+[#collectinspect]
+== Collect the application namespace "inspect" 
+
+[IMPORTANT]
+=====
+The command `oc adm must-gather` collects data only from the following namespaces:
+
+* `default`
+* `kube-system`
+* `openshift`
+* `openshift-*`
+=====
+
+Which command you should ask to a customer in order to collect data of a specific namespace ?
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+oc adm inspect ns/<project>
+----
+====
+
+In this lab, the "inspect" of `fsi-project` can be found in the `~/Module9/module9-inspect-fsi-project.local` directory.
+
+[TIP]
+=====
+The `omc` tool isn't restricted to must-gathers, but it can be used also on a namespace "inspect"
+=====
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc use ~/Module9/module9-inspect-fsi-project.local
+----
+====
+
+[#checkappns]
+== Check data inside the application namespace "inspect" 
+
+As the saying goes _"When you hear hoofbeats behind you, don't expect to see a zebra"_. Before checking for any cluster networking issue, start by trying to exclude the most common and simple issues related to the specific application.
+
+#TODO# - ADD LOGS COMPARISON BETWEEN PODS
+
+* First of all, check that the multiple Pod replicas reported in the Deployment `fsi-application` are all running
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc get deployment fsi-application
+SELECTOR_LABEL=$(omc get deployment fsi-application -o yaml | yq '.spec.selector.matchLabels' | sed 's/: /=/')
+omc get pod -l $SELECTOR_LABEL
+----
+====
+
+* Check that all application Pods are "connected" to the related Service (in this case, `fsi-service`)
+
+[TIP]
+=====
+When a Pod is correctly "connected" to a Service, its IP address will appear in the   Endpoints object corresponding to the Service
+=====
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc get pod -l $SELECTOR_LABEL -o wide
+omc get endpoints
+----
+====
+
+[#checkingressconfig]
+== Check IngressController configuration
+
+#WIP#
