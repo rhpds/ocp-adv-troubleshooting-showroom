@@ -1,24 +1,24 @@
-= OCP networking - Workload is not distributed among Pod replicas 
+= OCP networking - Traffic is not distributed among Pod replicas 
 :prewrap!:
 
-A customer reported an issue where, for a specific application, only one Pod is receiving the external workload. +
+A customer reported an issue where, for a specific application, only one Pod is receiving the expected traffic. +
 
 .The customer provided the following information:
 ************************************************
-Workload is not distributed among 2 Pods of the `fsi-application` in namespace `fsi-project`, causing loss of parallelism.
-It seems that all connections are directed to the same single Pod.
+Traffic is not distributed among the two Pods of the `fsi-application` Deployment in Namespace `fsi-project`, causing loss of parallelism.
+It seems that all traffic is being directed to the same single Pod.
 
-The application is stateless.
+Note that our application is completely stateless.
 
-We are on a _UPI_ cluster, with an external Load Balancer, which is using using a RoundRobin algorithm to direct traffic to the  ingresscontroller Pods.
+We are on a _UPI_ cluster and use an external _Load Balancer_ to send traffic to the _Ingress Controller_.
 ************************************************
 
 [#configureomc]
-== Configure `omc` to use the correct must-gather
+== Configure `omc` to use the correct _must-gather_
 
-. Change directory into the provided `must-gather` in the `Module9` folder.
+. Change directory into the provided `Module9` folder.
 
-. Using the `omc use` command, set the `Module9` `must-gather` to the current in use archive.
+. Using the `omc use` command, set the `module9-must-gather.local` _must-gather_ as the current archive in use.
 
 .Click to show some commands if you need a hint
 [%collapsible]
@@ -37,7 +37,12 @@ omc use module9-must-gather.local/
 [#checkocpnetwork]
 == Check the cluster basic network configurations
 
-Since it seems a networking issue, the first thing to do is to collect details about the cluster basic network configurations, in order to better understand the environment to be analyzed.
+Since the issue seems a networking one, a good idea is to collect details about the cluster basic network configurations, in order to better understand the environment that we are going to analyze.
+
+[IMPORTANT]
+=====
+OCP might receive critical networking bugfixes between different z-releases, therefore  checking the cluster full version is essential in any OCP networking troubleshooting session.
+=====
 
 * Check the cluster version.
 
@@ -50,12 +55,7 @@ omc get ClusterVersion version
 ----
 ====
 
-[TIP]
-=====
-OCP might receive critical networking bugfixes between the different z-releases, therefore checking the full cluster version is essential in any OCP networking troubleshooting session.
-=====
-
-* Check which CNI is being used.
+* Check which CNI (_Container Network Interface_) plugin is being used on the cluster.
 
 .Click to show some commands if you need a hint
 [%collapsible]
@@ -66,7 +66,7 @@ omc get Network cluster -o json | yq '.spec.networkType'
 ----
 ====
 
-* Check what are the installed IncressControllers.
+* Check which are the installed _Incress Controllers_.
 
 .Click to show some commands if you need a hint
 [%collapsible]
@@ -79,15 +79,17 @@ omc get IngressController -n openshift-ingress-operator
 
 [NOTE]
 =====
-The `default` IngressController uses _HAProxy_ as reverse proxy technology.
+In OCP, the `default` _Ingress Controller_ uses _HAProxy_ as reverse proxy technology.
 =====
 
 [#collectinspect]
-== Collect the application namespace "inspect" 
+== Collect the application Namespace _inspect_
+
+Since the issue is limited to a particular application, we need to collect and analyze data from its specific Namespace. 
 
 [IMPORTANT]
 =====
-The command `oc adm must-gather` collects data only from the following namespaces:
+The command `oc adm must-gather` does not collect data from all Namepsaces, but only from the following ones:
 
 * `default`
 * `kube-system`
@@ -95,22 +97,22 @@ The command `oc adm must-gather` collects data only from the following namespace
 * `openshift-*`
 =====
 
-Which command you should ask to a customer in order to collect data of a specific namespace ?
+Which command should we ask to a customer in order to collect data of a specific Namespace ?
 
 .Click to show some commands if you need a hint
 [%collapsible]
 ====
 [source,bash]
 ----
-oc adm inspect ns/<project>
+oc adm inspect ns/<namespace>
 ----
 ====
 
-In this lab, the "inspect" of `fsi-project` can be found in the `~/Module9/module9-inspect-fsi-project.local` directory.
+In this lab, the _inspect_ of `fsi-project` is named `module9-inspect-fsi-project.local` and can be found into the `Module9` folder.
 
 [TIP]
 =====
-The `omc` tool isn't restricted to must-gathers, but it can be used also on a namespace "inspect"
+The `omc` tool isn't restricted to _must-gathers_, but it can be set to read from a Namespace _inspect_ archive too.
 =====
 
 .Click to show some commands if you need a hint
@@ -118,18 +120,42 @@ The `omc` tool isn't restricted to must-gathers, but it can be used also on a na
 ====
 [source,bash]
 ----
-omc use ~/Module9/module9-inspect-fsi-project.local
+cd ~/Module9/
+----
+
+[source,bash]
+----
+omc use module9-inspect-fsi-project.local/
 ----
 ====
 
+[NOTE]
+=====
+Remember that `omc`, after opening an _inspect_, automatically sets the _inspect_ Namespace as the current Project. That is, `omc project <namespace-name>` is not necessary.  
+=====
+
 [#checkappns]
-== Check data inside the application namespace "inspect" 
+== Check data inside the application Namespace _inspect_ 
 
-As the saying goes _"When you hear hoofbeats behind you, don't expect to see a zebra"_. Before checking for any cluster networking issue, start by trying to exclude the most common and simple issues related to the specific application.
+As the saying goes: _"When you hear hoofbeats behind you, don't expect to see a zebra"_. Before checking for any advanced cluster networking issue, it's a good approach to start by trying to exclude the most common and simple issues.
 
-#TODO# - ADD LOGS COMPARISON BETWEEN PODS
+* First of all, it will be handy to find the Selector used by the Deployment `fsi-application` for its Pods. Let's check it and put it into a shell variable. 
 
-* First of all, check that the multiple Pod replicas reported in the Deployment `fsi-application` are all running
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+SELECTOR_LABEL=$(omc get deployment fsi-application -o yaml | yq '.spec.selector.matchLabels' | sed 's%: %=%')
+----
+
+[source,bash]
+----
+echo $SELECTOR_LABEL
+----
+====
+
+* Then, check that the Pod replicas in the reported Deployment `fsi-application` are all running.
 
 .Click to show some commands if you need a hint
 [%collapsible]
@@ -137,7 +163,10 @@ As the saying goes _"When you hear hoofbeats behind you, don't expect to see a z
 [source,bash]
 ----
 omc get deployment fsi-application
-SELECTOR_LABEL=$(omc get deployment fsi-application -o yaml | yq '.spec.selector.matchLabels' | sed 's/: /=/')
+----
+
+[source,bash]
+----
 omc get pod -l $SELECTOR_LABEL
 ----
 ====
@@ -146,7 +175,7 @@ omc get pod -l $SELECTOR_LABEL
 
 [TIP]
 =====
-When a Pod is correctly "connected" to a Service, its IP address will appear in the   Endpoints object corresponding to the Service
+When a Pod is correctly "connected" to a Service, its IP address will appear in the Endpoints object corresponding to the Service
 =====
 
 .Click to show some commands if you need a hint
@@ -154,12 +183,140 @@ When a Pod is correctly "connected" to a Service, its IP address will appear in 
 ====
 [source,bash]
 ----
+omc get endpoints fsi-service
+----
+
+[source,bash]
+----
 omc get pod -l $SELECTOR_LABEL -o wide
-omc get endpoints
+----
+====
+
+* As reported by the customer, even if the above checks were successfull, we should still expect to see traffic logs (for example, _GET_ requests) only in the logs of one of the two Pods. Let's verify by checking all Pods logs.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+PODS=$(omc get pod --no-headers -l $SELECTOR_LABEL | awk '{print $1}')
+----
+
+[source,bash]
+----
+for p in $PODS; do printf "\n@@@@@ POD: %s @@@@@\n" $p; omc logs $p; done
 ----
 ====
 
 [#checkingressconfig]
-== Check IngressController configuration
+== Check the _Ingress Controller_ configuration
 
-#WIP#
+So far we verified that:
+
+* all application Pods are correctly running
+* they are all correctly "connected" to their related Service
+* however, the traffic seems received only by one Pod
+
+To continue the troubleshooting, let's focus on what come _before_ the Service.
+That is, let's analyze the application related Route and how it is configured into the _Ingress Controller_. Note that in this case the used Route is named `fsi-route`.
+
+* Let's check the Route.
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc get route fsi-route
+----
+====
+
+We can note that it uses the _tls termination_ of type `passthrough`:
+
+[source,bash]
+----
+NAME        HOST/PORT                                                           PATH   SERVICES      PORT    TERMINATION   WILDCARD
+fsi-route   fsi-route-fsi-project.apps.foobarbank.lab.upshift.rdu2.redhat.com          fsi-service   https   passthrough   None
+----
+
+* Now let's verify with `omc` whether the Route was "admitted" (that is, installed) into the `default` _Ingress Controller_ configuration as a backend.
+
+[IMPORTANT]
+=====
+The application specific Route is contained into the _inspect_, however the `default` _Ingress Controller_ configuration is always contained into the _must-gather_.
+=====
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+omc haproxy backends fsi-project
+----
+====
+
+We can note that the Route is present also into the `default` _Ingress Controller_ configuration, therefore it was correctly "admitted":
+
+[source,bash]
+----
+NAMESPACE	NAME		INGRESSCONTROLLER	SERVICES	PORT		TERMINATION
+fsi-project	fsi-route	default			fsi-service	https(8443)	passthrough/Redirect	
+----
+
+* Everything seems correct so far, therefore we need to dig deeper. Let's manually print the whole `fsi-route` Route "admission" directly from the `default` _Ingress Controller_ configuration file.
+
+[TIP]
+=====
+In general, the `default` _Ingress Controller_ configuration file can be found at the following path: 
+
+`<must-gather-archive>/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-<hash>/ingress_controllers/default/<ingress-default-pod>/haproxy.config`.
+
+Note that there is one `haproxy.config` file for each _Ingress Controller_ Pod.
+=====
+
+.Click to show some commands if you need a hint
+[%collapsible]
+====
+[source,bash]
+----
+INGRESS_CONFIG=$(find ~/Module9/module9-must-gather.local -type f -name haproxy.config | head -n 1)
+----
+
+[source,bash]
+----
+echo $INGRESS_CONFIG
+----
+
+[source,bash]
+----
+grep "fsi-route" -A 7 $INGRESS_CONFIG
+----
+====
+
+We can note that, for the Route `fsi-route`, the used _balance_ type is `source`:
+
+[source,bash]
+----
+backend be_tcp:fsi-project:fsi-route
+  balance source
+
+  hash-type consistent
+  timeout check 5000ms
+  server pod:fsi-application-6fbf69565d-9hld7:fsi-service:https:10.128.2.13:8443 10.128.2.13:8443 weight 1 check inter 5000ms
+  server pod:fsi-application-6fbf69565d-t8xjt:fsi-service:https:10.131.0.19:8443 10.131.0.19:8443 weight 1 check inter 5000ms
+----
+
+[#solution]
+== Issue solution
+
+Gothca ! The Route seems using the _balance_ of type `source`. We can verify whether this is the intended _Ingress Controller_ behavior by checking the official OCP documentation about link:https://docs.openshift.com/container-platform/4.17/networking/routes/route-configuration.html#nw-route-specific-annotations_route-configuration[_Route-specific annotations_]. 
+
+There we can read:
+
+[source,text]
+----
+The default value is "source" for TLS passthrough routes. For all other routes, the default is "random".
+----
+
+OCP is therefore correctly behaving. The issue is not a bug, but a misconfiguration by the customer who supposed the _balance_ type was `random` for all types of Routes.
+

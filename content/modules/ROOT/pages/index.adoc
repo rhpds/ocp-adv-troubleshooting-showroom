@@ -6,16 +6,16 @@ image::openshift-logo.svg[openshift-logo,100%,100%]
 
 == Lab structure
 
-This lab is broken down into a set of 9 unique modules that explore a variety of tools. There is no spcific ordering or pre-requisit to move between each module, but we do recommend you review `Module 1` and `Module 2`.
+This lab is broken down into a set of 9 unique modules that explore a variety of tools. There is no specific ordering or pre-requisite to move between each module, but we do recommend you review `Module 1` and `Module 2`.
 
 Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Module 3` or pick one that interests you the most.
 
-. Module 1 introduced all of the tools we will be using
+. Module 1 introduces all of the tools we will be using
 . Module 2 does a deeper dive on the functionality in the `omc` tool
 . Module 3 uses `omc` to explore an issue with a vSphere IPI cluster
 . Module 4 uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
 . Module 5 uses `ocp_insights.sh` to proactively look for performance issues with OpenShift Insights data
-. Module 6 used `etcd-ocp-diag.sh` to review etcd logs for performance related issues.
+. Module 6 uses `etcd-ocp-diag.sh` to review etcd logs for performance related issues
 . Module 7
 . Module 8
-. Module 9 uses `omc` to explore an issue with an IngressController configuration
+. Module 9 uses `omc` and _manual checks_ on the cluster must-gather in order to explore an OCP networking issue

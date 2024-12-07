@@ -47,9 +47,10 @@
 
 * xref:module-08.adoc[8. ]
 
-* xref:module-09.adoc[9. OCP networking - Workload is not distributed among Pod replicas]
-** xref:module-09.adoc#configureomc[`omc` configuration]
-** xref:module-09.adoc#checkocpnetwork[OCP networking]
-** xref:module-09.adoc#collectinspect[Namespace "inspect"]
-** xref:module-09.adoc#checkappns[Check application]
-** xref:module-09.adoc#checkingressconfig[IngressController configuration]
+* xref:module-09.adoc[9. OCP networking - Traffic is not distributed among Pod replicas]
+** xref:module-09.adoc#configureomc[Configure `omc` to use the correct _must-gather_]
+** xref:module-09.adoc#checkocpnetwork[Check the cluster basic network configurations]
+** xref:module-09.adoc#collectinspect[Collect the application Namespace _inspect_]
+** xref:module-09.adoc#checkappns[Check data inside the application Namespace _inspect_]
+** xref:module-09.adoc#checkingressconfig[Check the _Ingress Controller_ configuration]
+** xref:module-09.adoc#solution[Issue solution]
