@@ -1,4 +1,15 @@
-= 3
+= Exploring etcd snapshots with koff
 :prewrap!:
 
-temp
+We have looked at `etcd` performance and how critical it is to cluster health, but what if we want to see what's in `etcd`? 
+
+If you have existing `etcd` backups / snapshots or want to take one now, there is a lot you can do and look at!
+
+If you deleted someone important and want to get it back, you can get it from a backup and recreate it in your cluster.
+
+If your `etcd` database is huge, you can parse through a fresh snapshot and see where the issues are without touching production.
+
+Accessing and parsing your `etcd` data isn't a daily occurance, but when the time comes, it's incredibly useful.
+
+In this module we will utilize the `koff` tool to showcase get and inspect commnads on both standard `Kubernetes` objects types as well as traditionally stored `etcd` keys.
+
