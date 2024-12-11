@@ -54,3 +54,5 @@
 ** xref:module-09.adoc#checkappns[Check data inside the application Namespace _inspect_]
 ** xref:module-09.adoc#checkingressconfig[Check the _Ingress Controller_ configuration]
 ** xref:module-09.adoc#solution[Issue solution]
+
+* xref:module-10.adoc[10. Exploring etcd snapshots with koff]
