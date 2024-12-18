@@ -1,4 +1,104 @@
-= 3
+= Reviewing Cluster Upgrades
 :prewrap!:
 
-temp
+When reviewing a must-gather, it's very important to review the output of the `omc get clusterversion` command to identify the current Cluster Version, if an install is currently progressing, any errors in the Status field, and if there have been any failed installations which can be causing issues.
+
+[#gettingstarted]
+To get started we will be running the `omc get clusterversion` command and then running the command a second time and outputting to yaml. We specifically want to look at the History section which will show every upgrade ever performed on the cluster. In the example below we see three upgrades with the `4.14.18` upgrade showing a state of `Partial`.
+
+.clusterversion
+====
+[source,bash]
+----
+$ omc get clusterversion
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.14.27   True        False         17d     Cluster version is 4.14.27
+$ omc get clusterversion -o yaml
+[
+    history:
+    - completionTime: null
+      image: fr2.icr.io/armada-master/ocp-release:4.13.43-x86_64
+      startedTime: "2024-07-04T06:21:36Z"
+      state: Partial
+      verified: false
+      version: 4.13.43
+    - completionTime: "2024-07-04T06:21:36Z"
+      image: fr2.icr.io/armada-master/ocp-release:4.12.58-x86_64
+      startedTime: "2024-06-26T16:25:53Z"
+      state: Partial
+      verified: false
+      version: 4.12.58
+    - completionTime: "2024-06-26T16:25:53Z"
+      image: fr2.icr.io/armada-master/ocp-release:4.12.56-x86_64
+      startedTime: "2024-06-05T17:06:12Z"
+      state: Partial
+      verified: false
+      version: 4.12.56
+...
+----
+====
+
+[#partialupgrade]
+A Partial upgrade is the result of manifests failing to be applied, objects not being updated or deleted, or items missing that result in the upgrade looping as it tries to progress past the issue. This then result in Cluster Operators remaining on an older version as seen in an example from an actual Customer case.
+
+.clusteroperators
+====
+[source,bash]
+----
+$ omc get clusteroperators
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+console                                    4.13.43   True        False         False      1d
+csi-snapshot-controller                    4.13.43   True        False         False      239d
+dns                                        4.12.40   True        False         False      239d
+image-registry                             4.13.43   True        False         False      134d
+ingress                                    4.13.43   True        False         False      8d
+insights                                   4.13.43   True        False         False      99d
+kube-apiserver                             4.13.43   True        False         False      239d
+kube-controller-manager                    4.13.43   True        False         False      239d
+kube-scheduler                             4.13.43   True        False         False      239d
+kube-storage-version-migrator              4.13.43   True        False         False      8d
+marketplace                                4.13.43   True        False         False      239d
+monitoring                                 4.13.43   True        False         False      159d
+network                                    4.12.40   True        False         False      239d
+node-tuning                                4.13.43   True        False         False      8d
+openshift-apiserver                        4.13.43   True        False         False      239d
+openshift-controller-manager               4.13.43   True        False         False      239d
+openshift-samples                          4.13.43   True        False         False      8d
+operator-lifecycle-manager                 4.13.43   True        False         False      239d
+operator-lifecycle-manager-catalog         4.13.43   True        False         False      239d
+operator-lifecycle-manager-packageserver   4.13.43   True        False         False      17h
+service-ca                                 4.13.43   True        False         False      239d
+storage                                    4.13.43   True        False         False      239d
+----
+====
+
+After reviwing the Cluster Version and the Cluster Operators we next want to move to the `cluster-version-operator` pod located in the `openshift-cluster-version` namespace. There you can review the logs to see where the upgrade is stalling. In the example below we can see that the logs show the upgrade process is getting stuck on the DNS and Network Operator which matches what we see in the ClusterOperator status.
+
+.cluster-version-operator
+====
+[source,bash]
+----
+I0718 14:20:33.366086       1 sync_worker.go:978] Precreated resource clusteroperator "network" (511 of 615)
+I0718 14:20:33.404169       1 sync_worker.go:978] Precreated resource clusteroperator "dns" (522 of 615)
+I0718 14:20:33.404237       1 sync_worker.go:708] Dropping status report from earlier in sync loop
+I0718 14:20:33.404254       1 sync_worker.go:987] Running sync for namespace "openshift-network-operator" (505 of 615)
+I0718 14:20:33.449849       1 sync_worker.go:1007] Done syncing for namespace "openshift-network-operator" (505 of 615)
+I0718 14:20:33.449956       1 sync_worker.go:708] Dropping status report from earlier in sync loop
+I0718 14:20:33.450181       1 sync_worker.go:987] Running sync for customresourcedefinition "networks.operator.openshift.io" (506 of 615)
+I0718 14:20:33.498554       1 sync_worker.go:1007] Done syncing for customresourcedefinition "networks.operator.openshift.io" (506 of 615)
+I0718 14:20:33.498601       1 sync_worker.go:708] Dropping status report from earlier in sync loop
+I0718 14:20:33.498614       1 sync_worker.go:987] Running sync for customresourcedefinition "egressrouters.network.operator.openshift.io" (507 of 615)
+I0718 14:20:33.545449       1 sync_worker.go:1007] Done syncing for customresourcedefinition "egressrouters.network.operator.openshift.io" (507 of 615)
+I0718 14:20:33.545495       1 sync_worker.go:708] Dropping status report from earlier in sync loop
+I0718 14:20:33.545507       1 sync_worker.go:987] Running sync for customresourcedefinition "operatorpkis.network.operator.openshift.io" (508 of 615)
+I0718 14:20:33.593751       1 sync_worker.go:1007] Done syncing for customresourcedefinition "operatorpkis.network.operator.openshift.io" (508 of 615)
+I0718 14:20:33.593790       1 sync_worker.go:708] Dropping status report from earlier in sync loop
+I0718 14:20:33.593799       1 sync_worker.go:987] Running sync for clusterrolebinding "default-account-cluster-network-operator" (509 of 615)
+I0718 14:20:33.641898       1 sync_worker.go:1007] Done syncing for clusterrolebinding "default-account-cluster-network-operator" (509 of 615)
+I0718 14:20:33.642013       1 sync_worker.go:708] Dropping status report from earlier in sync loop
+I0718 14:20:33.642033       1 sync_worker.go:987] Running sync for deployment "openshift-network-operator/network-operator" (510 of 615)
+I0718 14:20:33.696357       1 sync_worker.go:1007] Done syncing for deployment "openshift-network-operator/network-operator" (510 of 615)
+I0718 14:20:33.696477       1 sync_worker.go:987] Running sync for clusteroperator "network" (511 of 615)
+E0718 14:20:33.696795       1 task.go:117] error running apply for clusteroperator "network" (511 of 615): Cluster operator network is updating version
+----
+====

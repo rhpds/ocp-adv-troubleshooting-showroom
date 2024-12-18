@@ -1,4 +1,170 @@
-= 3
+= Reviewing Installed Operators
 :prewrap!:
 
-temp
+[#operators]
+To view all of the operators installed on a cluster we will be utilizing the `omc get operators` command which will output all of the operators like we see in the following example. The default is show all operators but you can narrow them down by running specifying the namespace with the `-n` option.
+
+.operators
+====
+[source,bash]
+NAME                                                              AGE
+ansible-automation-platform-operator.aap                          1y
+citrix-ingress-controller-operator.openshift-operators            1y
+cluster-kube-descheduler-operator.openshift-kube-descheduler-op   1y
+datagrid.openshift-operators                                      256d
+falcon-operator-rhmp.falcon-operator                              1y
+falcon-operator.falcon-operator                                   1y
+grafana-operator.openshift-operators                              1d
+openshift-gitops-operator.openshift-operators                     1y
+openshift-pipelines-operator-rh.openshift-operators               1y
+portworx-certified.openshift-operators                            1y
+quay-operator.openshift-operators                                 1y
+====
+
+[#csv]
+Next will will look at the CluserServiceVersion (CSV) which represents a particular version of a running operator on a cluster. It includes metadata such as name, description, version, repository link, labels, icon, etc. It declares owned/required CRDs, cluster requirements, and install strategy that tells the Operator Lifecycle Manager how to create required resources and set up the operator as a deployment.
+
+In this example we will look at the CSVs installed in the `aap` namespace.
+
+.csv
+====
+[source,bash]
+omc get csv -n aap
+NAME                                DISPLAY                                  VERSION              REPLACES                            PHASE
+aap-operator.v2.4.0-0.1692675723    Ansible Automation Platform              2.4.0+0.1692675723   aap-operator.v2.3.0-0.1692727374    Succeeded
+datagrid-operator.v8.5.1            Data Grid                                8.5.1                datagrid-operator.v8.5.0            Succeeded
+falcon-operator.v0.6.2              CrowdStrike Falcon Platform - Operator   0.6.2                                                    Succeeded
+grafana-operator.v5.12.0            Grafana Operator                         5.12.0               grafana-operator.v5.11.0            Succeeded
+openshift-gitops-operator.v1.12.5   Red Hat OpenShift GitOps                 1.12.5               openshift-gitops-operator.v1.12.4   Succeeded
+portworx-operator.v24.1.1           Portworx Enterprise                      24.1.1               portworx-operator.v24.1.0           Succeeded
+quay-operator.v3.9.8                Red Hat Quay                             3.9.8                quay-operator.v3.9.6                Succeeded
+====
+
+[#subscription]
+A Subscription represents an intention to install an operator. It is the CustomResource that relate an operator to a CatalogSource. Subscriptions describe which channel of an operator package to subscribe to, and whether to perform updates automatically or manually. If set to automatic, the Subscription ensures OLM will manage and upgrade the operator to ensure the latest version is always running in the cluster.
+
+In this example we will look at the Subscription for the `ansible-automation-platform-operator` which will show us the Channel, installPlanApproval, name, source, sourceNamespace, and startingCSV.
+
+Additionally, under status, it provided the InstallPlan.
+
+.subscription
+====
+[source,bash]
+$ omc get subscriptions -n aap ansible-automation-platform-operator -o yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  creationTimestamp: "2023-06-29T21:11:28Z"
+  generation: 5
+  labels:
+    operators.coreos.com/ansible-automation-platform-operator.aap: ""
+  name: ansible-automation-platform-operator
+  namespace: aap
+  resourceVersion: "700220891"
+  uid: fe232c2b-5c33-405a-929b-419a4191aeee
+spec:
+  channel: stable-2.4-cluster-scoped
+  installPlanApproval: Manual
+  name: ansible-automation-platform-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: aap-operator.v2.3.0-0.1686242173
+status:
+  catalogHealth:
+  - catalogSourceRef:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      name: certified-operators
+      namespace: openshift-marketplace
+      resourceVersion: "700220797"
+      uid: bd368dbe-e081-42d9-b9e6-278ee26d372a
+    healthy: true
+    lastUpdated: "2024-04-28T06:45:35Z"
+  - catalogSourceRef:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      name: community-operators
+      namespace: openshift-marketplace
+      resourceVersion: "700220851"
+      uid: 753a9d96-bc3c-4499-aecd-3f68e9420a3d
+    healthy: true
+    lastUpdated: "2024-04-28T06:45:35Z"
+  - catalogSourceRef:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      name: redhat-marketplace
+      namespace: openshift-marketplace
+      resourceVersion: "700220809"
+      uid: 77a4db7f-6abf-4e49-9ed1-a30a89c46d2d
+    healthy: true
+    lastUpdated: "2024-04-28T06:45:35Z"
+  - catalogSourceRef:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      name: redhat-operators
+      namespace: openshift-marketplace
+      resourceVersion: "700220844"
+      uid: a786e921-ac4c-4a06-a119-577591414821
+    healthy: true
+    lastUpdated: "2024-04-28T06:45:35Z"
+  conditions:
+  - lastTransitionTime: "2024-04-28T06:45:35Z"
+    message: all available catalogsources are healthy
+    reason: AllCatalogSourcesHealthy
+    status: "False"
+    type: CatalogSourcesUnhealthy
+  - lastTransitionTime: "2023-09-07T22:13:50Z"
+    reason: RequiresApproval
+    status: "True"
+    type: InstallPlanPending
+  currentCSV: aap-operator.v2.4.0-0.1693440031
+  installPlanGeneration: 5
+  installPlanRef:
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: InstallPlan
+    name: install-pqvgf
+    namespace: aap
+    resourceVersion: "427979356"
+    uid: e4880b85-62bc-4a9d-ba46-affeb6244577
+  installedCSV: aap-operator.v2.4.0-0.1692675723
+  installplan:
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: InstallPlan
+    name: install-pqvgf
+    uuid: e4880b85-62bc-4a9d-ba46-affeb6244577
+  lastUpdated: "2024-04-28T06:45:35Z"
+  state: UpgradePending
+====
+
+[#installplan]
+Finally, we will look at the InstallPlan which defines a set of resources to be created in order to install or upgrade to a specific version of a ClusterService defined by a CSV.
+
+.installplan
+====
+[source,bash]
+apiVersion: operators.coreos.com/v1alpha1
+kind: InstallPlan
+metadata:
+  creationTimestamp: "2023-09-07T22:13:33Z"
+  generateName: install-
+  generation: 1
+  labels:
+    operators.coreos.com/ansible-automation-platform-operator.aap: ""
+  name: install-pqvgf
+  namespace: aap
+  ownerReferences:
+  - apiVersion: operators.coreos.com/v1alpha1
+    blockOwnerDeletion: false
+    controller: false
+    kind: Subscription
+    name: ansible-automation-platform-operator
+    uid: fe232c2b-5c33-405a-929b-419a4191aeee
+  resourceVersion: "427979731"
+  uid: e4880b85-62bc-4a9d-ba46-affeb6244577
+spec:
+  approval: Manual
+  approved: false
+  clusterServiceVersionNames:
+  - aap-operator.v2.4.0-0.1693440031
+  generation: 5
+====
