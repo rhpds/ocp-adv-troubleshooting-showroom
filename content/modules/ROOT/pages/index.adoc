@@ -16,6 +16,6 @@ Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Modu
 . Module 4 uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
 . Module 5 uses `ocp_insights.sh` to proactively look for performance issues with OpenShift Insights data
 . Module 6 uses `etcd-ocp-diag.sh` to review etcd logs for performance related issues
-. Module 7
-. Module 8
+. Module 7 uses `omc` to review Cluster Upgrades
+. Module 8 uses `omc` to review install OLM Operators
 . Module 9 uses `omc` and _manual checks_ on the cluster must-gather in order to explore an OCP networking issue
