@@ -28,7 +28,7 @@ cd ~/Module2/
 
 [source,bash]
 ----
-$ omc use sno_demo
+$ omc use module2-demo-must-gather
 Must-Gather  : /home/lab-user/Module2/sno_demo/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2de07af89683678ae6bb7a939615fc0d4ced7fe185add38b050f2c6f60023b6f
 Project      : default
 ApiServerURL : https://api.cluster-6fmht.dynamic.redhatworkshops.io:6443

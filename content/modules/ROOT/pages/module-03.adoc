@@ -20,9 +20,9 @@ We recently patched this cluster to from *4.14.27* to *4.14.37*. Previous scale-
 [#checknodes]
 == Check the `nodes` and the `machines`
 
-. Change directory into the provided `must-gather` in the `Module1` folder
+. Change directory into the provided `must-gather` in the `Module3` folder
 
-. Using the `omc use` command, set the `Module1` `must-gather` to the current in use archive
+. Using the `omc use` command, set the `Module3` `must-gather` to the current in use archive
 
 . Check the cluster `nodes` and cluster `machines` to verify the nodes do not exist and the machines do
 
@@ -151,7 +151,7 @@ Collect the `kubelet` log from all workers: +
 
 ====
 
-Once you get that data back from the customer, let's review it. Change back to the Module1 root directory and review the file `ocp-node-zxc3456-journal.out` that was provided by the customer.
+Once you get that data back from the customer, let's review it. Change back to the Module3 root directory and review the file `ocp-node-zxc3456-journal.out` that was provided by the customer.
 
 .Click to show some commands if you need a hint
 [%collapsible]

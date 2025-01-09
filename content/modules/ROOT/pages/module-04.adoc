@@ -50,7 +50,7 @@ When using the `-f` flag, you can pass a single file, as in the example, or the 
 Let's run a command against the `kube-apiserver` and see what kind of information we get back.
 
 ----
-cd ~/Module4/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/audit_logs/
+cd ~/Module4/module4-must-gather-audit-log/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/
 ----
 
 Depending on the amount of data and the complexity of the search, it can take some time to process.
