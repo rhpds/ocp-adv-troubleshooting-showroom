@@ -63,7 +63,12 @@ Options:
 ====
 [source,bash]
 ----
-$ ocp_insights.sh --file insights_archive.tar.gz
+cd ~/Module5/
+----
+
+[source,bash]
+----
+$ ocp_insights.sh --file module5-insights-data
 
 Cluster Version: 4.14.27
 Channel: eus-4.14
@@ -152,7 +157,7 @@ To see all Alerts run: jq -r . insights-2024-08-14-144858/config/alerts.json
 ====
 [source,bash]
 ----
-$ ocp_insights.sh --file insights_archive.tar.gz --customer_memory
+$ ocp_insights.sh --file module5-insights-data --customer_memory
 ...
 Customer Namespace Memory Usage.
 
@@ -184,7 +189,7 @@ Total Customer Namespace Memory Usage: 121.9884G
 ====
 [source,bash]
 ----
-$ ocp_insights.sh --file insights_archive.tar.gz --etcd_metrics
+$ ocp_insights.sh --file module5-insights-data --etcd_metrics
 etcd server slow apply total
 
 etcd-ocp4-2nvq7-master-0,3548
@@ -209,7 +214,7 @@ etcd-ocp4-2nvq7-master-1,22
 ====
 [source,bash]
 ----
-$ ocp_insights.sh --file insights_archive.tar.gz --storage_classes
+$ ocp_insights.sh --file module5-insights-data --storage_classes
 ...
 StorageClass Information.
 

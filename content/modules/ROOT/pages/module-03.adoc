@@ -26,7 +26,7 @@ We recently patched this cluster to from *4.14.27* to *4.14.37*. Previous scale-
 
 . Check the cluster `nodes` and cluster `machines` to verify the nodes do not exist and the machines do
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]

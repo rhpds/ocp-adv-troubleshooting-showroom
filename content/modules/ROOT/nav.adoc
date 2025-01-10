@@ -62,3 +62,5 @@
 ** xref:module-09.adoc#solution[Issue solution]
 
 * xref:module-10.adoc[10. Exploring etcd snapshots with koff]
+** xref:module-10.adoc#gettingstarted[Getting Started with koff]
+** xref:module-10.adoc#koffget[Viewing resources in etcd]

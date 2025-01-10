@@ -20,7 +20,7 @@ We are on a _UPI_ cluster and use an external _Load Balancer_ to send traffic to
 
 . Using the `omc use` command, set the `module9-must-gather.local` _must-gather_ as the current archive in use.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -46,7 +46,7 @@ OCP might receive critical networking bugfixes between different z-releases, the
 
 * Check the cluster version.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -57,7 +57,7 @@ omc get ClusterVersion version
 
 * Check which CNI (_Container Network Interface_) plugin is being used on the cluster.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -68,7 +68,7 @@ omc get Network cluster -o json | yq '.spec.networkType'
 
 * Check which are the installed _Incress Controllers_.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -99,7 +99,7 @@ The command `oc adm must-gather` does not collect data from all Namepsaces, but 
 
 Which command should we ask to a customer in order to collect data of a specific Namespace ?
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -115,7 +115,7 @@ In this lab, the _inspect_ of `fsi-project` is named `module9-inspect-fsi-projec
 The `omc` tool isn't restricted to _must-gathers_, but it can be set to read from a Namespace _inspect_ archive too.
 =====
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -141,7 +141,7 @@ As the saying goes: _"When you hear hoofbeats behind you, don't expect to see a 
 
 * First of all, it will be handy to find the Selector used by the Deployment `fsi-application` for its Pods. Let's check it and put it into a shell variable. 
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -157,7 +157,7 @@ echo $SELECTOR_LABEL
 
 * Then, check that the Pod replicas in the reported Deployment `fsi-application` are all running.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -178,7 +178,7 @@ omc get pod -l $SELECTOR_LABEL
 When a Pod is correctly "connected" to a Service, its IP address will appear in the Endpoints object corresponding to the Service
 =====
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -194,7 +194,7 @@ omc get pod -l $SELECTOR_LABEL -o wide
 
 * As reported by the customer, even if the above checks were successfull, we should still expect to see traffic logs (for example, _GET_ requests) only in the logs of one of the two Pods. Let's verify by checking all Pods logs.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -222,7 +222,7 @@ That is, let's analyze the application related Route and how it is configured in
 
 * Let's check the Route.
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -243,14 +243,16 @@ fsi-route   fsi-route-fsi-project.apps.foobarbank.lab.upshift.rdu2.redhat.com   
 
 [IMPORTANT]
 =====
-The application specific Route is contained into the _inspect_, however the `default` _Ingress Controller_ configuration is always contained into the _must-gather_.
+The application specific Route is found inside the _inspect_ must-gather, however the `default` _Ingress Controller_ configuration is always only found in a full _must-gather_.
 =====
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
+Switch back to the full must-gather and use the `backends` command to view all of the haproxy configurations.
 [source,bash]
 ----
+omc use module9-must-gather.local/
 omc haproxy backends fsi-project
 ----
 ====
@@ -263,18 +265,18 @@ NAMESPACE	NAME		INGRESSCONTROLLER	SERVICES	PORT		TERMINATION
 fsi-project	fsi-route	default			fsi-service	https(8443)	passthrough/Redirect	
 ----
 
-* Everything seems correct so far, therefore we need to dig deeper. Let's manually print the whole `fsi-route` Route "admission" directly from the `default` _Ingress Controller_ configuration file.
+* Everything seems correct so far, therefore we need to dig deeper. Let's manually print the `fsi-route` configuration directly from the `default` _Ingress Controller_ haproxy configuration file.
 
 [TIP]
 =====
-In general, the `default` _Ingress Controller_ configuration file can be found at the following path: 
+In a full must-gather, the `default` _Ingress Controller_ configuration file can be found at the following path: 
 
 `<must-gather-archive>/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-<hash>/ingress_controllers/default/<ingress-default-pod>/haproxy.config`.
 
-Note that there is one `haproxy.config` file for each _Ingress Controller_ Pod.
+Note that there is one `haproxy.config` file for each _Ingress Controller_ Pod, although they should all be the same.
 =====
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -309,7 +311,7 @@ backend be_tcp:fsi-project:fsi-route
 [#solution]
 == Issue solution
 
-Gothca ! The Route seems using the _balance_ of type `source`. We can verify whether this is the intended _Ingress Controller_ behavior by checking the official OCP documentation about link:https://docs.openshift.com/container-platform/4.17/networking/routes/route-configuration.html#nw-route-specific-annotations_route-configuration[_Route-specific annotations_]. 
+Gothca! The Route seems using the _balance_ of type `source`. We can verify whether this is the intended _Ingress Controller_ behavior by checking the official OCP documentation about link:https://docs.openshift.com/container-platform/4.17/networking/routes/route-configuration.html#nw-route-specific-annotations_route-configuration[_Route-specific annotations_]. 
 
 There we can read:
 
@@ -318,5 +320,4 @@ There we can read:
 The default value is "source" for TLS passthrough routes. For all other routes, the default is "random".
 ----
 
-OCP is therefore correctly behaving. The issue is not a bug, but a misconfiguration by the customer who supposed the _balance_ type was `random` for all types of Routes.
-
+OCP is therefore correctly behaving. The issue is not a bug, but a misconfiguration/misunderstanding by the customer who assumed the _balance_ type was `random` for all Routes.

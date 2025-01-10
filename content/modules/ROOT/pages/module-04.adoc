@@ -97,7 +97,7 @@ Start by taking a high level view. You can be both broad and granular with audit
 
 Look at the top usage for the common `--by=` groups like `resource` and `user`
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -120,7 +120,7 @@ We spotted something suspicious, so let's drill down a little deeper.
 When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
 ====
 
-.Click to show some details if you need a hint
+.*Click to show some details if you need a hint*
 [%collapsible]
 ====
 Our top 3 resources from the previous command were `nodes`, `configmaps` and `pods`:
@@ -140,7 +140,7 @@ Our top 3 users from the previous command were `sysdig-agent`, `apiserver` and `
 
 One of those sticks out a lot, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
 
-.Click to show some details if you need a hint
+.*Click to show some details if you need a hint*
 [%collapsible]
 ====
 ----
@@ -167,7 +167,7 @@ Let's try to answer the following:
 What is the user doing? +
 What is the problem?
 
-.Click to show some details if you need a hint
+.*Click to show some details if you need a hint*
 [%collapsible]
 ====
 ----
@@ -186,7 +186,7 @@ Top 10 "GET" (of 440076 total hits):
    8308x [   270.327µs] [403-8307] /api/v1/nodes/cluster-app-02.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
 ----
 
-The conclusion is that there was an issue with the `SysDig`` monitoring component that was causing it to fail authentication when trying to collect `node` metrics and in turn spam the API server.
+The conclusion is that there was an issue with the `SysDig` monitoring component that was causing it to fail authentication when trying to collect `node` metrics and in turn spam the API server.
 ====
 
 I hope you found this introduction to the `kubectl-dev_tool` useful and can leverage it the next time you have an issue!
