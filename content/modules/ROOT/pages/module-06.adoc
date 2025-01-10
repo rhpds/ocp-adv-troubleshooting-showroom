@@ -76,55 +76,7 @@ Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-
 	Count: 3614
 	Expected: 200ms
 
-Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-1
-	First Occurrence: 2024-07-28T05:16:07
-	Last Occurrence: 2024-08-14T15:18:23
-	Maximum: 2303.5215ms
-	Minimum: 200.0820ms
-	Median: 593.4356ms
-	Average: 631.4544ms
-	Count: 4315
-	Expected: 200ms
-
-Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-2
-	First Occurrence: 2024-07-28T03:56:33
-	Last Occurrence: 2024-08-14T15:18:23
-	Maximum: 3432.5113ms
-	Minimum: 200.0972ms
-	Median: 597.9008ms
-	Average: 643.1600ms
-	Count: 4559
-	Expected: 200ms
-
-Stats about etcd "slow fdatasync" messages: etcd-ocp4-2nvq7-master-0
-	First Occurrence: 2024-07-28T05:54:22
-	Last Occurrence: 2024-08-14T15:12:30
-	Maximum: 1151.2715ms
-	Minimum: 1000.0142ms
-	Median: 1058.2370ms
-	Average: 1045.1226ms
-	Count: 60
-	Expected: 1s
-
-Stats about etcd "slow fdatasync" messages: etcd-ocp4-2nvq7-master-1
-	First Occurrence: 2024-07-30T00:20:55
-	Last Occurrence: 2024-08-14T15:12:30
-	Maximum: 1151.6210ms
-	Minimum: 1001.7959ms
-	Median: 1055.1022ms
-	Average: 1035.2390ms
-	Count: 34
-	Expected: 1s
-
-Stats about etcd "slow fdatasync" messages: etcd-ocp4-2nvq7-master-2
-	First Occurrence: 2024-07-28T04:02:07
-	Last Occurrence: 2024-08-14T15:12:30
-	Maximum: 1151.4257ms
-	Minimum: 1000.1440ms
-	Median: 1053.3669ms
-	Average: 1042.6280ms
-	Count: 59
-	Expected: 1s
+etc..
 ----
 ====
 
@@ -147,20 +99,6 @@ etcd-ocp4-2nvq7-master-0	slow fdatasync                                        	
 etcd-ocp4-2nvq7-master-0	apply request took too long                           	3614
 etcd-ocp4-2nvq7-master-0	leader is overloaded likely from slow disk            	 500
 etcd-ocp4-2nvq7-master-0	elected leader                                        	   9
-etcd-ocp4-2nvq7-master-0	lost leader                                           	   8
-etcd-ocp4-2nvq7-master-1	waiting for ReadIndex response took too long, retrying	 320
-etcd-ocp4-2nvq7-master-1	slow fdatasync                                        	  34
-etcd-ocp4-2nvq7-master-1	apply request took too long                           	4315
-etcd-ocp4-2nvq7-master-1	leader is overloaded likely from slow disk            	  28
-etcd-ocp4-2nvq7-master-1	elected leader                                        	   7
-etcd-ocp4-2nvq7-master-1	lost leader                                           	   6
-etcd-ocp4-2nvq7-master-2	waiting for ReadIndex response took too long, retrying	 385
-etcd-ocp4-2nvq7-master-2	slow fdatasync                                        	  59
-etcd-ocp4-2nvq7-master-2	apply request took too long                           	4559
-etcd-ocp4-2nvq7-master-2	leader is overloaded likely from slow disk            	  98
-etcd-ocp4-2nvq7-master-2	elected leader                                        	   9
-etcd-ocp4-2nvq7-master-2	lost leader                                           	   8
-etcd-ocp4-2nvq7-master-2	sending buffer is full                                	1922
 ----
 ====
 
@@ -189,9 +127,6 @@ $ etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --ttl
 POD                       	DATE      	COUNT
 etcd-ocp4-2nvq7-master-0	2024-07-28	121
 etcd-ocp4-2nvq7-master-0	2024-07-29	112
-etcd-ocp4-2nvq7-master-0	2024-07-30	133
-etcd-ocp4-2nvq7-master-0	2024-07-31	202
-etcd-ocp4-2nvq7-master-0	2024-08-01	102
 ...
 etcd-ocp4-2nvq7-master-0	2024-08-13	550
 etcd-ocp4-2nvq7-master-0	2024-08-14	702
@@ -199,18 +134,11 @@ etcd-ocp4-2nvq7-master-1	2024-07-28	 60
 etcd-ocp4-2nvq7-master-1	2024-07-29	 83
 etcd-ocp4-2nvq7-master-1	2024-07-30	114
 ...
-etcd-ocp4-2nvq7-master-1	2024-08-12	579
-etcd-ocp4-2nvq7-master-1	2024-08-13	805
-etcd-ocp4-2nvq7-master-1	2024-08-14	887
 etcd-ocp4-2nvq7-master-2	2024-07-28	 98
 etcd-ocp4-2nvq7-master-2	2024-07-29	 58
 etcd-ocp4-2nvq7-master-2	2024-07-30	152
 etcd-ocp4-2nvq7-master-2	2024-07-31	144
 etcd-ocp4-2nvq7-master-2	2024-08-01	 63
-...
-etcd-ocp4-2nvq7-master-2	2024-08-12	627
-etcd-ocp4-2nvq7-master-2	2024-08-13	744
-etcd-ocp4-2nvq7-master-2	2024-08-14	952
 ----
 ====
 
@@ -270,17 +198,5 @@ POD                            COUNT
 etcd-ocp4-2nvq7-master-0     14
 etcd-ocp4-2nvq7-master-1     12
 etcd-ocp4-2nvq7-master-2     15
-
-Date: 05:31
-POD                            COUNT
-etcd-ocp4-2nvq7-master-0     15
-etcd-ocp4-2nvq7-master-1     13
-etcd-ocp4-2nvq7-master-2     11
-
-Date: 05:54
-POD                            COUNT
-etcd-ocp4-2nvq7-master-0     7
-etcd-ocp4-2nvq7-master-1     7
-etcd-ocp4-2nvq7-master-2     14
 ----
 ====

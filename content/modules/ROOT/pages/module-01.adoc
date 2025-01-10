@@ -23,7 +23,7 @@ Inspect your `audit logs` with ease
 [#koffintro]
 === `koff`
 
-Read objects from the `etcd` snapshot
+Read objects from an `etcd` snapshot
 
 [#yqjqintro]
 === `yq` and `jq`

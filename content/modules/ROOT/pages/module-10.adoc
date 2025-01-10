@@ -25,15 +25,15 @@ In this module we will utilize the `koff` tool to showcase get and inspect commn
 ====
 [source,bash]
 ----
-$ koff version
-koff version: v1.0.1
-hash: 01cddf8
-https://github.com/gmeghnag/koff
+cd ~/Module10/
 ----
 
 [source,bash]
 ----
-cd ~/Module10/
+$ koff version
+koff version: v1.0.1
+hash: 01cddf8
+https://github.com/gmeghnag/koff
 ----
 
 [source,bash]
