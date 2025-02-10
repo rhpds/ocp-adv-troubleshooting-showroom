@@ -31,17 +31,25 @@ cd ~/Module9/
 [source,bash]
 ----
 omc use module9-must-gather.local/
+Must-Gather  : /home/lab-user/Module9/module9-inspect-fsi-project.local
+Project      : fsi-project
+[lab-user@rhel9 Module9]$ omc use module9-must-gather.local/
+Must-Gather  : /home/lab-user/Module9/module9-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-00703d4f834a53a4b213ca7f9ebdcc9f97be6ca1217723700e3c8d23fef704d9
+Project      : default
+ApiServerURL : https://api.foobarbank.lab.upshift.rdu2.redhat.com:6443
+Platform     : None
+ClusterID    : 07993242-57fb-4123-9f1d-1b0107b1ede7
 ----
 ====
 
 [#checkocpnetwork]
 == Check the cluster basic network configurations
 
-Since the issue seems a networking one, a good idea is to collect details about the cluster basic network configurations, in order to better understand the environment that we are going to analyze.
+Since the issue seems to be networking related, it is a good idea to collect details about the basic cluster network configurations, in order to better understand the environment that we are going to analyze.
 
 [IMPORTANT]
 =====
-OCP might receive critical networking bugfixes between different z-releases, therefore  checking the cluster full version is essential in any OCP networking troubleshooting session.
+OCP might receive critical networking bugfixes between different z-releases, therefore checking the cluster full version is essential in any OCP networking troubleshooting session.
 =====
 
 * Check the cluster version.
@@ -52,6 +60,24 @@ OCP might receive critical networking bugfixes between different z-releases, the
 [source,bash]
 ----
 omc get ClusterVersion version
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.17.4    True        False         29m     Cluster version is 4.17.4
+----
+
+To view the full cluster upgrade history, you can look at the `.status.history` section:
+[source,bash]
+----
+omc get ClusterVersion version -o json | jq '.status.history'
+[
+  {
+    "completionTime": "2024-12-01T21:28:27Z",
+    "image": "quay.io/openshift-release-dev/ocp-release@sha256:bada2d7626c8652e0fb68d3237195cb37f425e960347fbdd747beb17f671cf13",
+    "startedTime": "2024-12-01T20:38:06Z",
+    "state": "Completed",
+    "verified": false,
+    "version": "4.17.4"
+  }
+]
 ----
 ====
 
@@ -63,6 +89,7 @@ omc get ClusterVersion version
 [source,bash]
 ----
 omc get Network cluster -o json | yq '.spec.networkType'
+OVNKubernetes
 ----
 ====
 
@@ -74,22 +101,24 @@ omc get Network cluster -o json | yq '.spec.networkType'
 [source,bash]
 ----
 omc get IngressController -n openshift-ingress-operator
+NAME      AGE
+default   58m
 ----
 ====
 
 [NOTE]
 =====
-In OCP, the `default` _Ingress Controller_ uses _HAProxy_ as reverse proxy technology.
+In OpenShift, the `default` _Ingress Controller_ uses _HAProxy_ as its reverse proxy technology.
 =====
 
 [#collectinspect]
 == Collect the application Namespace _inspect_
 
-Since the issue is limited to a particular application, we need to collect and analyze data from its specific Namespace. 
+Since the issue is limited to a specific application, we need to collect and analyze data from that specific `Namespace`. 
 
 [IMPORTANT]
 =====
-The command `oc adm must-gather` does not collect data from all Namepsaces, but only from the following ones:
+The command `oc adm must-gather` command does not collect data from all `Namepsaces`. By default, it only collects information from the core openshift cluster namespaces such as:
 
 * `default`
 * `kube-system`
@@ -97,7 +126,7 @@ The command `oc adm must-gather` does not collect data from all Namepsaces, but 
 * `openshift-*`
 =====
 
-Which command should we ask to a customer in order to collect data of a specific Namespace ?
+Which command would you a customer to run in order to collect data from a specific `Namespace`?
 
 .*Click to show some commands if you need a hint*
 [%collapsible]
@@ -106,13 +135,15 @@ Which command should we ask to a customer in order to collect data of a specific
 ----
 oc adm inspect ns/<namespace>
 ----
+
+This command, like `oc adm must-gather` will produce a directory that can be zipped and uploaded to the customer portal for further examination.
 ====
 
-In this lab, the _inspect_ of `fsi-project` is named `module9-inspect-fsi-project.local` and can be found into the `Module9` folder.
+In this lab, the _inspect_ of `fsi-project` is named `module9-inspect-fsi-project.local` and can be found into the `Module9` directory.
 
 [TIP]
 =====
-The `omc` tool isn't restricted to _must-gathers_, but it can be set to read from a Namespace _inspect_ archive too.
+The `omc` tool isn't restricted to _must-gathers_, but it can be used to read a Namespace _inspect_ archive too.
 =====
 
 .*Click to show some commands if you need a hint*
@@ -126,12 +157,14 @@ cd ~/Module9/
 [source,bash]
 ----
 omc use module9-inspect-fsi-project.local/
+Must-Gather  : /home/lab-user/Module9/module9-inspect-fsi-project.local
+Project      : fsi-project
 ----
 ====
 
 [NOTE]
 =====
-Remember that `omc`, after opening an _inspect_, automatically sets the _inspect_ Namespace as the current Project. That is, `omc project <namespace-name>` is not necessary.  
+Remember that `omc`, after opening an _inspect_, automatically sets the _inspect_ `Namespace`` as the current Project. That is, `omc project <namespace-name>` is not necessary.  
 =====
 
 [#checkappns]
@@ -152,6 +185,7 @@ SELECTOR_LABEL=$(omc get deployment fsi-application -o yaml | yq '.spec.selector
 [source,bash]
 ----
 echo $SELECTOR_LABEL
+app=fsi-application
 ----
 ====
 
@@ -163,11 +197,16 @@ echo $SELECTOR_LABEL
 [source,bash]
 ----
 omc get deployment fsi-application
+NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+fsi-application   2/2     2            2           4m
 ----
 
 [source,bash]
 ----
 omc get pod -l $SELECTOR_LABEL
+NAME                               READY   STATUS    RESTARTS   AGE
+fsi-application-6fbf69565d-9hld7   1/1     Running   0          4m
+fsi-application-6fbf69565d-t8xjt   1/1     Running   0          4m
 ----
 ====
 
@@ -184,11 +223,16 @@ When a Pod is correctly "connected" to a Service, its IP address will appear in 
 [source,bash]
 ----
 omc get endpoints fsi-service
+NAME          ENDPOINTS                           AGE
+fsi-service   10.128.2.13:8443,10.131.0.19:8443   3m
 ----
 
 [source,bash]
 ----
 omc get pod -l $SELECTOR_LABEL -o wide
+NAME                               READY   STATUS    RESTARTS   AGE   IP            NODE                                              NOMINATED NODE   READINESS GATES
+fsi-application-6fbf69565d-9hld7   1/1     Running   0          4m    10.128.2.13   worker-0.foobarbank.lab.upshift.rdu2.redhat.com   <none>           <none>
+fsi-application-6fbf69565d-t8xjt   1/1     Running   0          4m    10.131.0.19   worker-1.foobarbank.lab.upshift.rdu2.redhat.com   <none>           <none>
 ----
 ====
 
@@ -205,6 +249,12 @@ PODS=$(omc get pod --no-headers -l $SELECTOR_LABEL | awk '{print $1}')
 [source,bash]
 ----
 for p in $PODS; do printf "\n@@@@@ POD: %s @@@@@\n" $p; omc logs $p; done
+@@@@@ POD: fsi-application-6fbf69565d-9hld7 @@@@@
+2024-12-01T21:52:03.814766892Z => sourcing 10-set-mpm.sh ...
+2024-12-01T21:52:03.820742174Z => sourcing 20-copy-config.sh ...
+2024-12-01T21:52:03.826643116Z => sourcing 40-ssl-certs.sh ...
+2024-12-01T21:52:03.834622285Z ---> Generating SSL key pair for httpd...
+....
 ----
 ====
 
@@ -249,7 +299,7 @@ The application specific Route is found inside the _inspect_ must-gather, howeve
 .*Click to show some commands if you need a hint*
 [%collapsible]
 ====
-Switch back to the full must-gather and use the `backends` command to view all of the haproxy configurations.
+Switch back to the full must-gather and use the build-in `backends` command to view all of the haproxy configurations.
 [source,bash]
 ----
 omc use module9-must-gather.local/
@@ -287,6 +337,7 @@ INGRESS_CONFIG=$(find ~/Module9/module9-must-gather.local -type f -name haproxy.
 [source,bash]
 ----
 echo $INGRESS_CONFIG
+/home/lab-user/Module9/module9-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-00703d4f834a53a4b213ca7f9ebdcc9f97be6ca1217723700e3c8d23fef704d9/ingress_controllers/default/router-default-59948d8bb6-hdgd6/haproxy.config
 ----
 
 [source,bash]

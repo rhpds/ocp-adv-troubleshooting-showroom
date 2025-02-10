@@ -22,7 +22,6 @@ In this module we will utilize the `koff` tool to showcase get and inspect commn
 . Then run the `koff get -h` to view the available flags.
 
 .koff use
-====
 [source,bash]
 ----
 cd ~/Module10/
@@ -30,7 +29,7 @@ cd ~/Module10/
 
 [source,bash]
 ----
-$ koff version
+koff version
 koff version: v1.0.1
 hash: 01cddf8
 https://github.com/gmeghnag/koff
@@ -38,12 +37,12 @@ https://github.com/gmeghnag/koff
 
 [source,bash]
 ----
-$ koff use module10-etcd_snapshot_2024.db
+koff use module10-etcd_snapshot_2024.db
 ----
 
 [source,bash]
 ----
-$ koff get -h
+koff get -h
 Usage:
   koff get [flags]
 
@@ -57,20 +56,18 @@ Flags:
       --show-managed-fields   Show managedFields when output is one of: json, yaml.
   -N, --show-namespace        Show namespace.
 ----
-====
 
 [#koffget]
 == Viewing resources in etcd
 The `koff get` command allows you to get any resource inside the `etcd` database like you were using `oc`
 
 .koff get
-====
 
 View all of the cluster namespaces with `koff get namespaces`:
 
 [source,bash]
 ----
-$ koff get namespaces
+koff get namespaces
 NAME                                                         STATUS   AGE
 namespace/aap                                                Active   1y
 namespace/aap25                                              Active   102d
@@ -86,7 +83,7 @@ Get all of the pods running inside a namespace with `koff get pods -n <namespace
 
 [source,bash]
 ----
-$ koff get pods -n app
+koff get pods -n aap
 NAME                                                              READY   STATUS    RESTARTS   AGE
 ansible-lightspeed-operator-controller-manager-bccffff68-wqj5h    2/2     Running   91         102d
 automation-controller-operator-controller-manager-85b5464dldtnw   2/2     Running   89         102d
@@ -99,26 +96,24 @@ Continue to explore the `etcd` database with some addition koff get commands, ju
 
 [source,bash]
 ----
-$ koff get service -A
-$ koff get endpoints -A
-$ koff get configmaps -A
-$ koff get daemonset -A
-$ koff get deployment -A
+koff get service -A
+koff get endpoints -A
+koff get configmaps -A
+koff get daemonset -A
+koff get deployment -A
 ----
-====
 
 [#koffinspect]
 == Inspecting the etcd database
 The `koff etcd inspect` command allows you to inspect the `etcd` databse in it's true key/value pair structure
 
 .koff etcd inspect
-====
 
 View all of the object inside the `etcd` database:
 
 [source,bash]
 ----
-$ koff etcd inspect module10-etcd_snapshot_2024.db
+koff etcd inspect module10-etcd_snapshot_2024.db
 /kubernetes.io/apiregistration.k8s.io/apiservices/v1.apiextensions.k8s.io
 /kubernetes.io/prioritylevelconfigurations/system
 /kubernetes.io/apiregistration.k8s.io/apiservices/v1.apps
@@ -130,7 +125,7 @@ Inspect a specifc resource, in this case a node (actually called a minion in kub
 
 [source,bash]
 ----
-$ koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/minions/master-1.ocp413shared.tamlab.brq2.redhat.com
+koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/minions/master-1.ocp413shared.tamlab.brq2.redhat.com
 {
   "apiVersion": "v1",
   "kind": "Node",
@@ -164,7 +159,7 @@ Maybe you deleted an important `ConfigMap` or `Secret` and needed to get it back
 
 [source,bash]
 ----
-$ koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/configmaps/firewall-rule/httpd-ex-1-sys-config
+koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/configmaps/firewall-rule/httpd-ex-1-sys-config
 {
   "apiVersion": "v1",
   "kind": "ConfigMap",
@@ -176,7 +171,7 @@ $ koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/configmaps/fir
 
 [source,bash]
 ----
-$ koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/secrets/quay/tamlab-quay-config-secret-98gh285gcd
+koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/secrets/quay/tamlab-quay-config-secret-98gh285gcd
 {
   "apiVersion": "v1",
   "data": {
@@ -184,5 +179,3 @@ $ koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/secrets/quay/t
   },
   "kind": "Secret",
 ----
-====
-

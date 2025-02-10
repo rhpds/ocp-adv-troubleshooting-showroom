@@ -2,6 +2,8 @@
 
 Welcome to Red Hat One 2025 and this exciting, hand-on, lab experience. Throughout this lab, we will explore a wide variety of tools available to analyze, search and debug OpenShift cluster data to find patterns, issues and other useful information that will help you engage with your customers.
 
+This lab does not use any running OpenShift cluster, it instead focuses on offline debugging using the most common and easiest to collect files our customers provide when they run into issues.
+
 image::openshift-logo.svg[openshift-logo,100%,100%]
 
 == Lab structure
