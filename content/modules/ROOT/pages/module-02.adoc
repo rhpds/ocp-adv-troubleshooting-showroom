@@ -4,7 +4,7 @@
 In this module we will at a subset of the features in omc that allow you to quickly review an OpenShift Must-Gather. omc has similar commands as the `oc` client so those will not be covered and instead we will cover the omc specific commands.
 
 [#gettingstarted]
-== omc `use` command
+== Using the omc `use` command
 . To get started you want to verify that omc is installed in your path and working
 
 . Once you have confirmed this, you want to call the `omc use` command to tell omc the must-gather to utilize for review
@@ -12,15 +12,6 @@ In this module we will at a subset of the features in omc that allow you to quic
 . Then run the `omc get clusterversion` to verify that you are using the `must-gather`
 
 .omc use
-====
-[source,bash]
-----
-$ omc version
-omc version: v3.7.4
-hash: 45e91af
-https://github.com/gmeghnag/omc
-----
-
 [source,bash]
 ----
 cd ~/Module2/
@@ -28,7 +19,15 @@ cd ~/Module2/
 
 [source,bash]
 ----
-$ omc use module2-demo-must-gather
+omc version
+omc version: v3.7.4
+hash: 45e91af
+https://github.com/gmeghnag/omc
+----
+
+[source,bash]
+----
+omc use module2-demo-must-gather
 Must-Gather  : /home/lab-user/Module2/module2-demo-must-gather/sno_demo/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2de07af89683678ae6bb7a939615fc0d4ced7fe185add38b050f2c6f60023b6f
 Project      : default
 ApiServerURL : https://api.cluster-6fmht.dynamic.redhatworkshops.io:6443
@@ -38,36 +37,33 @@ ClusterID    : 1304b08d-2a73-410f-98ed-342233008cb0
 
 [source,bash]
 ----
-$ omc get clusterversion
+omc get clusterversion
 NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
 version   4.16.20   True        False         20h     Cluster version is 4.16.20
 ----
-====
 
 [#certs]
-== omc `certs inspect` command
+== Using the omc `certs inspect` command
 . The `omc certs inspect` command allows you to inspect all certificates in `ConfigMaps` and `Secrets` that are in the `must-gather`
 
 . Additionally, the command also highlights `CertificateSigngingRequest` which can help resolve issues related to nodes joining a cluster.
 
-.certs
-====
+.certs inspect
+
 [source,bash]
 ----
 $ omc certs inspect
 NAME                     KIND                        AGE    CERTTYPE      SUBJECT                                                                                        NOTBEFORE                       NOTAFTER
 csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=system:multus:ocp4-2nvq7-worker-xdwch,O=system:multus                                     2024-08-14 14:27:20 +0000 UTC   2024-08-15 14:27:20 +0000 UTC
 ----
-====
 
 [#etcd]
-== omc `ectd` command
+== Using the omc `ectd` command
 . The `etcd` command allows you to view the health and the status of your `etcd` cluster.
 
 . It includes two options, `etcd health` and `etcd status`
 
-.etcd
-====
+.etcd health
 [source,bash]
 ----
 $ omc etcd health
@@ -91,14 +87,12 @@ $ omc etcd status
 | https://10.36.18.23:2379  | dbb6cf331005ae32 | 3.5.13  | 291 MB/207 MB  | 30%      | false     | false      |       176 |  873809138 |          873809138 |        |
 +---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
 ----
-====
 
 [#haproxy]
-== omc `haproxy` command
+== Using the omc `haproxy` command
 . The `haproxy backends` command displays all of the `haproxy` configured backends
 
-.haproxy
-====
+.haproxy backends
 [source,bash]
 ----
 $ omc haproxy backends
@@ -107,16 +101,14 @@ aap			    frost-prod				default			    frost-prod-service			http(8052)	edge/Redir
 ecomm			app-api-blue-p4lb5		default			    ecomm-api-blue				https(8443)	reencrypt/Redirect
 ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthrough/Redirect
 ----
-====
 
 [#machine-config]
-== omc `machine-config` command
+== Using the omc `machine-config` command
 . The `omc machine-config diff` command allows you to compare two `MachineConfig` objects. This is different from the built-in `omc get machineconfigs` which will only display the `MachineConfigs`.
 
 . The `diff` option will open the selected `machine-configs` in `vim-diff` to allow quick review of the two `MachineConfigs` to help quickly identify all changes.
 
-.machine-config
-====
+.machine-config diff
 [source,bash]
 ----
 $ omc get machineconfigs -n openshift-machineconfig-operator
@@ -133,16 +125,14 @@ rendered-worker-cf392af65e20a73197f046cacaf156e5   20e767851f25a12f9be5701012abb
 ----
 $ omc machine-config diff rendered-master-c5f327c05f9e70b9ef90ad15b0610341 rendered-worker-cf392af65e20a73197f046cacaf156e5
 ----
-====
 
 [#node-logs]
-== omc `node-logs` command
+== Using the omc `node-logs` command
 . The `omc node-logs` command lists the node-logs collected from the OpenShift `control-plane` nodes and are in the `must-gather`.
 
 . By running `omc node-logs crio`, for example, will then output `crio-logs` for all of the `control-plane` nodes.
 
 .node-logs
-====
 [source,bash]
 ----
 $ omc node-logs
@@ -177,13 +167,12 @@ Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.9
 Aug 07 15:25:56.027736 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.027649    1927 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-controller-manager/kube-controller-manager-ocp4-2nvq7-master-1" status=Running
 Aug 07 15:25:56.028592 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.027867    1927 kubelet_getters.go:187] "Pod status updated" pod="openshift-machine-config-operator/kube-rbac-proxy-crio-ocp4-2nvq7-master-1" status=Running
 ----
-====
 
 [#ovn]
-== omc `ovn` command
+== Using the omc `ovn` command
 . The `omc ovn subnets` command will output all of the ovn subnets on the cluster.
 
-.ovn
+.ovn subnets
 ====
 [source,bash]
 ----
@@ -191,14 +180,12 @@ $ omc ovn subnets
 HOST/NODE                       ROLE                          HOST IP-ADDRESSES               PRIMARY IF-ADDRESS   HOST GATEWAY-IP   NODE SUBNET
 control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192.168.1.2/24   10.10.10.10/24       10.10.10.1        10.132.0.0/23
 ----
-====
 
 [#prometheus]
-== omc `prometheus` command
+== Using the omc `prometheus` command
 . The `omc prometheus` command provides several options to output Prometheus `alertgroup`, `alertrule`, and `target`.
 
 .prometheus
-====
 [source,bash]
 ----
 $ omc prometheus alertgroup | head -n 10
@@ -243,4 +230,3 @@ machine-approver-7d57ddd485-f6cv6                        https://10.10.10.10:919
 cluster-node-tuning-operator-56f7cbd8bc-k8qgq            https://10.132.0.24:60000/metrics                 up
 cluster-samples-operator-dbfb4c7b-jhqz6                  https://10.132.0.48:60000/metrics                 up
 ----
-====

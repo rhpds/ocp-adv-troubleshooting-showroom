@@ -27,7 +27,9 @@ For this exercise, we asked the customer to collect the audit logs from their cl
 =====
 Can you use the following command to collect an `audit log` `must-gather`:
 
-oc adm must-gather -- /usr/bin/gather_audit_logs 
+`oc adm must-gather -- /usr/bin/gather_audit_logs`
+
+This will produce a `must-gather` style directory that can be zipped and uploaded to a support case.
 =====
 
 [#explore]
@@ -50,18 +52,18 @@ When using the `-f` flag, you can pass a single file, as in the example, or the 
 Let's run a command against the `kube-apiserver` and see what kind of information we get back.
 
 [source,bash]
-====
+----
 cd ~/Module4/module4-must-gather-audit-log/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/
-====
+----
 
 Depending on the amount of data and the complexity of the search, it can take some time to process.
 
 Using the example from the help page, we can run a command like this:
 
 [source,bash]
-====
+----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --verb=get --resource='*.*' --resource='-subjectaccessreviews.*' --resource='-tokenreviews.*' | more
-====
+----
 
 In this case, we are looking at individual `GET` requests, how long they took, what they accessed and who made the request. 
 
@@ -98,15 +100,15 @@ Look at the top usage for the common `--by=` groups like `resource` and `user`
 The first thing you will see is a log outlining the `count` (number of records), followed by a time range and duration for the period the audit logs cover.
 
 [source,bash]
-====
+----
 count: 2181977, first: 2022-02-07T20:11:40Z, last: 2022-02-08T00:59:59Z, duration: 4h48m18.666203s
-====
+----
 
 After that, you will see the returned data set.
 
 `data by resource`
 [source,bash]
-====
+----
 464191x              v1/nodes
 372952x              v1/configmaps
 357233x              v1/pods
@@ -117,11 +119,11 @@ After that, you will see the returned data set.
 92327x               v1/persistentvolumes
 50571x               v1/namespaces
 34385x               apps/deployments
-====
+----
 
 `data by user`
 [source,bash]
-====
+----
 446278x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
 76068x               system:apiserver
 63661x               system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
@@ -132,7 +134,8 @@ After that, you will see the returned data set.
 30875x               system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
 29274x               system:serviceaccount:openshift-cluster-storage-operator:csi-snapshot-controller-operator
 28468x               system:serviceaccount:openshift-apiserver-operator:openshift-apiserver-operator
-====
+----
+
 
 .*Click to show some commands if you need a hint*
 [%collapsible]
@@ -180,7 +183,7 @@ Our top 3 users from the previous command were `sysdig-agent`, `apiserver` and `
 ----
 ====
 
-One of those sticks out a lot, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
+One of those sticks out, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
 
 .*Click to show some details if you need a hint*
 [%collapsible]
@@ -206,7 +209,7 @@ The data for `configmaps` and `pods` looks pretty spread out across a variety of
 
 `data by user for configmaps`
 [source,bash]
-====
+----
 16947x               system:serviceaccount:openshift-etcd-operator:etcd-operator
 6470x                user@identity
 5197x                system:serviceaccount:openshift-kube-controller-manager-operator:kube-controller-manager-operator
@@ -217,11 +220,11 @@ The data for `configmaps` and `pods` looks pretty spread out across a variety of
 3131x                system:serviceaccount:devops-archeobot:default
 3045x                system:kube-scheduler
 3016x                system:serviceaccount:openshift-kube-scheduler-operator:openshift-kube-scheduler-operator
-====
+----
 
 `data by user for pods`
 [source,bash]
-====
+----
 13218x               system:serviceaccount:openshift-multus:multus
 8808x                system:node:cluster-app-13.dmz
 8763x                system:node:cluster-app-15.dmz
@@ -232,13 +235,13 @@ The data for `configmaps` and `pods` looks pretty spread out across a variety of
 4644x                system:node:cluster-app-03.dmz
 4510x                system:node:cluster-app-31.dmz
 4380x                system:node:cluster-app-26.dmz
-====
+----
 
 But for nodes, there is one big outlier in the number of requests being executed. It aligns with the outlier we saw from the previous `--by=user` output.
 
 `data by user for nodes`
 [source,bash]
-====
+----
 440987x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
 737x                 system:node:cluster-infra-03.dmz
 736x                 system:node:cluster-infra-04.dmz
@@ -249,14 +252,14 @@ But for nodes, there is one big outlier in the number of requests being executed
 441x                 system:node:cluster-app-02.dmz
 437x                 system:node:cluster-app-41.dmz
 437x                 system:node:cluster-app-05.dmz
-====
+----
 
 So let's take a look at that specific user and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
 
 Let's try to answer the following:
 
 What is the user doing? +
-What is the problem?
+What is the problem? +
 
 .*Click to show some details if you need a hint*
 [%collapsible]
@@ -269,14 +272,12 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user=system:serviceaccou
 What we see is very interesting:
 
 . The majority are `GET` requests to the `/proxy/metrics` endpoint of every node. 
-. They're all returning a HTTP `403` errors:
+. They're all returning a HTTP `403` errors
 
 [NOTE]
-====
-HTTP 403 is an HTTP status code meaning access to the requested resource is forbidden.
+A `HTTP 403`` is an HTTP status code meaning access to the requested resource is forbidden. +
+A `HTTP 403`` is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account. 
 
-A HTTP 403 is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account. 
-====
 
 [source,bash]
 ----

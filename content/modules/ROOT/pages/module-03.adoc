@@ -37,20 +37,39 @@ cd ~/Module3/
 [source,bash]
 ----
 omc use module3-must-gather.local/
+Must-Gather  : /home/lab-user/Module3/module3-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3
+Project      : default
+ApiServerURL : https://api.ocp-cluster-1.paas.is.exampledev.com:6443
+Platform     : VSphere
+ClusterID    : 3bdf9a64-4e53-4c25-9f23-1e64eda92c13
 ----
 
 [source,bash]
 ----
 omc get nodes
+[lab-user@rhel9 Module3]$ omc get nodes
+NAME                                  STATUS   ROLES              AGE    VERSION
+ocp-cluster-1-gzg77-compute-a-2j74v   Ready    compute-a,worker   2y     v1.27.16+03a907c
+ocp-cluster-1-gzg77-compute-a-4q8r8   Ready    compute-a,worker   1y     v1.27.16+03a907c
+ocp-cluster-1-gzg77-compute-a-62gr8   Ready    compute-a,worker   2y     v1.27.16+03a907c
+ocp-cluster-1-gzg77-compute-a-cddz8   Ready    compute-a,worker   359d   v1.27.16+03a907c
+ocp-cluster-1-gzg77-compute-a-dzt5r   Ready    compute-a,worker   2y     v1.27.16+03a907c
 ----
 
 [source,bash]
 ----
 omc get machines -A
+NAMESPACE               NAME                                  PHASE         TYPE   REGION   ZONE   AGE    NODE                   PROVIDERID                            STATE
+openshift-machine-api   ocp-cluster-1-gzg77-compute-a-2j74v   Running                              2y     2022-03-23T19:44:38Z   ocp-cluster-1-gzg77-compute-a-2j74v   vsphere://420b6a2d-d0e3-834c-b523-1bb39344ddc8
+openshift-machine-api   ocp-cluster-1-gzg77-compute-a-4q8r8   Running                              1y     2023-09-06T10:57:05Z   ocp-cluster-1-gzg77-compute-a-4q8r8   vsphere://420bf268-d18f-6b4e-fb17-670b887854a5
+openshift-machine-api   ocp-cluster-1-gzg77-compute-a-62gr8   Running                              2y     2022-03-25T15:30:39Z   ocp-cluster-1-gzg77-compute-a-62gr8   vsphere://420b952a-7fed-c326-3461-9b7019bc323b
+openshift-machine-api   ocp-cluster-1-gzg77-compute-a-bt4x7   Provisioned                          35d    2024-10-10T19:09:17Z                                         vsphere://420b9119-e619-59af-dcc7-39c302ff0ca1
+openshift-machine-api   ocp-cluster-1-gzg77-compute-b-xcw9x   Provisioned                          35d    2024-10-10T19:09:29Z                                         vsphere://420b850c-f157-ce13-a8f0-1158bf6d9291
+openshift-machine-api   ocp-cluster-1-gzg77-compute-b-zgv6w   Running                              1y     2023-11-09T17:58:13Z   ocp-cluster-1-gzg77-compute-b-zgv6w   vsphere://420b7b50-6523-b7f1-1592-a84640e25a5f
 ----
 ====
 
-You will see that the 2 identified nodes do not exist, while the `Machines` for those 2 nodes do exist.
+You will see that the 2 identified nodes do not exist, while the `Machines` output, they do exist.
 
 [#checkmachineapi]
 == Check the `Machine API`
@@ -61,22 +80,43 @@ Knowing that the `Machine API` is responsible for the lifecycle of provisioning 
 . Get a list of all of the `pods` in the `project`
 . Check the logs of the pods for any issues related to our 2 machines
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
 ----
 omc project openshift-machine-api
+Now using project "openshift-machine-api" on must-gather "/home/lab-user/Module3/module3-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3".
 ----
 
 [source,bash]
 ----
 omc get pods
+NAME                                                  READY   STATUS    RESTARTS   AGE
+cluster-autoscaler-operator-5b7bb6db5c-nr8x6          2/2     Running   0          36d
+cluster-baremetal-operator-6dcfc556c6-xb4cm           2/2     Running   0          36d
+control-plane-machine-set-operator-655468bfc7-pn6nq   1/1     Running   0          36d
+machine-api-controllers-7d58464879-rz45f              7/7     Running   0          36d
+machine-api-operator-dbb5d5c9c-ht597                  2/2     Running   0          36d
 ----
 
 [source,bash]
 ----
 omc logs machine-api-controllers-7d58464879-rz45f -c machine-controller | grep 'ocp-cluster-1-gzg77-compute-a-bt4x7'
+2024-10-10T20:13:32.498063101Z I1010 20:13:32.498026       1 controller.go:164] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling Machine
+2024-10-10T20:13:32.498129017Z I1010 20:13:32.498122       1 actuator.go:113] ocp-cluster-1-gzg77-compute-a-bt4x7: actuator checking if machine exists
+2024-10-10T20:13:32.507828077Z I1010 20:13:32.507736       1 reconciler.go:308] ocp-cluster-1-gzg77-compute-a-bt4x7: already exists
+2024-10-10T20:13:32.507828077Z I1010 20:13:32.507750       1 controller.go:290] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling machine triggers idempotent update
+2024-10-10T20:13:32.507828077Z I1010 20:13:32.507755       1 actuator.go:128] ocp-cluster-1-gzg77-compute-a-bt4x7: actuator updating machine
+2024-10-10T20:13:32.823437804Z I1010 20:13:32.823400       1 reconciler.go:1308] ocp-cluster-1-gzg77-compute-a-bt4x7: Reconciling attached tags
+2024-10-10T20:13:32.972484952Z I1010 20:13:32.972447       1 reconciler.go:486] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling machine with cloud state
+2024-10-10T20:13:33.366209440Z I1010 20:13:33.366171       1 reconciler.go:494] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling providerID
+2024-10-10T20:13:33.367920675Z I1010 20:13:33.367901       1 reconciler.go:499] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling network
+2024-10-10T20:13:33.371358675Z I1010 20:13:33.371343       1 reconciler.go:604] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling network: IP addresses: [{InternalIP 127.0.0.1} {InternalIP x-ipv6-0000000021-x} {InternalDNS ocp-cluster-1-gzg77-compute-a-bt4x7}]
+2024-10-10T20:13:33.371383423Z I1010 20:13:33.371377       1 reconciler.go:504] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling powerstate annotation
+2024-10-10T20:13:33.372682772Z I1010 20:13:33.372665       1 reconciler.go:1154] ocp-cluster-1-gzg77-compute-a-bt4x7: Updating provider status
+2024-10-10T20:13:33.375232561Z I1010 20:13:33.375208       1 machine_scope.go:104] ocp-cluster-1-gzg77-compute-a-bt4x7: patching machine
+2024-10-10T20:13:33.392194224Z I1010 20:13:33.392128       1 controller.go:318] ocp-cluster-1-gzg77-compute-a-bt4x7: has no node yet, requeuing
 ----
 ====
 
@@ -86,7 +126,7 @@ Checking each `container` in each `pod` with `omc` can be tedious and time consu
 
 . Using find and grep, review all of the `machine-api` data for our missing node with a single command
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,bash]
@@ -102,7 +142,7 @@ find . -type f | xargs grep -si 'ocp-cluster-1-gzg77-compute-a-bt4x7' | more
 
 Looking at all of the data broadly, do you see any issues or does it look like the `machine-api` is doing its job?
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 [source,text]
@@ -113,25 +153,25 @@ Looking at all of the data broadly, do you see any issues or does it look like t
 ./pods/machine-api-controllers-7d58464879-rz45f/nodelink-controller/nodelink-controller/logs/current.log:2024-10-10T19:24:40.699406150Z I1010 19:24:40.699401       1 nodelink_controller.go:331] No-op: Node for machine "ocp-cluster-1-gzg77-compute-a-bt4x7" not found
 ----
 
-Based on this data, we only see `INFO` level logs. Nothing looks problematic and all indications are that the `machine-api` is simply waiting for the `node` to register.
+Based on this data, we only see `INFO` level logs. Nothing looks problematic and all indications are that the `machine-api` is simply waiting for the `Node` to register.
 ====
 
 [#checkserver]
 == Check the server
 
-If the machine-api is not the issue and we still do not have a node, ask yourself the next question: "Where does the node come from?"
+If the machine-api is not the issue and we still do not have a node, ask yourself the next question: "Where does the `Node` come from?"
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 ************************************************
-The node is registered with the API Server when the kubelet successfully starts on the provisioned server. If the `machine-api` is fine and we still do not have a new `node`, the next step is to see if there is an issue with the `kubelet` or `server`.
+The node is registered with the API Server when the kubelet successfully starts on the provisioned server. If the `machine-api` is fine and we still do not have a new `node`, the next step is to see if there is an issue with the `kubelet` or the `server/virtual machihe` itself.
 ************************************************
 ====
 
 If you need to `debug` the `server`, what information are you going to ask for from the `customer`?
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 ************************************************
@@ -153,10 +193,15 @@ Collect the `kubelet` log from all workers: +
 
 Once you get that data back from the customer, let's review it. Change back to the Module3 root directory and review the file `ocp-node-zxc3456-journal.out` that was provided by the customer.
 
-.Click to show some commands if you need a hint
+[source,bash]
+----
+cd ~/Module3/
+----
+
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
-Looking at the `journal`, it is immediately obvious there is an issue on the `node`. The `node` can not reach the `registry` during `kubelet` startup.
+Looking at the `journal`, there are a log of `Error` logs indicating there is an issue on the `server`. The `server` can not reach the `registry` during `kubelet` startup.
 
 [source,text]
 ----
@@ -165,12 +210,12 @@ Oct 10 19:24:19 ocp-wdc-np-int-1-gzg77-compute-b-xcw9x sh[1868]: Error: Error in
 
 If you look closely, it's a lookup `UDP` issue on `port 53` which suggests this is a `DNS` issue.
 
-Ask the customer to check if their `resolv.conf` is correct.
+Ask the customer to check if their `resolv.conf` is correct or if there are any other current known issue within the corporate network that could cause this.
 ====
 
 Based on that knowledge, and knowing that nodes had been provisioning successfully a few days earlier, are there any other issues in the `journal` related to the `networking` that could contribute to the problem?
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 
@@ -193,7 +238,7 @@ Now that you have a specific issue to investigate, the first question you should
 
 To check for known issues, what resources would you use?
 
-.Click to show some commands if you need a hint
+.*Click to show some commands if you need a hint*
 [%collapsible]
 ====
 

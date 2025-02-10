@@ -1,6 +1,6 @@
 = Tools of the trade
 
-There are many tools available to speed up debugging, issue resolution and problem identification when analyzing an issue with your OpenShift cluster.
+There are many tools available to speed up debugging, issue resolution and problem identification when analyzing issues with an OpenShift cluster.
 
 
 [#intro]
@@ -13,31 +13,31 @@ During this lab, we will run through a number of exercises that show the power a
 
 It's just like `oc`, but on a `must-gather`!
 
-You can find and download `omc` from github at: link:https://github.com/gmeghnag/omc/releases/[omc releases]
+You can find and download `omc` from github at: link:https://github.com/gmeghnag/omc/releases/[omc releases^]
 
-For more in-depth details on how to collect a `must-gather` and for alternative `must-gather` commands for other OpenShift components, you can refer to the Gathering data about your cluster link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html[Gathering data about your cluster] section of our doc.
+For more in-depth details on how to collect a `must-gather` and for alternative `must-gather` commands for other OpenShift components, you can refer to the link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html[Gathering data about your cluster^] section of our doc.
 
 [#kcdevtoolintro]
 === `kubectl-dev_tool`
 
-Inspect your `audit logs` with ease
+Inspect your `audit logs` with ease!
 
-You can install the `kubectl-dev_tool` from github using `go install` against the: link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools] repository.
+You can install the `kubectl-dev_tool` from github using `go install` against the: link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools^] repository.
 
 Example: `go install github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_tool@latest`
 
-In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub command with `must-gather` in the link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html#about-must-gather_gathering-cluster-data[gather_audit_logs] section of our docs.
+In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub-command with `must-gather` in the link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
 
 [#koffintro]
 === `koff`
 
-Read objects from an `etcd` snapshot
+Read objects from an `etcd` snapshot.
 
-You can find and download `koff` from github at: link:https://github.com/gmeghnag/koff/releases[koff releases]
+You can find and download `koff` from github at: link:https://github.com/gmeghnag/koff/releases[koff releases^]
 
-In order to use the `koff` tool, you must collect an `etcd snapshot` from the target environment. Most customers are already taking daily or more frequent etcd snapshots for disaster recovery purposes, so if you are looking to analyze a problem from a specific time period, request a specific `etcd snapshot`.
+In order to use the `koff` tool, you must collect an `etcd snapshot` from the target environment. Most customers are already taking daily or more frequent `etcd snapshots`` for disaster recovery purposes, so if you are looking to analyze a problem from a specific time period, request a specific `etcd snapshot`.
 
-If you need to collect a fresh `etcd snapshot`, you can follow the link:https://docs.openshift.com/container-platform/4.17/backup_and_restore/control_plane_backup_and_restore/backing-up-etcd.html#backing-up-etcd-data_backup-etcd[Backing up etcd data] section of our docs.
+If you need to collect a fresh `etcd snapshot`, you can follow the link:https://docs.openshift.com/container-platform/4.17/backup_and_restore/control_plane_backup_and_restore/backing-up-etcd.html#backing-up-etcd-data_backup-etcd[Backing up etcd data^] section of our docs.
 
 The archive produced by the `cluster-backup.sh` script will include a `snapshot_<date>.db` file you can use with `koff`. You can zip and upload the archive to the customer portal for further analysis.
 [source,bash]
@@ -55,14 +55,14 @@ Process and parse `YAML` and `JSON`
 
 Making `JSON` greppable
 
-You can find and download `gron` from github at: link:https://github.com/tomnomnom/gron/releases[gron releases]
+You can find and download `gron` from github at: link:https://github.com/tomnomnom/gron/releases[gron releases^]
 
 [#etcddiagintro]
 === `etcd-ocp-diag`
 
 Find `etcd` issue in your `must-gather` data
 
-You can find and download `etcd-ocp-diag` from github at: link:https://github.com/cptmorgan-rh/etcd-ocp-diag-script/blob/python/etcd-ocp-diag.py[etcd-ocp-diag-script]
+You can find and download `etcd-ocp-diag` from github at: link:https://github.com/cptmorgan-rh/etcd-ocp-diag-script/blob/python/etcd-ocp-diag.py[etcd-ocp-diag-script^]
 
 
 [#ocpinsightsintro]
@@ -70,4 +70,4 @@ You can find and download `etcd-ocp-diag` from github at: link:https://github.co
 
 Parse and view your `Insights` data from the `Insights Operator`
 
-You can find and download `ocp_insights` from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/insightsarchive/ocp_insights.sh[ocp_insights]
+You can find and download `ocp_insights` from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/insightsarchive/ocp_insights.sh[ocp_insights^]
