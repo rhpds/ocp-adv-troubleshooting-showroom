@@ -275,11 +275,11 @@ What we see is very interesting:
 . They're all returning a HTTP `403` errors
 
 [NOTE]
-A `HTTP 403`` is an HTTP status code meaning access to the requested resource is forbidden. +
-A `HTTP 403`` is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account. 
+A HTTP 403 is an HTTP status code meaning access to the requested resource is forbidden. +
+A HTTP 403 is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account. 
 
 
-[source,bash]
+[source,bash,subs="quotes"]
 ----
 Top 10 "GET" (of 440076 total hits):
    8313x [   274.335µs] [*403*-8312] /api/v1/nodes/cluster-app-38.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]

@@ -2,11 +2,11 @@
 :prewrap!:
 
 [#operators]
-To view all of the operators installed on a cluster we will be utilizing the `omc get operators` command which will output all of the operators like we see in the following example. The default is show all operators but you can narrow them down by running specifying the namespace with the `-n` option.
+To view all of the operators installed on a cluster, you can use the `omc get operators` command which will output all of the operators like we see in the following example. The default is show all operators but you can narrow them down by running specifying the namespace with the `-n` option.
 
-.operators
-====
+.Viewing the installed operators
 [source,bash]
+----
 NAME                                                              AGE
 ansible-automation-platform-operator.aap                          1y
 citrix-ingress-controller-operator.openshift-operators            1y
@@ -19,16 +19,16 @@ openshift-gitops-operator.openshift-operators                     1y
 openshift-pipelines-operator-rh.openshift-operators               1y
 portworx-certified.openshift-operators                            1y
 quay-operator.openshift-operators                                 1y
-====
+----
 
 [#csv]
 Next will will look at the CluserServiceVersion (CSV) which represents a particular version of a running operator on a cluster. It includes metadata such as name, description, version, repository link, labels, icon, etc. It declares owned/required CRDs, cluster requirements, and install strategy that tells the Operator Lifecycle Manager how to create required resources and set up the operator as a deployment.
 
 In this example we will look at the CSVs installed in the `aap` namespace.
 
-.csv
-====
+.View the csv
 [source,bash]
+----
 omc get csv -n aap
 NAME                                DISPLAY                                  VERSION              REPLACES                            PHASE
 aap-operator.v2.4.0-0.1692675723    Ansible Automation Platform              2.4.0+0.1692675723   aap-operator.v2.3.0-0.1692727374    Succeeded
@@ -38,7 +38,7 @@ grafana-operator.v5.12.0            Grafana Operator                         5.1
 openshift-gitops-operator.v1.12.5   Red Hat OpenShift GitOps                 1.12.5               openshift-gitops-operator.v1.12.4   Succeeded
 portworx-operator.v24.1.1           Portworx Enterprise                      24.1.1               portworx-operator.v24.1.0           Succeeded
 quay-operator.v3.9.8                Red Hat Quay                             3.9.8                quay-operator.v3.9.6                Succeeded
-====
+----
 
 [#subscription]
 A Subscription represents an intention to install an operator. It is the CustomResource that relate an operator to a CatalogSource. Subscriptions describe which channel of an operator package to subscribe to, and whether to perform updates automatically or manually. If set to automatic, the Subscription ensures OLM will manage and upgrade the operator to ensure the latest version is always running in the cluster.
@@ -47,9 +47,9 @@ In this example we will look at the Subscription for the `ansible-automation-pla
 
 Additionally, under status, it provided the InstallPlan.
 
-.subscription
-====
+.Viewing a subscription
 [source,bash]
+----
 $ omc get subscriptions -n aap ansible-automation-platform-operator -o yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -134,14 +134,14 @@ status:
     uuid: e4880b85-62bc-4a9d-ba46-affeb6244577
   lastUpdated: "2024-04-28T06:45:35Z"
   state: UpgradePending
-====
+----
 
 [#installplan]
 Finally, we will look at the InstallPlan which defines a set of resources to be created in order to install or upgrade to a specific version of a ClusterService defined by a CSV.
 
-.installplan
-====
+.Viewing an installplan
 [source,bash]
+----
 apiVersion: operators.coreos.com/v1alpha1
 kind: InstallPlan
 metadata:
@@ -167,4 +167,4 @@ spec:
   clusterServiceVersionNames:
   - aap-operator.v2.4.0-0.1693440031
   generation: 5
-====
+----

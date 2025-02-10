@@ -1,13 +1,13 @@
 = Using OpenShift Insights to Proactively Analyze a Cluster
 :prewrap!:
 
-OpenShift Insights is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on `SupportShell`` allowing Support Engineers and Technical Account Managers to review that data.
+OpenShift Insights is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on `SupportShell` allowing Support Engineers and Technical Account Managers to review that data.
 
 In this module we will be reviewing how to look at a script that parses an `OpenShift Insights` archive to allow you to proactively analyze a cluster.
 
-You can find more details on OpenShift Insights and the entire remove health monitoring package in our documentation: https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/about-remote-health-monitoring.html
+You can find more details on OpenShift Insights and the entire remove health monitoring package in our documentation: link:https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/about-remote-health-monitoring.html[About remote health monitoring]
 
-You can find details on what OpenShift Insights collects here: https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/showing-data-collected-by-remote-health-monitoring.html
+You can find details on what OpenShift Insights collects here: link:https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/showing-data-collected-by-remote-health-monitoring.html[Showing data collected by remote health monitoring]
 
 You can also review the source code to more information on what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_most_recent_metrics.go[GitHub: Insights Operator - gather_most_recent_metrics.go]
 
@@ -15,8 +15,7 @@ You can also review the source code to more information on what is collected her
 == The ocp_insights.sh script
 With this script we will be able to parse the insights archive, review customer namespace memory usage, look for namespaces with overlapping UIDs, reivew storage classes, and look at etcd metrics.
 
-. Understanding ocp_insights
-
+.Understanding ocp_insights
 [source,bash]
 ----
 cd ~/Module5/
@@ -97,7 +96,6 @@ etc...
 . The Insights Operator, when installed, collects data about the cluster every two hours. One piece of that collected data is `container_memory_usage_bytes` which can then be converted to see total MB/GB usage of a namespace.
 
 .Viewing Cluster Memory Usage
-
 [source,bash]
 ----
 $ ocp_insights.sh --file module5-insights-data --customer_memory
@@ -126,7 +124,6 @@ Total Customer Namespace Memory Usage: 121.9884G
 . These two metrics are a great indicator of performance issues with the underlying disk that supports etcd. Tracking these over multiple Insights Archives is a good way to determine if the cluster is suffering from etcd performance problems.
 
 .Looking at etcd metrics
-
 [source,bash]
 ----
 ocp_insights.sh --file module5-insights-data --etcd_metrics
@@ -148,7 +145,6 @@ etcd-ocp4-2nvq7-master-1,22
 . For customer using persistent storage via OpenShift Data Foundations or through a 3rd party like Portworx, Infinidat or VMware, we collect storage class information which is helpful to determine what storage is being used by the cluster.
 
 .Storage Classes
-
 [source,bash]
 ----
 ocp_insights.sh --file module5-insights-data --storage_classes
@@ -177,14 +173,14 @@ thin                                kubernetes.io/vsphere-volume   Delete       
 ...
 ----
 
-Beyond that, there is a ton of other other useful information about the cluster. The `--all` flag will show your:
+Beyond that, there is a ton of other other useful information about the cluster. The `--all` flag will show you:
 
 [source,bash]
 ----
 ocp_insights.sh --file module5-insights-data --all
 ----
 
-All of the node information, including `coreos version`, `kubelet version` and the `cpu` and `memory` details of each server
+.All of the node information, including `coreos version`, `kubelet version` and the `cpu` and `memory` details of each server
 [source,bash]
 ----
 NAME                          READY  ROLE    CREATED ON            VERSION           OS                                                            CPU  MEMORY
@@ -198,7 +194,7 @@ prodshift-2nvq7-worker-xdwch  True   worker  2022-11-17T16:38:55Z  v1.27.13+0485
 prodshift-2nvq7-worker-zpwq6  True   worker  2022-11-17T16:39:38Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
 ----
 
-What operators are installed on the cluter:
+.What operators are installed on the cluter:
 [source,bash]
 ----
 Installed Operators:
@@ -221,7 +217,7 @@ Portworx Enterprise                     v24.1.1              portworx-certified.
 Red Hat Quay                            v3.9.8               quay-operator.openshift-operators
 ----
 
-The status of the `MachineConfigPools` and `MachineSets`:
+.The status of the `MachineConfigPools` and `MachineSets`:
 [source,bash]
 ----
 MachineConfigPools:
@@ -237,7 +233,7 @@ prodshift-2nvq7-dmz     2        2        2      2
 prodshift-2nvq7-worker  3        3        3      3
 ----
 
-And finally, any alert that is currently firing on the cluster:
+.And finally, any alert that is currently firing on the cluster:
 [source,bash]
 ----
 ALERT NAME                           STATE   START TIME

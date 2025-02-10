@@ -267,8 +267,8 @@ So far we verified that:
 * they are all correctly "connected" to their related Service
 * however, the traffic seems received only by one Pod
 
-To continue the troubleshooting, let's focus on what come _before_ the Service.
-That is, let's analyze the application related Route and how it is configured into the _Ingress Controller_. Note that in this case the used Route is named `fsi-route`.
+To continue the troubleshooting, let's focus on what comes _before_ the Service.
+Let's analyze the application related Route and how it is configured in the _Ingress Controller_. In this case, the Route we are looking at is called `fsi-route`.
 
 * Let's check the Route.
 

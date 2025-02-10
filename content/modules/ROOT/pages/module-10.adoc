@@ -160,7 +160,7 @@ Maybe you deleted an important `ConfigMap` or `Secret` and needed to get it back
 [source,bash]
 ----
 koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/configmaps/firewall-rule/httpd-ex-1-sys-config
-{
+
   "apiVersion": "v1",
   "kind": "ConfigMap",
   "metadata": {
@@ -172,7 +172,7 @@ koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/configmaps/firew
 [source,bash]
 ----
 koff etcd inspect module10-etcd_snapshot_2024.db /kubernetes.io/secrets/quay/tamlab-quay-config-secret-98gh285gcd
-{
+
   "apiVersion": "v1",
   "data": {
     "config.yaml": ""

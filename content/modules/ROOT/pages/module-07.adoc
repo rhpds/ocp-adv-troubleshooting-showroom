@@ -6,15 +6,13 @@ When reviewing a must-gather, it's very important to review the output of the `o
 [#gettingstarted]
 To get started we will be running the `omc get clusterversion` command and then running the command a second time and outputting to yaml. We specifically want to look at the History section which will show every upgrade ever performed on the cluster. In the example below we see three upgrades with the `4.14.18` upgrade showing a state of `Partial`.
 
-.clusterversion
-====
+.Checking the clusterversion
 [source,bash]
 ----
 $ omc get clusterversion
 NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
 version   4.14.27   True        False         17d     Cluster version is 4.14.27
 $ omc get clusterversion -o yaml
-[
     history:
     - completionTime: null
       image: fr2.icr.io/armada-master/ocp-release:4.13.43-x86_64
@@ -34,15 +32,12 @@ $ omc get clusterversion -o yaml
       state: Partial
       verified: false
       version: 4.12.56
-...
 ----
-====
 
 [#partialupgrade]
 A Partial upgrade is the result of manifests failing to be applied, objects not being updated or deleted, or items missing that result in the upgrade looping as it tries to progress past the issue. This then result in Cluster Operators remaining on an older version as seen in an example from an actual Customer case.
 
-.clusteroperators
-====
+.Viewing the clusteroperators
 [source,bash]
 ----
 $ omc get clusteroperators
@@ -70,12 +65,10 @@ operator-lifecycle-manager-packageserver   4.13.43   True        False         F
 service-ca                                 4.13.43   True        False         False      239d
 storage                                    4.13.43   True        False         False      239d
 ----
-====
 
 After reviwing the Cluster Version and the Cluster Operators we next want to move to the `cluster-version-operator` pod located in the `openshift-cluster-version` namespace. There you can review the logs to see where the upgrade is stalling. In the example below we can see that the logs show the upgrade process is getting stuck on the DNS and Network Operator which matches what we see in the ClusterOperator status.
 
-.cluster-version-operator
-====
+.Logs from the cluster-version-operator
 [source,bash]
 ----
 I0718 14:20:33.366086       1 sync_worker.go:978] Precreated resource clusteroperator "network" (511 of 615)
@@ -101,4 +94,3 @@ I0718 14:20:33.696357       1 sync_worker.go:1007] Done syncing for deployment "
 I0718 14:20:33.696477       1 sync_worker.go:987] Running sync for clusteroperator "network" (511 of 615)
 E0718 14:20:33.696795       1 task.go:117] error running apply for clusteroperator "network" (511 of 615): Cluster operator network is updating version
 ----
-====

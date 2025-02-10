@@ -54,7 +54,6 @@ options:
 . If you encounter a large number (over 100 errors a day average) or your Maximums are near 1 Second or higher, then you want to dig deeper into the etcd performance to see when it is happening and if we see any issues elsewhere in the cluster.
 
 .Checking for etcd Error Stats
-
 [source,bash]
 ----
 cd ~/Module6/
@@ -84,7 +83,6 @@ etc..
 . To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --errors` and it will search all of the etcd Pods and return the Pod Name, Error, and the Count.
 
 .Reviewing Common Errors
-
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --errors
@@ -104,17 +102,17 @@ etcd-ocp4-2nvq7-master-0	elected leader                                        	
 . To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --ttl` and it will search all of the etcd Pods and return the Pod Name, Date, and the Count.
 
 . In addition to "Took Too Long" errors you can also use the following sub-commands:
-====
+
 [source,bash]
+----
   --heartbeat     Check failed to send out heartbeat
   --election      Check election issues
   --fdatasync     Check slow fdatasync
   --buffer        Check sending buffer is full
   --etcd_timeout  Check etcdserver: request timed out
-====
+----
 
 .Using Sub-Commands to look for Specific Errors
-
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --ttl | sort -u -k3,3nr
@@ -191,3 +189,4 @@ etcd-ocp4-2nvq7-master-1     12
 etcd-ocp4-2nvq7-master-2     15
 ----
 
+Debugging etcd can be complex and there are often a handful of potential root causes. If you find a customer cluster that is showing signs of etcd performance issues, the best course of action is to open a support ticket to engage with our experts. You can also determine next steps by reviewing our detailed etcd debugging article found at https://access.redhat.com/articles/6271341
