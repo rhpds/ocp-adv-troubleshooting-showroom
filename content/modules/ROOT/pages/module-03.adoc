@@ -37,6 +37,7 @@ cd ~/Module3/
 [source,bash]
 ----
 omc use module3-must-gather.local/
+
 Must-Gather  : /home/lab-user/Module3/module3-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3
 Project      : default
 ApiServerURL : https://api.ocp-cluster-1.paas.is.exampledev.com:6443
@@ -47,7 +48,7 @@ ClusterID    : 3bdf9a64-4e53-4c25-9f23-1e64eda92c13
 [source,bash]
 ----
 omc get nodes
-[lab-user@rhel9 Module3]$ omc get nodes
+
 NAME                                  STATUS   ROLES              AGE    VERSION
 ocp-cluster-1-gzg77-compute-a-2j74v   Ready    compute-a,worker   2y     v1.27.16+03a907c
 ocp-cluster-1-gzg77-compute-a-4q8r8   Ready    compute-a,worker   1y     v1.27.16+03a907c
@@ -59,6 +60,7 @@ ocp-cluster-1-gzg77-compute-a-dzt5r   Ready    compute-a,worker   2y     v1.27.1
 [source,bash]
 ----
 omc get machines -A
+
 NAMESPACE               NAME                                  PHASE         TYPE   REGION   ZONE   AGE    NODE                   PROVIDERID                            STATE
 openshift-machine-api   ocp-cluster-1-gzg77-compute-a-2j74v   Running                              2y     2022-03-23T19:44:38Z   ocp-cluster-1-gzg77-compute-a-2j74v   vsphere://420b6a2d-d0e3-834c-b523-1bb39344ddc8
 openshift-machine-api   ocp-cluster-1-gzg77-compute-a-4q8r8   Running                              1y     2023-09-06T10:57:05Z   ocp-cluster-1-gzg77-compute-a-4q8r8   vsphere://420bf268-d18f-6b4e-fb17-670b887854a5
@@ -86,12 +88,14 @@ Knowing that the `Machine API` is responsible for the lifecycle of provisioning 
 [source,bash]
 ----
 omc project openshift-machine-api
+
 Now using project "openshift-machine-api" on must-gather "/home/lab-user/Module3/module3-must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2ae072de711dec29d9a8568e8e31f4fccdd64512737ee5baff636d7da5a1f4f3".
 ----
 
 [source,bash]
 ----
 omc get pods
+
 NAME                                                  READY   STATUS    RESTARTS   AGE
 cluster-autoscaler-operator-5b7bb6db5c-nr8x6          2/2     Running   0          36d
 cluster-baremetal-operator-6dcfc556c6-xb4cm           2/2     Running   0          36d
@@ -103,6 +107,7 @@ machine-api-operator-dbb5d5c9c-ht597                  2/2     Running   0       
 [source,bash]
 ----
 omc logs machine-api-controllers-7d58464879-rz45f -c machine-controller | grep 'ocp-cluster-1-gzg77-compute-a-bt4x7'
+
 2024-10-10T20:13:32.498063101Z I1010 20:13:32.498026       1 controller.go:164] ocp-cluster-1-gzg77-compute-a-bt4x7: reconciling Machine
 2024-10-10T20:13:32.498129017Z I1010 20:13:32.498122       1 actuator.go:113] ocp-cluster-1-gzg77-compute-a-bt4x7: actuator checking if machine exists
 2024-10-10T20:13:32.507828077Z I1010 20:13:32.507736       1 reconciler.go:308] ocp-cluster-1-gzg77-compute-a-bt4x7: already exists
@@ -213,7 +218,7 @@ If you look closely, it's a lookup `UDP` issue on `port 53` which suggests this 
 Ask the customer to check if their `resolv.conf` is correct or if there are any other current known issue within the corporate network that could cause this.
 ====
 
-Based on that knowledge, and knowing that nodes had been provisioning successfully a few days earlier, are there any other issues in the `journal` related to the `networking` that could contribute to the problem?
+Based on that knowledge, and knowing that nodes had been provisioning successfully a few days earlier, we can continue to check for other issues in the `journal` related to the `networking` that could contribute to the problem.
 
 .*Click to show some commands if you need a hint*
 [%collapsible]

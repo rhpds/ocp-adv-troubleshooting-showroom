@@ -20,6 +20,7 @@ cd ~/Module2/
 [source,bash]
 ----
 omc version
+
 omc version: v3.7.4
 hash: 45e91af
 https://github.com/gmeghnag/omc
@@ -28,6 +29,7 @@ https://github.com/gmeghnag/omc
 [source,bash]
 ----
 omc use module2-demo-must-gather
+
 Must-Gather  : /home/lab-user/Module2/module2-demo-must-gather/sno_demo/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2de07af89683678ae6bb7a939615fc0d4ced7fe185add38b050f2c6f60023b6f
 Project      : default
 ApiServerURL : https://api.cluster-6fmht.dynamic.redhatworkshops.io:6443
@@ -38,6 +40,7 @@ ClusterID    : 1304b08d-2a73-410f-98ed-342233008cb0
 [source,bash]
 ----
 omc get clusterversion
+
 NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
 version   4.16.20   True        False         20h     Cluster version is 4.16.20
 ----
@@ -46,6 +49,7 @@ Like with `oc`, you can use `-o yaml` to print out addition information about th
 [source,bash]
 ----
 omc get clusterversion -o yaml
+
 apiVersion: v1
 items:
 - apiVersion: config.openshift.io/v1
@@ -71,6 +75,7 @@ items:
 [source,bash]
 ----
 omc certs inspect
+
 NAME                     KIND                        AGE    CERTTYPE      SUBJECT                                                                                        NOTBEFORE                       NOTAFTER
 csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=system:multus:ocp4-2nvq7-worker-xdwch,O=system:multus                                     2024-08-14 14:27:20 +0000 UTC   2024-08-15 14:27:20 +0000 UTC
 ----
@@ -85,6 +90,7 @@ csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=sys
 [source,bash]
 ----
 omc etcd health
+
 +---------------------------+--------+-------------+-------+
 |         ENDPOINT          | HEALTH |    TOOK     | ERROR |
 +---------------------------+--------+-------------+-------+
@@ -97,6 +103,7 @@ omc etcd health
 [source,bash]
 ----
 omc etcd status
+
 +---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
 |         ENDPOINT          |        ID        | VERSION | DB SIZE/IN USE | NOT USED | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
 +---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
@@ -114,6 +121,7 @@ omc etcd status
 [source,bash]
 ----
 omc haproxy backends
+
 NAMESPACE		NAME					INGRESSCONTROLLER	SERVICES				    PORT		TERMINATION
 aap			    frost-prod				default			    frost-prod-service			http(8052)	edge/Redirect
 ecomm			app-api-blue-p4lb5		default			    ecomm-api-blue				https(8443)	reencrypt/Redirect
@@ -130,6 +138,7 @@ ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthro
 [source,bash]
 ----
 omc get machineconfigs -n openshift-machineconfig-operator
+
 NAME                                               GENERATEDBYCONTROLLER                      IGNITIONVERSION   AGE
 00-master                                          20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
 00-worker                                          20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
@@ -154,6 +163,7 @@ omc machine-config diff rendered-master-c5f327c05f9e70b9ef90ad15b0610341 rendere
 [source,bash]
 ----
 omc node-logs
+
 The following node services logs are available to be read:
 
 - NetworkManager
@@ -174,6 +184,7 @@ is it possible to read the content by executing 'omc node-logs <SERVICE>'.
 [source,bash]
 ----
 omc node-logs kubelet | head -n 10
+
 Aug 07 15:25:30.970016 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.969893    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-apiserver/kube-apiserver-ocp4-2nvq7-master-0" status=Running
 Aug 07 15:25:30.970016 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970031    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/coredns-ocp4-2nvq7-master-0" status=Running
 Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970074    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/haproxy-ocp4-2nvq7-master-0" status=Running
@@ -195,6 +206,7 @@ Aug 07 15:25:56.028592 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.0
 [source,bash]
 ----
 omc ovn subnets
+
 HOST/NODE                       ROLE                          HOST IP-ADDRESSES               PRIMARY IF-ADDRESS   HOST GATEWAY-IP   NODE SUBNET
 control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192.168.1.2/24   10.10.10.10/24       10.10.10.1        10.132.0.0/23
 ----
@@ -208,6 +220,7 @@ control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192
 [source,bash]
 ----
 omc prometheus alertgroup | head -n 10
+
 GROUP                                               FILENAME                                                                                                                AGE
 CloudCredentialOperator                             openshift-cloud-credential-operator-cloud-credential-operator-alerts-2b1b6efc-359d-41f1-910c-f759091ea8db.yaml          27s
 cluster-machine-approver.rules                      openshift-cluster-machine-approver-machineapprover-rules-559e1f58-cf67-435f-8e25-8fe67acc824f.yaml                      14s
@@ -223,6 +236,7 @@ cluster-version                                     openshift-cluster-version-cl
 [source,bash]
 ----
 omc prometheus alertrule | head -n 10
+
 RULE                                                    SEVERITY   STATE      AGE   ALERTS   ACTIVE SINCE
 CloudCredentialOperatorTargetNamespaceMissing           warning    inactive   27s   0        ----
 CloudCredentialOperatorProvisioningFailed               warning    inactive   27s   0        ----
@@ -238,6 +252,7 @@ SamplesRetriesMissingOnImagestreamImportFailing         warning    inactive   28
 [source,bash]
 ----
 omc prometheus target | head -n 10
+
 TARGET                                                   SCRAPE URL                                        HEALTH   LAST ERROR
 openshift-apiserver-operator-5b89bd7bb8-z69dz            https://10.132.0.12:8443/metrics                  up
 apiserver-66dcdc546c-vxms2                               https://10.132.0.144:17698/metrics                up

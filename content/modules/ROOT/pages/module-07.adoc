@@ -9,10 +9,11 @@ To get started we will be running the `omc get clusterversion` command and then 
 .Checking the clusterversion
 [source,bash]
 ----
-$ omc get clusterversion
+omc get clusterversion
 NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
 version   4.14.27   True        False         17d     Cluster version is 4.14.27
-$ omc get clusterversion -o yaml
+
+omc get clusterversion -o yaml
     history:
     - completionTime: null
       image: fr2.icr.io/armada-master/ocp-release:4.13.43-x86_64
@@ -40,7 +41,8 @@ A Partial upgrade is the result of manifests failing to be applied, objects not 
 .Viewing the clusteroperators
 [source,bash]
 ----
-$ omc get clusteroperators
+omc get clusteroperators
+
 NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
 console                                    4.13.43   True        False         False      1d
 csi-snapshot-controller                    4.13.43   True        False         False      239d

@@ -7,6 +7,8 @@ To view all of the operators installed on a cluster, you can use the `omc get op
 .Viewing the installed operators
 [source,bash]
 ----
+omc get operators
+
 NAME                                                              AGE
 ansible-automation-platform-operator.aap                          1y
 citrix-ingress-controller-operator.openshift-operators            1y
@@ -30,6 +32,7 @@ In this example we will look at the CSVs installed in the `aap` namespace.
 [source,bash]
 ----
 omc get csv -n aap
+
 NAME                                DISPLAY                                  VERSION              REPLACES                            PHASE
 aap-operator.v2.4.0-0.1692675723    Ansible Automation Platform              2.4.0+0.1692675723   aap-operator.v2.3.0-0.1692727374    Succeeded
 datagrid-operator.v8.5.1            Data Grid                                8.5.1                datagrid-operator.v8.5.0            Succeeded
@@ -50,7 +53,8 @@ Additionally, under status, it provided the InstallPlan.
 .Viewing a subscription
 [source,bash]
 ----
-$ omc get subscriptions -n aap ansible-automation-platform-operator -o yaml
+omc get subscriptions -n aap ansible-automation-platform-operator -o yaml
+
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -142,6 +146,8 @@ Finally, we will look at the InstallPlan which defines a set of resources to be 
 .Viewing an installplan
 [source,bash]
 ----
+omc get installplan install-pqvgf -o yaml
+
 apiVersion: operators.coreos.com/v1alpha1
 kind: InstallPlan
 metadata:

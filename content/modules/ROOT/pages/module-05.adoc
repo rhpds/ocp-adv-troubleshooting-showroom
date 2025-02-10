@@ -23,7 +23,7 @@ cd ~/Module5/
 
 [source,bash]
 ----
-$ ocp_insights.sh --help
+ocp_insights.sh --help
 
 USAGE: ocp_insights_file.sh
 
@@ -99,6 +99,7 @@ etc...
 [source,bash]
 ----
 $ ocp_insights.sh --file module5-insights-data --customer_memory
+
 ...
 Customer Namespace Memory Usage.
 
@@ -127,6 +128,7 @@ Total Customer Namespace Memory Usage: 121.9884G
 [source,bash]
 ----
 ocp_insights.sh --file module5-insights-data --etcd_metrics
+
 etcd server slow apply total
 
 etcd-ocp4-2nvq7-master-0,3548

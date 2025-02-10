@@ -23,7 +23,8 @@ In this module we will utilize a python script to analyze the etcd pod logs in a
 
 [source,bash]
 ----
-$ etcd-ocp-diag.py --help
+etcd-ocp-diag.py --help
+
 usage: etcd-ocp-diag.py [-h] --path PATH [--ttl] [--heartbeat] [--election] [--fdatasync] [--buffer] [--etcd_timeout] [--pod POD] [--date DATE] [--compare] [--errors] [--stats] [--previous] [--rotated]
 
 Process etcd logs and gather statistics.
@@ -62,6 +63,7 @@ cd ~/Module6/
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --stats
+
 Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-0
 	First Occurrence: 2024-07-28T04:00:27
 	Last Occurrence: 2024-08-14T15:18:23
@@ -86,6 +88,7 @@ etc..
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --errors
+
 POD                       	ERROR                                                 	COUNT
 etcd-ocp4-2nvq7-master-0	waiting for ReadIndex response took too long, retrying	 295
 etcd-ocp4-2nvq7-master-0	slow fdatasync                                        	  60
@@ -116,6 +119,7 @@ etcd-ocp4-2nvq7-master-0	elected leader                                        	
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --ttl | sort -u -k3,3nr
+
 POD                       	DATE      	COUNT
 etcd-prodshift-2nvq7-master-2	2024-08-14	952
 etcd-prodshift-2nvq7-master-1	2024-08-14	887
@@ -139,6 +143,7 @@ etcd-prodshift-2nvq7-master-2	2024-08-09	268
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --ttl --date 2024-08-14 --pod etcd-prodshift-2nvq7-master-1 | sort -k3,3rn
+
 POD                       	DATE 	COUNT
 etcd-prodshift-2nvq7-master-1	00:10	26
 etcd-prodshift-2nvq7-master-1	05:39	21
@@ -155,6 +160,7 @@ etcd-prodshift-2nvq7-master-1	05:54	19
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --ttl --compare
+
 Date: 2024-07-28
 POD                            COUNT
 etcd-ocp4-2nvq7-master-0     121
@@ -177,6 +183,7 @@ etcd-ocp4-2nvq7-master-2     152
 [source,bash]
 ----
 etcd-ocp-diag.py --path module6-must-gather.6521552859184261155/ --ttl --date 2024-07-28 --compare
+
 Date: 04:02
 POD                            COUNT
 etcd-ocp4-2nvq7-master-0     8
