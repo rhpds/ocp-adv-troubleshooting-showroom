@@ -81,7 +81,7 @@ csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=sys
 ----
 
 [#etcd]
-== Using the omc `ectd` command
+== Using the omc `etcd` command
 . The `etcd` command allows you to view the health and the status of your `etcd` cluster.
 
 . It includes two options, `etcd health` and `etcd status`

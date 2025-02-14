@@ -116,7 +116,6 @@ To view the SDN the ccluster is using, you can look at the `Network` CR `.spec.n
 omc get Network cluster -o yaml | yq '.spec.networkType'
 OVNKubernetes
 ----
-====
 
 * Check how many _Incress Controllers_ are installed.
 
