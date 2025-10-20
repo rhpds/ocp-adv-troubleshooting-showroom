@@ -1,246 +1,199 @@
-= Using OpenShift Insights to Proactively Analyze a Cluster
+= Analyzing etcd performance
 :prewrap!:
 
-OpenShift Insights is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on `SupportShell` allowing Support Engineers and Technical Account Managers to review that data.
+The brain of any good Kubernetes cluster is etcd (pronounced et-see-dee), is an open source, distributed, consistent key-value store for shared configuration, service discovery, and scheduler coordination of distributed systems or clusters of machines.
 
-In this module we will be reviewing how to look at a script that parses an `OpenShift Insights` archive to allow you to proactively analyze a cluster.
+As the primary datastore of Kubernetes, etcd stores and replicates all Kubernetes cluster states. Since it is a critical component of a Kubernetes cluster it is important that etcd has a reliable approach to its configuration and management and is hosted on hardware that is able to support it's rigorous demands. When etcd is experiencing performance issues, then entire cluster suffers and can become unstable and unusable.
 
-You can find more details on OpenShift Insights and the entire remove health monitoring package in our documentation: link:https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/about-remote-health-monitoring.html[About remote health monitoring]
-
-You can find details on what OpenShift Insights collects here: link:https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/showing-data-collected-by-remote-health-monitoring.html[Showing data collected by remote health monitoring]
-
-You can also review the source code to more information on what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_most_recent_metrics.go[GitHub: Insights Operator - gather_most_recent_metrics.go]
+In this module we will utilize a python script to analyze the etcd pod logs in an OpenShift must-gather to help identify common errors and correlate those errors.
 
 [#gettingstarted]
-== The ocp_insights.sh script
-With this script we will be able to parse the insights archive, review customer namespace memory usage, look for namespaces with overlapping UIDs, reivew storage classes, and look at etcd metrics.
+== etcd-ocp-diag.py
+. With this python script we will be able to identify common errors in the etc pod logs including:
+** "Apply Request Took Too Long" - etcd took longer than expected to apply the request.
+** "Failed to Send Out Heartbeat" - The etcd node took longer than expected to send out a heart beat.
+** "Lost Leader" and "Elected Leader" - The node hasn't heard from the leader in a set period causing an election
+** "wal: Sync Duration" - The Write Ahead Log Sync Duration took too long.
+** "The Clock Difference Against Peer" - The Peers have too large of a clock difference/
+** "Server is Likely Overloaded" - This error is a direct result of disk performance per etcd docs.
+** "Sending Buffer is Full" - The sending buffer for etcd raft messages is full due to slowness of other nodes.
+** and more.
 
-.Understanding ocp_insights
-[source,bash]
-----
-cd ~/Module5/
-----
-
-[source,bash]
-----
-ocp_insights.sh --help
-
-USAGE: ocp_insights_file.sh
-
-Displays information obtained from the latest Insights data for the cluster ID provided.
-
-Options:
-    --all                       Lists all of the following options
-        --customer_memory       Lists memory usage for non-OpenShift Cluster Namespaces
-        --uid                   Lists Namespaces with overlapping UIDs
-        --storage_classes       Lists Storage Class information
-    --file                      Run the script against a specific insights file
-                                    E.g.: ocp_insights_file.sh --file ~/insights_archive.tar.gz
-    --etcd_metrics              Returns metrics from Insights Metrics Data
-    -h, --help                  Shows this help message.
-----
-
-[#whatisoutput]
-== What is in the output?
-. This script was written with the intention to parse Insights Archives to display the data the same way it is output by OpenShift's CLI.
-
-* We include the following information:
-** ClusterVersion
-** Channel
-** Previously Installed Versions
-** Platform
-*** VMware, AWS, Nutanix, IBMCloud, etc
-** NetworkType
-** Proxy Configuration
-** Ingress and API IP Addresses
-** etcd Encryption
-** Audit Profile
-** Node Information
-*** Name, State, Role, Created Date, Version, OS, CPU, and Memory
-** Cluster Operator status with the same output as `oc get clusteroperators`
-** Installed Operators
-** Installed OLM Operators
-*** Display Name, Version, and Namespace
-** MachineConfigPools
-** MachineSets
-** Failing Pods
-** Alerts
-** Namespace Events
-** PodNetworkConnectivityChecks
+.Understanding etcd-ocp-diag.py
 
 [source,bash]
 ----
-ocp_insights.sh --file module5-insights-data
+etcd-ocp-diag.py --help
 
-Cluster Version: 4.14.27
-Channel: eus-4.14
-Previous Version(s): 4.14.27, 4.14.18, 4.13.30, 4.12.36, 4.12.22, 4.12.13, 4.11.33, 4.11.20, 4.11.17, 4.11.12, 4.11.9
+usage: etcd-ocp-diag.py [-h] --path PATH [--ttl] [--heartbeat] [--election] [--fdatasync] [--buffer] [--etcd_timeout] [--pod POD] [--date DATE] [--compare] [--errors] [--stats] [--previous] [--rotated]
 
-Platform: VSphere
-Install Type: IPI
-NetworkType: OpenShiftSDN
-Proxy Configured:
-  HTTP: false
-  HTTPS: false
-apiServerInternalIP: 10.0.0.2
-ingressIP: 10.0.0.1
+Process etcd logs and gather statistics.
 
-etcd Encryption: None
-Audit Profile: Default
-
-etc...
+options:
+  -h, --help      show this help message and exit
+  --path PATH     Path to the must-gather
+  --ttl           Check apply request took too long
+  --heartbeat     Check failed to send out heartbeat
+  --election      Check election issues
+  --fdatasync     Check slow fdatasync
+  --buffer        Check sending buffer is full
+  --etcd_timeout  Check etcdserver: request timed out
+  --pod POD       Specify the pod to analyze
+  --date DATE     Specify date for error search in YYYY-MM-DD format
+  --compare       Display only dates or times that happen in all pods
+  --errors        Display etcd errors
+  --stats         Display etcd stats
+  --previous      Use previous logs
+  --rotated       Use rotated logs
 ----
 
-[#customermemory]
-== Customer Namespace Memory Usage
-. The Insights Operator, when installed, collects data about the cluster every two hours. One piece of that collected data is `container_memory_usage_bytes` which can then be converted to see total MB/GB usage of a namespace.
+[#stats]
+== etcd Error Stats
 
-.Viewing Cluster Memory Usage
+. The first thing you should check is to see if there are performance issues affecting the etcd cluster. To do this we run the `--stats` which looks for `Took Too Long` error messages, collects the `expected` time, and then calculated the `maximum` time, the `minimum` time over the `expected` time, the `median`, and the `average` along with the `count` and then displays the information. It also does the same thing for the `slow fdatasync` error message.
+
+. If you encounter a large number (over 100 errors a day average) or your Maximums are near 1 Second or higher, then you want to dig deeper into the etcd performance to see when it is happening and if we see any issues elsewhere in the cluster.
+
+.Checking for etcd Error Stats
 [source,bash]
 ----
-$ ocp_insights.sh --file module5-insights-data --customer_memory
-
-...
-Customer Namespace Memory Usage.
-
-NAMESPACE         MEMORY
-aap               2.7282G
-web-app           45.6647G
-falcon-operator   12.5485G
-frank-enterprise  14.8893G
-frank-monitoring  186.4453M
-frank-quay        21.7653G
-frank-test        109.0507M
-duck              22.3663G
-portworx          1.7372G
-
-Total Customer Namespace Memory Usage: 121.9884G
-...
+cd ~/module5/
 ----
-
-[#etcd_metrics]
-== etcd Metrics
-. Along with the customer namespace metrics, we also collect several etcd metrics including `etcd_server_slow_apply_total` and `etcd_server_slow_read_indexes_total`.
-
-. These two metrics are a great indicator of performance issues with the underlying disk that supports etcd. Tracking these over multiple Insights Archives is a good way to determine if the cluster is suffering from etcd performance problems.
-
-.Looking at etcd metrics
-[source,bash]
-----
-ocp_insights.sh --file module5-insights-data --etcd_metrics
-
-etcd server slow apply total
-
-etcd-ocp4-2nvq7-master-0,3548
-etcd-ocp4-2nvq7-master-2,4488
-etcd-ocp4-2nvq7-master-1,4223
-
-etcd server slow read indexex total
-
-etcd-ocp4-2nvq7-master-0,21
-etcd-ocp4-2nvq7-master-2,24
-etcd-ocp4-2nvq7-master-1,22
-----
-
-[#storageclasses]
-== Storage Classes
-. For customer using persistent storage via OpenShift Data Foundations or through a 3rd party like Portworx, Infinidat or VMware, we collect storage class information which is helpful to determine what storage is being used by the cluster.
-
-.Storage Classes
-[source,bash]
-----
-ocp_insights.sh --file module5-insights-data --storage_classes
-...
-StorageClass Information.
-
-NAME                                PROVISIONER                    RECLAIM POLICY  BINDING MODE          VOLUME EXPANSION
-px-csi-db-cloud-snapshot-encrypted  pxd.portworx.com               Delete          Immediate             True
-px-csi-db-cloud-snapshot            pxd.portworx.com               Delete          Immediate             True
-px-csi-db-encrypted                 pxd.portworx.com               Delete          Immediate             True
-px-csi-db                           pxd.portworx.com               Delete          Immediate             True
-px-csi-db-local-snapshot-encrypted  pxd.portworx.com               Delete          Immediate             True
-px-csi-db-local-snapshot            pxd.portworx.com               Delete          Immediate             True
-px-csi-replicated-encrypted         pxd.portworx.com               Delete          Immediate             True
-px-csi-replicated                   pxd.portworx.com               Delete          Immediate             True
-px-db-cloud-snapshot-encrypted      kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-cloud-snapshot                kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-encrypted                     kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db                               kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-local-snapshot-encrypted      kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-local-snapshot                kubernetes.io/portworx-volume  Delete          Immediate             True
-px-replicated-encrypted             kubernetes.io/portworx-volume  Delete          Immediate             True
-px-replicated                       kubernetes.io/portworx-volume  Delete          Immediate             True
-thin-csi                            csi.vsphere.vmware.com         Delete          WaitForFirstConsumer  True
-thin                                kubernetes.io/vsphere-volume   Delete          Immediate             False
-...
-----
-
-Beyond that, there is a ton of other other useful information about the cluster. The `--all` flag will show you:
 
 [source,bash]
 ----
-ocp_insights.sh --file module5-insights-data --all
+etcd-ocp-diag.py --path module5-must-gather.6521552859184261155/ --stats
+
+Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-0
+	First Occurrence: 2024-07-28T04:00:27
+	Last Occurrence: 2024-08-14T15:18:23
+	Maximum: 2515.8442ms
+	Minimum: 200.1755ms
+	Median: 554.2048ms
+	Average: 607.3171ms
+	Count: 3614
+	Expected: 200ms
+
+etc..
 ----
 
-.All of the node information, including `coreos version`, `kubelet version` and the `cpu` and `memory` details of each server
+[#commonerrors]
+== Common Errors
+
+. etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
+
+. To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --errors` and it will search all of the etcd Pods and return the Pod Name, Error, and the Count.
+
+.Reviewing Common Errors
 [source,bash]
 ----
-NAME                          READY  ROLE    CREATED ON            VERSION           OS                                                            CPU  MEMORY
-prodshift-2nvq7-dmz-8qn4p     True   worker  2024-08-01T21:07:31Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-dmz-b2gvz     True   worker  2024-08-01T21:18:13Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-master-0      True   master  2022-11-17T16:30:11Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  8    63G
-prodshift-2nvq7-master-1      True   master  2022-11-17T16:29:32Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  8    63G
-prodshift-2nvq7-master-2      True   master  2022-11-17T16:29:53Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  8    63G
-prodshift-2nvq7-worker-8fkc9  True   worker  2022-11-17T16:40:10Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-worker-xdwch  True   worker  2022-11-17T16:38:55Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-worker-zpwq6  True   worker  2022-11-17T16:39:38Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
+etcd-ocp-diag.py --path module5-must-gather.6521552859184261155/ --errors
+
+POD                       	ERROR                                                 	COUNT
+etcd-ocp4-2nvq7-master-0	waiting for ReadIndex response took too long, retrying	 295
+etcd-ocp4-2nvq7-master-0	slow fdatasync                                        	  60
+etcd-ocp4-2nvq7-master-0	apply request took too long                           	3614
+etcd-ocp4-2nvq7-master-0	leader is overloaded likely from slow disk            	 500
+etcd-ocp4-2nvq7-master-0	elected leader                                        	   9
 ----
 
-.What operators are installed on the cluter:
+[#singleerrors]
+== Searching for Specific Errors
+
+. etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
+
+. To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --ttl` and it will search all of the etcd Pods and return the Pod Name, Date, and the Count.
+
+. In addition to "Took Too Long" errors you can also use the following sub-commands:
+
 [source,bash]
 ----
-Installed Operators:
-
-datagrid-operator.v8.5.0
-datagrid-operator.v8.5.1
-grafana-operator.v5.12.0
-openshift-gitops-operator.v1.12.5
-quay-operator.v3.10.6
-
-Installed OLM Operators:
-
-DISPLAY NAME                            VERSION              NAME
-Ansible Automation Platform             v2.4.0-0.1692675723  ansible-automation-platform-operator.aap
-Data Grid                               v8.5.1               datagrid.openshift-operators
-CrowdStrike Falcon Platform - Operator  v0.6.2               falcon-operator-rhmp.falcon-operator
-Grafana Operator                        v5.12.0              grafana-operator.openshift-operators
-Red Hat OpenShift GitOps                v1.12.5              openshift-gitops-operator.openshift-operators
-Portworx Enterprise                     v24.1.1              portworx-certified.openshift-operators
-Red Hat Quay                            v3.9.8               quay-operator.openshift-operators
+  --heartbeat     Check failed to send out heartbeat
+  --election      Check election issues
+  --fdatasync     Check slow fdatasync
+  --buffer        Check sending buffer is full
+  --etcd_timeout  Check etcdserver: request timed out
 ----
 
-.The status of the `MachineConfigPools` and `MachineSets`:
+.Using Sub-Commands to look for Specific Errors
 [source,bash]
 ----
-MachineConfigPools:
+etcd-ocp-diag.py --path module5-must-gather.6521552859184261155/ --ttl | sort -u -k3,3nr
 
-NAME    CONFIG                                            PAUSED  UPDATED  UPDATING  DEGRADED  MACHINECOUNT  READYMACHINECOUNT  UPDATEDMACHINECOUNT  DEGRADEDMACHINECOUNT
-master  rendered-master-8831ba6d556d1c6a582116beaa537dbb  False   True     False     False     3             3                  3                    0
-worker  rendered-worker-b33efe42325e084f9dcef59f47b93fc9  False   True     False     False     5             5                  5                    0
-
-MachineSets:
-
-NAME                    DESIRED  CURRENT  READY  AVAILABLE
-prodshift-2nvq7-dmz     2        2        2      2
-prodshift-2nvq7-worker  3        3        3      3
+POD                       	DATE      	COUNT
+etcd-prodshift-2nvq7-master-2	2024-08-14	952
+etcd-prodshift-2nvq7-master-1	2024-08-14	887
+etcd-prodshift-2nvq7-master-1	2024-08-13	805
+etcd-prodshift-2nvq7-master-2	2024-08-13	744
+etcd-prodshift-2nvq7-master-0	2024-08-14	702
+etcd-prodshift-2nvq7-master-2	2024-08-12	627
+etcd-prodshift-2nvq7-master-1	2024-08-12	579
+etcd-prodshift-2nvq7-master-0	2024-08-13	550
+etcd-prodshift-2nvq7-master-0	2024-08-12	455
+etcd-prodshift-2nvq7-master-2	2024-08-11	360
+etcd-prodshift-2nvq7-master-1	2024-08-11	333
+etcd-prodshift-2nvq7-master-1	2024-08-10	288
+etcd-prodshift-2nvq7-master-2	2024-08-09	268
 ----
 
-.And finally, any alert that is currently firing on the cluster:
+. After you return the results for all dates and pods, you can then drill down further by specifying the `--date` and/or the `--pod` command to return the hour and minute the error happened and results just for one specific pod.
+
+.Using the Date and Pod Options
+
 [source,bash]
 ----
-ALERT NAME                           STATE   START TIME
-ArgoCDSyncAlert                      ACTIVE  2024-08-12T18:52:43.454Z
-ArgoCDSyncAlert                      ACTIVE  2024-08-12T18:52:43.454Z
-UpdateAvailable                      ACTIVE  2024-08-13T14:57:25.650Z
-PrometheusOperatorRejectedResources  ACTIVE  2024-07-28T04:01:17.570Z
+etcd-ocp-diag.py --path module5-must-gather.6521552859184261155/ --ttl --date 2024-08-14 --pod etcd-prodshift-2nvq7-master-1 | sort -k3,3rn
+
+POD                       	DATE 	COUNT
+etcd-prodshift-2nvq7-master-1	00:10	26
+etcd-prodshift-2nvq7-master-1	05:39	21
+etcd-prodshift-2nvq7-master-1	06:08	21
+etcd-prodshift-2nvq7-master-1	05:41	20
+etcd-prodshift-2nvq7-master-1	14:21	20
+etcd-prodshift-2nvq7-master-1	15:12	20
+etcd-prodshift-2nvq7-master-1	05:54	19
 ----
+
+. Finally, you can use the `--compare` command to see when errors happened on the same date. You can combine it with the `--date` command to narrow issues down to specifics hours or minutes.
+
+.Using Compare
+[source,bash]
+----
+etcd-ocp-diag.py --path module5-must-gather.6521552859184261155/ --ttl --compare
+
+Date: 2024-07-28
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     121
+etcd-ocp4-2nvq7-master-1     60
+etcd-ocp4-2nvq7-master-2     98
+
+Date: 2024-07-29
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     112
+etcd-ocp4-2nvq7-master-1     83
+etcd-ocp4-2nvq7-master-2     58
+
+Date: 2024-07-30
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     133
+etcd-ocp4-2nvq7-master-1     114
+etcd-ocp4-2nvq7-master-2     152
+----
+
+[source,bash]
+----
+etcd-ocp-diag.py --path module5-must-gather.6521552859184261155/ --ttl --date 2024-07-28 --compare
+
+Date: 04:02
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     8
+etcd-ocp4-2nvq7-master-2     13
+
+Date: 05:16
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     14
+etcd-ocp4-2nvq7-master-1     12
+etcd-ocp4-2nvq7-master-2     15
+----
+
+Debugging etcd can be complex and there are often a handful of potential root causes. If you find a customer cluster that is showing signs of etcd performance issues, the best course of action is to open a support ticket to engage with our experts. You can also determine next steps by reviewing our detailed etcd debugging article found at https://access.redhat.com/articles/6271341

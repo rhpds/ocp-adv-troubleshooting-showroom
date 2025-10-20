@@ -14,11 +14,9 @@ Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Modu
 
 . `Module 1` introduces all of the tools we will be using
 . `Module 2` does a deeper dive on the functionality in the `omc` tool
-. `Module 3` uses `omc` to explore an issue with a vSphere IPI cluster
+. `Module 3` uses `ocp_insights.py` to proactively look for performance issues with OpenShift Insights data
 . `Module 4` uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
-. `Module 5` uses `ocp_insights.sh` to proactively look for performance issues with OpenShift Insights data
-. `Module 6` uses `etcd-ocp-diag.sh` to review etcd logs for performance related issues
-. `Module 7` uses `omc` to review a stuck Cluster Upgrade
-. `Module 8` uses `omc` to review installed OLM Operators
-. `Module 9` uses `omc` and _manual checks_ on the cluster must-gather in order to explore an OCP networking issue
-. `Module 10` uses `koff` to get and inspect data from an etcd database snapshot
+. `Module 5` uses `etcd-ocp-diag.py` to review etcd logs for performance related issues
+. `Module 6` OVN Lab Module 1
+. `Module 7` OVN Lab Module 2
+. `Module 8` OVN Lab Module 3

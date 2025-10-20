@@ -28,23 +28,6 @@ Example: `go install github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_to
 
 In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub-command with `must-gather` in the link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
 
-[#koffintro]
-=== `koff`
-
-Read objects from an `etcd` snapshot.
-
-You can find and download `koff` from github at: link:https://github.com/gmeghnag/koff/releases[koff releases^]
-
-In order to use the `koff` tool, you must collect an `etcd snapshot` from the target environment. Most customers are already taking daily or more frequent `etcd snapshots`` for disaster recovery purposes, so if you are looking to analyze a problem from a specific time period, request a specific `etcd snapshot`.
-
-If you need to collect a fresh `etcd snapshot`, you can follow the link:https://docs.openshift.com/container-platform/4.17/backup_and_restore/control_plane_backup_and_restore/backing-up-etcd.html#backing-up-etcd-data_backup-etcd[Backing up etcd data^] section of our docs.
-
-The archive produced by the `cluster-backup.sh` script will include a `snapshot_<date>.db` file you can use with `koff`. You can zip and upload the archive to the customer portal for further analysis.
-[source,bash]
-----
-Snapshot saved at /home/core/assets/backup/snapshot_2021-06-25_190035.db
-----
-
 [#yqjqintro]
 === `yq` and `jq`
 
