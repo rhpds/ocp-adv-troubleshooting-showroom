@@ -1,6 +1,6 @@
 = {lab_name}
 
-Welcome to Red Hat One 2025 and this exciting, hand-on, lab experience. Throughout this lab, we will explore a wide variety of tools available to analyze, search and debug OpenShift cluster data to find patterns, issues and other useful information that will help you engage with your customers.
+Welcome to Red Hat One 2026 and this exciting, hand-on, lab experience. Throughout this lab, we will explore a wide variety of tools available to analyze, search and debug OpenShift cluster data to find patterns, issues and other useful information that will help you engage with your customers.
 
 This lab does not use any running OpenShift cluster, it instead focuses on offline debugging using the most common and easiest to collect files our customers provide when they run into issues.
 
@@ -8,13 +8,13 @@ image::openshift-logo.svg[openshift-logo,100%,100%]
 
 == Lab structure
 
-This lab is broken down into a set of 10 unique modules that explore a variety of tools. There is no specific ordering or pre-requisite to move between each module, but we do recommend you review `Module 1` and `Module 2` first.
+This lab is broken down into a set of 8 unique modules that explore a variety of tools. There is no specific ordering or pre-requisite to move between each module, but we do recommend you review `Module 1` and `Module 2` first.
 
 Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Module 3` or pick one that interests you the most.
 
 . `Module 1` introduces all of the tools we will be using
 . `Module 2` does a deeper dive on the functionality in the `omc` tool
-. `Module 3` uses `ocp_insights.py` to proactively look for performance issues with OpenShift Insights data
+. `Module 3` uses `ocp_insights.py` to triage an OpenShift Cluster
 . `Module 4` uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
 . `Module 5` uses `etcd-ocp-diag.py` to review etcd logs for performance related issues
 . `Module 6` OVN Lab Module 1

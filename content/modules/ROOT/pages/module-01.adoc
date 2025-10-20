@@ -11,39 +11,127 @@ During this lab, we will run through a number of exercises that show the power a
 [#omcintro]
 === `omc`
 
-It's just like `oc`, but on a `must-gather`!
+The `omc` tool (OpenShift Must‑Gather Client) is a CLI that lets engineers inspect and query OpenShift `must-gather` archives using oc-like commands to view resources, logs, metrics, and diagnostics.
 
 You can find and download `omc` from github at: link:https://github.com/gmeghnag/omc/releases/[omc releases^]
 
-For more in-depth details on how to collect a `must-gather` and for alternative `must-gather` commands for other OpenShift components, you can refer to the link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html[Gathering data about your cluster^] section of our doc.
+For more in-depth details on how to collect a `must-gather` and for alternative `must-gather` commands for other OpenShift components, you can refer to the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/support/gathering-cluster-data[Gathering data about your cluster^] section of our doc.
 
 [#kcdevtoolintro]
 === `kubectl-dev_tool`
 
-Inspect your `audit logs` with ease!
+`kubectl-dev_tool` is a kubectl plugin that provides developer-friendly commands for Kubernetes workflows—like port-forwarding, log streaming, interactive pod shells, and simplified deploy/rollback operations—wrapped in shorter, higher-level subcommands. It focuses on speeding local development and debugging by combining common kubectl actions into convenient, opinionated shortcuts.
+
+For our use case we will be using the `audit` function of the `kubectl-dev_tool` to filter by `user`, `resource`, `verb`, and sort the data in an easy to ready format.
 
 You can install the `kubectl-dev_tool` from github using `go install` against the: link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools^] repository.
 
 Example: `go install github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_tool@latest`
 
-In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub-command with `must-gather` in the link:https://docs.openshift.com/container-platform/4.17/support/gathering-cluster-data.html#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
+In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub-command with `must-gather` in the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/support/gathering-cluster-data#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
 
 [#yqjqintro]
 === `yq` and `jq`
 
-Process and parse `YAML` and `JSON`
+`jq` is a lightweight command-line `JSON` processor that reads `JSON`, applies queries and filters to transform, extract, and format data, and outputs the result—useful for slicing, mapping, and aggregating `JSON` in scripts and pipelines.
+
+`yq` is a command-line `YAML` processor (also supports `JSON`) that applies jq-like queries and transformations to read, update, convert, and write `YAML`/`JSON—useful` for scripting config files and pipelines.
+
+When to use each tool is based on your preferred output. The version of `yq` we use will convert `YAML` to `JSON` unless you specify to keep the output `YAML` as seen in the example below.
+
+[source,bash]
+----
+$ omc get node worker-00002c77 -o json | jq '.status.conditions[]'
+{
+  "lastHeartbeatTime": "2025-10-13T15:23:37Z",
+  "lastTransitionTime": "2025-09-11T02:08:38Z",
+  "message": "kubelet has sufficient memory available",
+  "reason": "KubeletHasSufficientMemory",
+  "status": "False",
+  "type": "MemoryPressure"
+}
+{
+  "lastHeartbeatTime": "2025-10-13T15:23:37Z",
+  "lastTransitionTime": "2025-09-11T02:08:38Z",
+  "message": "kubelet has no disk pressure",
+  "reason": "KubeletHasNoDiskPressure",
+  "status": "False",
+  "type": "DiskPressure"
+}
+{
+  "lastHeartbeatTime": "2025-10-13T15:23:37Z",
+  "lastTransitionTime": "2025-09-11T02:08:38Z",
+  "message": "kubelet has sufficient PID available",
+  "reason": "KubeletHasSufficientPID",
+  "status": "False",
+  "type": "PIDPressure"
+}
+{
+  "lastHeartbeatTime": "2025-10-13T15:23:37Z",
+  "lastTransitionTime": "2025-09-11T02:10:10Z",
+  "message": "kubelet is posting ready status",
+  "reason": "KubeletReady",
+  "status": "True",
+  "type": "Ready"
+}
+$ omc get node worker-00002c77 -o yaml | yq -Y '.status.conditions[]'
+lastHeartbeatTime: "2025-10-13T15:23:37Z"
+lastTransitionTime: "2025-09-11T02:08:38Z"
+message: kubelet has sufficient memory available
+reason: KubeletHasSufficientMemory
+status: "False"
+type: MemoryPressure
+---
+lastHeartbeatTime: "2025-10-13T15:23:37Z"
+lastTransitionTime: "2025-09-11T02:08:38Z"
+message: kubelet has no disk pressure
+reason: KubeletHasNoDiskPressure
+status: "False"
+type: DiskPressure
+---
+lastHeartbeatTime: "2025-10-13T15:23:37Z"
+lastTransitionTime: "2025-09-11T02:08:38Z"
+message: kubelet has sufficient PID available
+reason: KubeletHasSufficientPID
+status: "False"
+type: PIDPressure
+---
+lastHeartbeatTime: "2025-10-13T15:23:37Z"
+lastTransitionTime: "2025-09-11T02:10:10Z"
+message: kubelet is posting ready status
+reason: KubeletReady
+status: "True"
+type: Ready
+----
 
 [#gronintro]
 === `gron`
 
-Making `JSON` greppable
+`gron` is a command-line tool that transforms `JSON` into a flat, line-oriented format of assignment-like statements (paths = values), making it easy to grep, filter, and diff `JSON`; it can also reconstruct the original `JSON` from that flattened output.
+
+In this example below we want to return the the cpu count of the node but we don't know the exact `JSON` path. By utilizing the `gron` tool, we now know the `JSON` path to use when running `jq`. Using this path we can now run a bash for loop to print the cpu count for each worker node.
+
+[source,bash]
+----
+$ omc get node woker-00002c77 -o json | gron | grep -i osimage
+json.status.capacity.cpu = "4";
+$ omc get node woker-00002c77 -o json | jq -r '.status.capacity.cpu'
+4
+$ for i in $(omc get nodes -l node-role.kubernetes.io/worker= | grep -v NAME | awk '{ print $1 }'); \
+do echo "$i" - $(omc get node $i -o json | jq -r '.status.capacity.cpu'); done
+worker-00002c77 - 4
+worker-00002de0 - 4
+worker-00002ef5 - 4
+worker-00002f2e - 4
+----
+
 
 You can find and download `gron` from github at: link:https://github.com/tomnomnom/gron/releases[gron releases^]
 
 [#etcddiagintro]
 === `etcd-ocp-diag`
 
-Find `etcd` issue in your `must-gather` data
+This python script allows you to quick identify common etcd performance errors, review statistics, and easily review when errors have occurred so that you can quickly pinpoint if the problem is your underlying disks or point you to other areas that may be causing the issues.
 
 You can find and download `etcd-ocp-diag` from github at: link:https://github.com/cptmorgan-rh/etcd-ocp-diag-script/blob/python/etcd-ocp-diag.py[etcd-ocp-diag-script^]
 
@@ -51,6 +139,6 @@ You can find and download `etcd-ocp-diag` from github at: link:https://github.co
 [#ocpinsightsintro]
 === `ocp_insights`
 
-Parse and view your `Insights` data from the `Insights Operator`
+OpenShift LightSpeed, formerly OpenShift Insights, is a data collection tool that collects information similar to an OpenShift Must-Gather and uploads that data to Red Hat's servers for proactive analysis. When a must-gather is collected from a cluster running the Insights Operator, the latest Lightspeed Archives are collected. Using these archives along with the `ocp_insights` script, we can quickly triage a cluster to determine all of the important information in seconds to allow us to get an understand of the make up and design of the cluster along with any issues currently affecting the cluster.
 
 You can find and download `ocp_insights` from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/insightsarchive/ocp_insights.sh[ocp_insights^]
