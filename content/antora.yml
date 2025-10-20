@@ -1,12 +1,12 @@
 name: modules
-title: Anatomy of a must-gather - Analyzing real customer issues
+title: Beyond the Basics - Advanced OpenShift Troubleshooting Techniques
 version: master
 nav:
   - modules/ROOT/nav.adoc
 
 asciidoc:
   attributes:
-    lab_name: "Anatomy of a must-gather - Analyzing real customer issues"
+    lab_name: "Beyond the Basics - Advanced OpenShift Troubleshooting Techniques"
     release-version: master
     page-pagination: true
     my_var: "foo"

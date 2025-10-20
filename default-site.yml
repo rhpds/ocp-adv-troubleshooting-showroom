@@ -1,6 +1,6 @@
 ---
 site:
-  title: Anatomy of a Must-Gather Lab
+  title: Beyond the Basics - Advanced OpenShift Troubleshooting Techniques
   url: https://redhat-scholars.github.io/course-template
   start_page: modules::index.adoc
 
