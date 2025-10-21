@@ -1,294 +1,199 @@
-= What is overloading my API?
+= Analyzing etcd performance
 :prewrap!:
 
-A customer reported an issue where access to the OpenShift API was intermittent and or slow. +
+The brain of any good Kubernetes cluster is etcd (pronounced et-see-dee), is an open source, distributed, consistent key-value store for shared configuration, service discovery, and scheduler coordination of distributed systems or clusters of machines.
 
-.The customer provided the following information:
-************************************************
-While upgrading from OpenShift v4.12 to 4.13, we saw a spike in `Readiness probe for <pod> failed` logs. We usually see a few hundred of these per minute, but it has spiked to 11,000 in one minute from 09:55 PST / 17:55 UTC.
+As the primary datastore of Kubernetes, etcd stores and replicates all Kubernetes cluster states. Since it is a critical component of a Kubernetes cluster it is important that etcd has a reliable approach to its configuration and management and is hosted on hardware that is able to support it's rigorous demands. When etcd is experiencing performance issues, then entire cluster suffers and can become unstable and unusable.
 
-These probe failures caused several pods in a `Deployment` or `StatefulSet` to restart at the same time, causing application downtimes as the pods recovered.
-************************************************
+In this module we will utilize a python script to analyze the etcd pod logs in an OpenShift must-gather to help identify common errors and correlate those errors.
 
-[#theapi]
-== What is hitting my API?
+[#gettingstarted]
+== etcd-ocp-diag.py
+. With this python script we will be able to identify common errors in the etc pod logs including:
+** "Apply Request Took Too Long" - etcd took longer than expected to apply the request.
+** "Failed to Send Out Heartbeat" - The etcd node took longer than expected to send out a heart beat.
+** "Lost Leader" and "Elected Leader" - The node hasn't heard from the leader in a set period causing an election
+** "wal: Sync Duration" - The Write Ahead Log Sync Duration took too long.
+** "The Clock Difference Against Peer" - The Peers have too large of a clock difference/
+** "Server is Likely Overloaded" - This error is a direct result of disk performance per etcd docs.
+** "Sending Buffer is Full" - The sending buffer for etcd raft messages is full due to slowness of other nodes.
+** and more.
 
-How do we check who, what and how often something is hitting the API of an OpenShift cluster?
-
-In this lab we are going to explore the usage of the `OpenShift Cluster Debug Tools`, specifically `kubectl-dev_tool` and the `kubectl-dev_tool audit` subcommand.
-
-https://github.com/openshift/cluster-debug-tools/
-
-In addition to the standard must-gather, there are a number of additional variants for collecting data for special use cases.
-
-For this exercise, we asked the customer to collect the audit logs from their cluster so we can analyze every request going to the API.
-
-[TIP]
-=====
-Can you use the following command to collect an `audit log` `must-gather`:
-
-`oc adm must-gather -- /usr/bin/gather_audit_logs`
-
-This will produce a `must-gather` style directory that can be zipped and uploaded to a support case.
-=====
-
-[#explore]
-== Explore the `kubectl-dev_tool audit` command
-
-Lets take a look at the `kubectl-dev_tool audit` subcommand by running it with the `-h` flag to look at the help screen.
-
-On this screen, you will find 5 examples to give you some understanding of how to use the tool.
-
-[TIP]
-====
-When using the `-f` flag, you can pass a single file, as in the example, or the entire directory.
-
-`-f 'audit_logs/kube-apiserver'`
-====
-
-[#firstrun]
-== Run a command
-
-Let's run a command against the `kube-apiserver` and see what kind of information we get back.
+.Understanding etcd-ocp-diag.py
 
 [source,bash]
 ----
-cd ~/Module4/module4-must-gather-audit-log/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/
+etcd-ocp-diag.py --help
+
+usage: etcd-ocp-diag.py [-h] --path PATH [--ttl] [--heartbeat] [--election] [--fdatasync] [--buffer] [--etcd_timeout] [--pod POD] [--date DATE] [--compare] [--errors] [--stats] [--previous] [--rotated]
+
+Process etcd logs and gather statistics.
+
+options:
+  -h, --help      show this help message and exit
+  --path PATH     Path to the must-gather
+  --ttl           Check apply request took too long
+  --heartbeat     Check failed to send out heartbeat
+  --election      Check election issues
+  --fdatasync     Check slow fdatasync
+  --buffer        Check sending buffer is full
+  --etcd_timeout  Check etcdserver: request timed out
+  --pod POD       Specify the pod to analyze
+  --date DATE     Specify date for error search in YYYY-MM-DD format
+  --compare       Display only dates or times that happen in all pods
+  --errors        Display etcd errors
+  --stats         Display etcd stats
+  --previous      Use previous logs
+  --rotated       Use rotated logs
 ----
 
-Depending on the amount of data and the complexity of the search, it can take some time to process.
+[#stats]
+== etcd Error Stats
 
-Using the example from the help page, we can run a command like this:
+. The first thing you should check is to see if there are performance issues affecting the etcd cluster. To do this we run the `--stats` which looks for `Took Too Long` error messages, collects the `expected` time, and then calculated the `maximum` time, the `minimum` time over the `expected` time, the `median`, and the `average` along with the `count` and then displays the information. It also does the same thing for the `slow fdatasync` error message.
 
+. If you encounter a large number (over 100 errors a day average) or your Maximums are near 1 Second or higher, then you want to dig deeper into the etcd performance to see when it is happening and if we see any issues elsewhere in the cluster.
+
+.Checking for etcd Error Stats
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --verb=get --resource='*.*' --resource='-subjectaccessreviews.*' --resource='-tokenreviews.*' | more
-----
-
-In this case, we are looking at individual `GET` requests, how long they took, what they accessed and who made the request.
-
-[source,bash]
-----
-23:03:59 [   GET][     1.095ms] [200] /livez                                  [system:anonymous]
-23:04:00 [   GET][       352µs] [200] /.well-known/oauth-authorization-server [system:anonymous]
-23:04:00 [   GET][       196µs] [200] /.well-known/oauth-authorization-server [system:anonymous]
-----
-
-[NOTE]
-====
-The larger and busier the cluster, the shorter the audit log duration will be.
-
-If you have a requirement to maintain or potentially review the audit logs, you need to send them to an external logging source for retention.
-
-For this lab, each `kubectl-dev_tool` commands takes approximately 50 seconds to run.
-====
-
-[#theissue]
-== Checking for issues
-
-Now that we know a little bit about the `kubectl-dev_tool`, let's look at our `audit log must-gather` for potential issues.
-
-[TIP]
-====
-There is a helpful flag you can use `-o top` which will count, group and display the top 10 entries for your search.
-====
-
-Start by taking a high level view. You can be both broad and granular with audit logs, but unless you know exactly what you're looking for, it's best to cast a wide net.
-
-Look at the top usage for the common `--by=` groups like `resource` and `user`
-
-The first thing you will see is a log outlining the `count` (number of records), followed by a time range and duration for the period the audit logs cover.
-
-[source,bash]
-----
-count: 2181977, first: 2022-02-07T20:11:40Z, last: 2022-02-08T00:59:59Z, duration: 4h48m18.666203s
-----
-
-After that, you will see the returned data set.
-
-`data by resource`
-[source,bash]
-----
-464191x              v1/nodes
-372952x              v1/configmaps
-357233x              v1/pods
-99403x               v1/secrets
-99280x               authorization.k8s.io/v1/subjectaccessreviews
-96385x               coordination.k8s.io/leases
-93652x               v1/persistentvolumeclaims
-92327x               v1/persistentvolumes
-50571x               v1/namespaces
-34385x               apps/deployments
-----
-
-`data by user`
-[source,bash]
-----
-446278x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
-76068x               system:apiserver
-63661x               system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
-39312x               user@identity
-36799x               system:serviceaccount:openshift-operators-redhat:elasticsearch-operator
-33976x               system:serviceaccount:kube-system:horizontal-pod-autoscaler
-33303x               system:serviceaccount:openshift-etcd-operator:etcd-operator
-30875x               system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
-29274x               system:serviceaccount:openshift-cluster-storage-operator:csi-snapshot-controller-operator
-28468x               system:serviceaccount:openshift-apiserver-operator:openshift-apiserver-operator
-----
-
-====
-[source,bash]
-----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=resource -otop
+cd ~/module4/
 ----
 
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop
+etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --stats
+
+Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-0
+	First Occurrence: 2024-07-28T04:00:27
+	Last Occurrence: 2024-08-14T15:18:23
+	Maximum: 2515.8442ms
+	Minimum: 200.1755ms
+	Median: 554.2048ms
+	Average: 607.3171ms
+	Count: 3614
+	Expected: 200ms
+
+etc..
 ----
-====
 
-[#thedata]
-== Evaluate and dig deeper
+[#commonerrors]
+== Common Errors
 
-We spotted something suspicious, so let's drill down a little deeper.
+. etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
 
-[TIP]
-====
-When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
-====
+. To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --errors` and it will search all of the etcd Pods and return the Pod Name, Error, and the Count.
 
-====
-Our top 3 resources from the previous command were `nodes`, `configmaps` and `pods`:
+.Reviewing Common Errors
+[source,bash]
+----
+etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --errors
+
+POD                       	ERROR                                                 	COUNT
+etcd-ocp4-2nvq7-master-0	waiting for ReadIndex response took too long, retrying	 295
+etcd-ocp4-2nvq7-master-0	slow fdatasync                                        	  60
+etcd-ocp4-2nvq7-master-0	apply request took too long                           	3614
+etcd-ocp4-2nvq7-master-0	leader is overloaded likely from slow disk            	 500
+etcd-ocp4-2nvq7-master-0	elected leader                                        	   9
+----
+
+[#singleerrors]
+== Searching for Specific Errors
+
+. etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
+
+. To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --ttl` and it will search all of the etcd Pods and return the Pod Name, Date, and the Count.
+
+. In addition to "Took Too Long" errors you can also use the following sub-commands:
 
 [source,bash]
 ----
-464191x              v1/nodes
-372952x              v1/configmaps
-357233x              v1/pods
+  --heartbeat     Check failed to send out heartbeat
+  --election      Check election issues
+  --fdatasync     Check slow fdatasync
+  --buffer        Check sending buffer is full
+  --etcd_timeout  Check etcdserver: request timed out
 ----
 
-Our top 3 users from the previous command were `sysdig-agent`, `apiserver` and `openshift-apiserver-sa`
+.Using Sub-Commands to look for Specific Errors
+[source,bash]
+----
+etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl | sort -u -k3,3nr
+
+POD                       	DATE      	COUNT
+etcd-prodshift-2nvq7-master-2	2024-08-14	952
+etcd-prodshift-2nvq7-master-1	2024-08-14	887
+etcd-prodshift-2nvq7-master-1	2024-08-13	805
+etcd-prodshift-2nvq7-master-2	2024-08-13	744
+etcd-prodshift-2nvq7-master-0	2024-08-14	702
+etcd-prodshift-2nvq7-master-2	2024-08-12	627
+etcd-prodshift-2nvq7-master-1	2024-08-12	579
+etcd-prodshift-2nvq7-master-0	2024-08-13	550
+etcd-prodshift-2nvq7-master-0	2024-08-12	455
+etcd-prodshift-2nvq7-master-2	2024-08-11	360
+etcd-prodshift-2nvq7-master-1	2024-08-11	333
+etcd-prodshift-2nvq7-master-1	2024-08-10	288
+etcd-prodshift-2nvq7-master-2	2024-08-09	268
+----
+
+. After you return the results for all dates and pods, you can then drill down further by specifying the `--date` and/or the `--pod` command to return the hour and minute the error happened and results just for one specific pod.
+
+.Using the Date and Pod Options
 
 [source,bash]
 ----
-446278x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
-76068x               system:apiserver
-63661x               system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
+etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl --date 2024-08-14 --pod etcd-prodshift-2nvq7-master-1 | sort -k3,3rn
+
+POD                       	DATE 	COUNT
+etcd-prodshift-2nvq7-master-1	00:10	26
+etcd-prodshift-2nvq7-master-1	05:39	21
+etcd-prodshift-2nvq7-master-1	06:08	21
+etcd-prodshift-2nvq7-master-1	05:41	20
+etcd-prodshift-2nvq7-master-1	14:21	20
+etcd-prodshift-2nvq7-master-1	15:12	20
+etcd-prodshift-2nvq7-master-1	05:54	19
 ----
-====
 
-One of those sticks out, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
+. Finally, you can use the `--compare` command to see when errors happened on the same date. You can combine it with the `--date` command to narrow issues down to specifics hours or minutes.
 
-====
+.Using Compare
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps -otop --by=user
+etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl --compare
+
+Date: 2024-07-28
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     121
+etcd-ocp4-2nvq7-master-1     60
+etcd-ocp4-2nvq7-master-2     98
+
+Date: 2024-07-29
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     112
+etcd-ocp4-2nvq7-master-1     83
+etcd-ocp4-2nvq7-master-2     58
+
+Date: 2024-07-30
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     133
+etcd-ocp4-2nvq7-master-1     114
+etcd-ocp4-2nvq7-master-2     152
 ----
 
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=pods -otop --by=user
+etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl --date 2024-07-28 --compare
+
+Date: 04:02
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     8
+etcd-ocp4-2nvq7-master-2     13
+
+Date: 05:16
+POD                            COUNT
+etcd-ocp4-2nvq7-master-0     14
+etcd-ocp4-2nvq7-master-1     12
+etcd-ocp4-2nvq7-master-2     15
 ----
 
-[source,bash]
-----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=nodes -otop --by=user
-----
-====
-
-The data for `configmaps` and `pods` looks pretty spread out across a variety of users. There are no obvious bad actors.
-
-`data by user for configmaps`
-[source,bash]
-----
-16947x               system:serviceaccount:openshift-etcd-operator:etcd-operator
-6470x                user@identity
-5197x                system:serviceaccount:openshift-kube-controller-manager-operator:kube-controller-manager-operator
-4157x                system:serviceaccount:openshift-operators-redhat:elasticsearch-operator
-4149x                system:serviceaccount:openshift-kube-apiserver-operator:kube-apiserver-operator
-3317x                system:serviceaccount:openshift-logging:cluster-logging-operator
-3285x                system:serviceaccount:9b301c-dev:tno
-3131x                system:serviceaccount:devops-archeobot:default
-3045x                system:kube-scheduler
-3016x                system:serviceaccount:openshift-kube-scheduler-operator:openshift-kube-scheduler-operator
-----
-
-`data by user for pods`
-[source,bash]
-----
-13218x               system:serviceaccount:openshift-multus:multus
-8808x                system:node:cluster-app-13.dmz
-8763x                system:node:cluster-app-15.dmz
-6592x                system:node:cluster-app-16.dmz
-4805x                system:serviceaccount:openshift-logging:logcollector
-4777x                system:node:cluster-app-07.dmz
-4741x                system:node:cluster-app-12.dmz
-4644x                system:node:cluster-app-03.dmz
-4510x                system:node:cluster-app-31.dmz
-4380x                system:node:cluster-app-26.dmz
-----
-
-But for nodes, there is one big outlier in the number of requests being executed. It aligns with the outlier we saw from the previous `--by=user` output.
-
-`data by user for nodes`
-[source,bash]
-----
-440987x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
-737x                 system:node:cluster-infra-03.dmz
-736x                 system:node:cluster-infra-04.dmz
-734x                 system:node:cluster-infra-06.dmz
-734x                 system:node:cluster-infra-02.dmz
-452x                 system:node:cluster-app-26.dmz
-449x                 system:node:cluster-app-07.dmz
-441x                 system:node:cluster-app-02.dmz
-437x                 system:node:cluster-app-41.dmz
-437x                 system:node:cluster-app-05.dmz
-----
-
-So let's take a look at that specific user and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
-
-Let's try to answer the following:
-
-What is the user doing? +
-What is the problem? +
-
-====
-[source,bash]
-----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user=system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent --by=verb -otop
-----
-
-What we see is very interesting:
-
-. The majority are `GET` requests to the `/proxy/metrics` endpoint of every node.
-. They're all returning a HTTP `403` errors
-
-[NOTE]
-A HTTP 403 is an HTTP status code meaning access to the requested resource is forbidden. +
-A HTTP 403 is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account.
-
-
-[source,bash,subs="quotes"]
-----
-Top 10 "GET" (of 440076 total hits):
-   8313x [   274.335µs] [*403*-8312] /api/v1/nodes/cluster-app-38.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
-   8309x [   272.092µs] [*403*-8308] /api/v1/nodes/cluster-app-25.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
-   8308x [   270.327µs] [*403*-8307] /api/v1/nodes/cluster-app-02.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
-----
-
-Based on this information, we could conclude that the API was being overloaded with requests from an application called `sysdig` which is a piece of 3rd party software used to monitor the OpenShift cluster. The service account `sysdig-agent` was failing to collect `node` metrics and in turn was spamming the API server.
-
-With this information, you can now have an informed discussion with your customer, provide them all of the details of the issue and direct them to open a support case or start a discussion with the 3rd party vendor to address the issue.
-====
-
-I hope you found this introduction to the `kubectl-dev_tool` useful and can leverage it the next time you have an issue!
-
-[TIP]
-====
-You don't need to have an overloaded API or a performance issue to take a look at the audit logs.
-
-The audit logs and `kubectl-dev_tool` are equally useful if you want to understand who or what did something in your cluster.
-
-Something or someone deleted your pod, secret, service or other object? That's in the audit logs! Use the `kubectl-dev_tool` to find out who did it and when!
-====
+Debugging etcd can be complex and there are often a handful of potential root causes. If you find a customer cluster that is showing signs of etcd performance issues, the best course of action is to open a support ticket to engage with our experts. You can also determine next steps by reviewing our detailed etcd debugging article found at https://access.redhat.com/articles/6271341

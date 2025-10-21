@@ -15,8 +15,8 @@ Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Modu
 . `Module 1` introduces all of the tools we will be using
 . `Module 2` does a deeper dive on the functionality in the `omc` tool
 . `Module 3` uses `ocp_insights.py` to triage an OpenShift Cluster
-. `Module 4` uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
-. `Module 5` uses `etcd-ocp-diag.py` to review etcd logs for performance related issues
+. `Module 4` uses `etcd-ocp-diag.py` to review etcd logs for performance related issues
+. `Module 5` uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
 . `Module 6` OVN Lab Module 1
 . `Module 7` OVN Lab Module 2
 . `Module 8` OVN Lab Module 3
