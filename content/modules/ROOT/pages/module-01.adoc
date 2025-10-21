@@ -1,6 +1,6 @@
 = Tools of the trade
 
-There are many tools available to speed up debugging, issue resolution and problem identification when analyzing issues with an OpenShift cluster.
+These are some of the many Community Created Tools available to speed up debugging, issue resolution and problem identification when analyzing issues with an OpenShift cluster. Red Hat does not maintain and/or provide support on these tools. Please see each projects GitHub page, if available, for assistance.
 
 
 [#intro]
@@ -24,9 +24,12 @@ For more in-depth details on how to collect a `must-gather` and for alternative 
 
 For our use case we will be using the `audit` function of the `kubectl-dev_tool` to filter by `user`, `resource`, `verb`, and sort the data in an easy to ready format.
 
-You can install the `kubectl-dev_tool` from github using `go install` against the: link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools^] repository.
+==== Installation
+To install `kubectl-dev_tool` from github use ensure `golang` is installed and run the command `go get` or you can follow the build instructions located in the link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools^] repository.
 
-Example: `go install github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_tool@latest`
+Example: `go get github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_tool`
+
+==== Usage
 
 In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub-command with `must-gather` in the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/support/gathering-cluster-data#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
 
@@ -36,6 +39,14 @@ In order to use the `kubectl-dev_tool` you need to collect the audit logs from t
 `jq` is a lightweight command-line `JSON` processor that reads `JSON`, applies queries and filters to transform, extract, and format data, and outputs the result—useful for slicing, mapping, and aggregating `JSON` in scripts and pipelines.
 
 `yq` is a command-line `YAML` processor (also supports `JSON`) that applies jq-like queries and transformations to read, update, convert, and write `YAML`/`JSON—useful` for scripting config files and pipelines.
+
+==== Installation
+
+`jq` and `yq` are provided by most Package Managers
+
+Example: `dnf install jq yq -y`
+
+==== Usage
 
 When to use each tool is based on your preferred output. The version of `yq` we use will convert `YAML` to `JSON` unless you specify to keep the output `YAML` as seen in the example below.
 
