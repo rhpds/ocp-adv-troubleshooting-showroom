@@ -3,7 +3,6 @@
 *** xref:module-01.adoc#omcintro[omc - It's just like oc, but on a must-gather!]
 *** xref:module-01.adoc#kcdevtoolintro[kubectl-dev_tool - Inspect your audit logs with ease]
 *** xref:module-01.adoc#yqjqintro[yq and jq - Process and parse yaml and json]
-*** xref:module-01.adoc#gronintro[gron - Making JSON greppable]
 *** xref:module-01.adoc#etcddiagintro[etcd-ocp-diag - Find etcd issue in your must-gather]
 *** xref:module-01.adoc#ocpinsightsintro[ocp_insights - Parse and view your Insights data from the Insights Operator]
 

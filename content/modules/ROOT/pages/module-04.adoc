@@ -65,7 +65,7 @@ Using the example from the help page, we can run a command like this:
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --verb=get --resource='*.*' --resource='-subjectaccessreviews.*' --resource='-tokenreviews.*' | more
 ----
 
-In this case, we are looking at individual `GET` requests, how long they took, what they accessed and who made the request. 
+In this case, we are looking at individual `GET` requests, how long they took, what they accessed and who made the request.
 
 [source,bash]
 ----
@@ -78,7 +78,7 @@ In this case, we are looking at individual `GET` requests, how long they took, w
 ====
 The larger and busier the cluster, the shorter the audit log duration will be.
 
-If you have a requirement to maintain or potentially review the audit logs, you need to send them to an external logging source for retention. 
+If you have a requirement to maintain or potentially review the audit logs, you need to send them to an external logging source for retention.
 
 For this lab, each `kubectl-dev_tool` commands takes approximately 50 seconds to run.
 ====
@@ -90,7 +90,7 @@ Now that we know a little bit about the `kubectl-dev_tool`, let's look at our `a
 
 [TIP]
 ====
-There is a helpful flag you can use `-o top` which will count, group and display the top 10 entries for your search. 
+There is a helpful flag you can use `-o top` which will count, group and display the top 10 entries for your search.
 ====
 
 Start by taking a high level view. You can be both broad and granular with audit logs, but unless you know exactly what you're looking for, it's best to cast a wide net.
@@ -136,9 +136,6 @@ After that, you will see the returned data set.
 28468x               system:serviceaccount:openshift-apiserver-operator:openshift-apiserver-operator
 ----
 
-
-.*Click to show some commands if you need a hint*
-[%collapsible]
 ====
 [source,bash]
 ----
@@ -161,8 +158,6 @@ We spotted something suspicious, so let's drill down a little deeper.
 When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
 ====
 
-.*Click to show some details if you need a hint*
-[%collapsible]
 ====
 Our top 3 resources from the previous command were `nodes`, `configmaps` and `pods`:
 
@@ -185,10 +180,7 @@ Our top 3 users from the previous command were `sysdig-agent`, `apiserver` and `
 
 One of those sticks out, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
 
-.*Click to show some details if you need a hint*
-[%collapsible]
 ====
-
 [source,bash]
 ----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps -otop --by=user
@@ -261,8 +253,6 @@ Let's try to answer the following:
 What is the user doing? +
 What is the problem? +
 
-.*Click to show some details if you need a hint*
-[%collapsible]
 ====
 [source,bash]
 ----
@@ -271,12 +261,12 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user=system:serviceaccou
 
 What we see is very interesting:
 
-. The majority are `GET` requests to the `/proxy/metrics` endpoint of every node. 
+. The majority are `GET` requests to the `/proxy/metrics` endpoint of every node.
 . They're all returning a HTTP `403` errors
 
 [NOTE]
 A HTTP 403 is an HTTP status code meaning access to the requested resource is forbidden. +
-A HTTP 403 is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account. 
+A HTTP 403 is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account.
 
 
 [source,bash,subs="quotes"]
@@ -296,7 +286,7 @@ I hope you found this introduction to the `kubectl-dev_tool` useful and can leve
 
 [TIP]
 ====
-You don't need to have an overloaded API or a performance issue to take a look at the audit logs. 
+You don't need to have an overloaded API or a performance issue to take a look at the audit logs.
 
 The audit logs and `kubectl-dev_tool` are equally useful if you want to understand who or what did something in your cluster.
 

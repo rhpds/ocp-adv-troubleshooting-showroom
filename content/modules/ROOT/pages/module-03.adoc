@@ -18,7 +18,7 @@ With this script we will be able to parse the insights archive, review customer 
 .Understanding ocp_insights
 [source,bash]
 ----
-cd ~/Module5/
+cd ~/Module3/
 ----
 
 [source,bash]
@@ -70,7 +70,7 @@ Options:
 
 [source,bash]
 ----
-ocp_insights.sh --file module5-insights-data
+ocp_insights.sh --file Module3-insights-data
 
 Cluster Version: 4.14.27
 Channel: eus-4.14
@@ -98,7 +98,7 @@ etc...
 .Viewing Cluster Memory Usage
 [source,bash]
 ----
-$ ocp_insights.sh --file module5-insights-data --customer_memory
+$ ocp_insights.sh --file Module3-insights-data --customer_memory
 
 ...
 Customer Namespace Memory Usage.
@@ -127,7 +127,7 @@ Total Customer Namespace Memory Usage: 121.9884G
 .Looking at etcd metrics
 [source,bash]
 ----
-ocp_insights.sh --file module5-insights-data --etcd_metrics
+ocp_insights.sh --file Module3-insights-data --etcd_metrics
 
 etcd server slow apply total
 
@@ -149,7 +149,7 @@ etcd-ocp4-2nvq7-master-1,22
 .Storage Classes
 [source,bash]
 ----
-ocp_insights.sh --file module5-insights-data --storage_classes
+ocp_insights.sh --file Module3-insights-data --storage_classes
 ...
 StorageClass Information.
 
@@ -179,7 +179,7 @@ Beyond that, there is a ton of other other useful information about the cluster.
 
 [source,bash]
 ----
-ocp_insights.sh --file module5-insights-data --all
+ocp_insights.sh --file Module3-insights-data --all
 ----
 
 .All of the node information, including `coreos version`, `kubelet version` and the `cpu` and `memory` details of each server

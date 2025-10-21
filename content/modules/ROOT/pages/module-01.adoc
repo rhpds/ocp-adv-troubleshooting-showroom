@@ -104,30 +104,6 @@ status: "True"
 type: Ready
 ----
 
-[#gronintro]
-=== `gron`
-
-`gron` is a command-line tool that transforms `JSON` into a flat, line-oriented format of assignment-like statements (paths = values), making it easy to grep, filter, and diff `JSON`; it can also reconstruct the original `JSON` from that flattened output.
-
-In this example below we want to return the the cpu count of the node but we don't know the exact `JSON` path. By utilizing the `gron` tool, we now know the `JSON` path to use when running `jq`. Using this path we can now run a bash for loop to print the cpu count for each worker node.
-
-[source,bash]
-----
-$ omc get node woker-00002c77 -o json | gron | grep -i osimage
-json.status.capacity.cpu = "4";
-$ omc get node woker-00002c77 -o json | jq -r '.status.capacity.cpu'
-4
-$ for i in $(omc get nodes -l node-role.kubernetes.io/worker= | grep -v NAME | awk '{ print $1 }'); \
-do echo "$i" - $(omc get node $i -o json | jq -r '.status.capacity.cpu'); done
-worker-00002c77 - 4
-worker-00002de0 - 4
-worker-00002ef5 - 4
-worker-00002f2e - 4
-----
-
-
-You can find and download `gron` from github at: link:https://github.com/tomnomnom/gron/releases[gron releases^]
-
 [#etcddiagintro]
 === `etcd-ocp-diag`
 
