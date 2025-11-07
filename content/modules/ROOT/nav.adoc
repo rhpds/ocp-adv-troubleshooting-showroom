@@ -35,8 +35,21 @@
 ** xref:module-05.adoc#theissue[Checking for issues]
 ** xref:module-05.adoc#thedata[Evaluate and dig deeper]
 
-* xref:module-06.adoc[6. OVN Lab Module 1]
+* xref:module-06.adoc[6. Debugging OVN-Kubernetes - The Setup]
+** xref:module-06.adoc#thetools[Lab Tools]
+*** xref:module-06.adoc#ovnkube[ovnkube-trace]
+*** xref:module-06.adoc#ovntrace[ovn-trace]
+*** xref:module-06.adoc#ovnnb[ovn-nbctl]
+** xref:module-06.adoc#thesetup[Lab Setup]
 
-* xref:module-07.adoc[7. OVN Lab Module 2]
+* xref:module-07.adoc[7. OVN-Kubernetes - My pods can not communicate in the same namespace]
+** xref:module-07.adoc#theissue[Issues with pod communication in a namespace]
+** xref:module-07.adoc#debugnspodtopod[Debug the Traffic Flow]
+*** xref:module-07.adoc#environmentsetup[Setup the OVN Environment]
+*** xref:module-07.adoc#firsttrace[Running the First Trace]
+*** xref:module-07.adoc#analyzefirsttrace[Analyzing the Trace]
+*** xref:module-07.adoc#resolvingtheissue[Resolving the Connectivity Issue]
 
-* xref:module-08.adoc[8. OVN Lab Module 3]
+* xref:module-08.adoc[8. OVN-Kubernetes - Some traffic between namesspaces works and some is failing]
+
+* xref:module-09.adoc[9. OVN-Kubernetes - My Virtual Machine can only reach a few external websites]

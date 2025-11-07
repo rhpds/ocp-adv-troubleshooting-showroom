@@ -1,1 +1,192 @@
-= OVN Troubleshooting Module 6
+= Debugging OVN-Kubernetes - The Setup
+:prewrap!:
+
+The Software Defined Network (SDN) used in the OpenShift Container Platform is based off the upstream OVN-Kubernetes project and serves as the backbone for all container and virtual machine networking needs.
+
+OVN-Kubernetes (Open Virtual Networking - Kubernetes) is an open-source project that provides a robust networking solution for Kubernetes clusters with OVN (Open Virtual Networking) and Open vSwitch (Open Virtual Switch) at its core. It is a Kubernetes networking conformant plugin written according to the CNI (Container Network Interface) specifications.
+
+Everyone knows it's there, but how do we debug it? When you run into an issue, how do you narrow down the cause?
+
+In this section of the lab, we are going to walk you through 3 scenarios and how to leverage tools like `ovnkube-trace`, `ovn-trace` and `ovn-nbctl` to identify and resolve network communication issues between internal and external resouces.
+
+
+[#thetools]
+== Lab Tools
+
+[#ovnkube]
+=== ovnkube-trace
+
+Th first tool you'll go to, `ovnkube-trace`, is a GO based command line tool that takes a set of arguments, inspects your running OpenShift cluster and translates all of the pod IP and MAC information to perform low level ovn-trace, ovs-appctl ofproto/trace and ovn-detrace commands on your defined workloads.
+
+Because this lab is not taking place on a running OpenShift cluster, we will show you examples of the `ovnkube-trace` command for each exercise and actually use the lower level `ovn-trace` that `ovnkube-trace` produces.
+
+[#ovntrace]
+=== ovn-trace
+
+Moving down a layer, `ovn-trace` is used to simulate packet forwarding within an OVN logical network. This allows you to view and subsequently debug where and why decision were made that resulted in the successful or unsuccessful delivery of your packet.
+
+[#ovnnb]
+=== ovn-nbctl
+
+The `ovn-nbctl` command allows you to interact with the running OVN Northbound Database. In this lab, we will use it to view and inspect logical routrs and switchs, ACLs and other configurations that make up the SDN configuration.
+
+[#thesetup]
+== Lab Setup
+
+[NOTE]
+=====
+This lab is not using a running OpenShift Cluster.
+
+The following scenarios we're deployed into a running OpenShift Cluster and a backup of the OVN and OVS databases, along with flows and interfaces, were restored into this demo environment.
+
+All commands and outputs yield the same results as if this OVN-Kubernetes dump was running in an OpenShift Cluster.
+=====
+
+What does our example application look like?
+
+For this lab, we will trace traffic flows between 2 frontend pods, 2 backend pods and 1 virtual machine with each set residing in their own namespace.
+
+[source,bash]
+----
+NAMESPACE  NAME                              READY   STATUS     RESTARTS  AGE   IP             NODE                                    NOM NODE   READINESS
+backend    sitea-backend-796cf44b87-wx565    1/1     Running    0         27h   10.129.6.11    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+backend    siteb-backend-5b765679b5-6wkvx    1/1     Running    0         27h   10.129.6.16    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+external   virt-launcher-external-vm-tfbr4   1/1     Running    0         13m   10.129.7.5     worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     1/1
+frontend   sitea-frontend-8798d9cdc-sq7dk    1/1     Running    0         27h   10.129.6.17    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+frontend   siteb-frontend-66f9f55ddc-97jkg   1/1     Running    0         27h   10.129.6.15    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+----
+
+Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network `default/vlan530`.
+
+[source,bash]
+----
+oc get pods sitea-frontend-8798d9cdc-sq7dk -o yaml | grep 'k8s.ovn.org/pod-networks'
+    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.17/23"],"mac_address":"0a:58:0a:81:06:11","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.17/23","gateway_ip":"10.129.6.1","role":"primary"}}'
+
+oc get pods siteb-frontend-66f9f55ddc-97jkg -o yaml | grep 'k8s.ovn.org/pod-networks'
+    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.15/23"],"mac_address":"0a:58:0a:81:06:0f","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.15/23","gateway_ip":"10.129.6.1","role":"primary"}}'
+
+oc get pods siteb-backend-5b765679b5-6wkvx -o yaml | grep 'k8s.ovn.org/pod-networks'
+    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.16/23"],"mac_address":"0a:58:0a:81:06:10","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.16/23","gateway_ip":"10.129.6.1","role":"primary"}}'
+
+oc get pods sitea-backend-796cf44b87-wx565 -o yaml | grep 'k8s.ovn.org/pod-networks'
+    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.11/23"],"mac_address":"0a:58:0a:81:06:0b","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.11/23","gateway_ip":"10.129.6.1","role":"primary"}}'
+
+oc get pods virt-launcher-external-vm-tfbr4 -o yaml | grep 'k8s.ovn.org/pod-networks'
+    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.7.5/23"],"mac_address":"0a:58:0a:81:07:05","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.7.5/23","gateway_ip":"10.129.6.1","role":"primary"},"default/vlan530":{"ip_addresses":null,"mac_address":"02:a1:3b:00:00:15","role":"secondary"}}'
+----
+
+You can also pull the networking information of the VM directly off the Virtual Machine Instance (vmi) object.
+
+[source,yaml]
+----
+oc get vmi -o wide
+NAME          AGE   PHASE     IP             NODENAME                               READY   LIVE-MIGRATABLE   PAUSED
+external-vm   21m   Running   10.6.153.247   worker-5.ocpv.tamlab.rdu2.redhat.com   True    True
+
+oc get vmi external-vm -o yaml | yq .status.interfaces
+- infoSource: domain, guest-agent, multus-status
+  interfaceName: eth0
+  ipAddress: 10.6.153.247
+  ipAddresses:
+    - 10.6.153.247
+    - 2620:52:9:1699:a1:3bff:fe00:15
+    - fe80::a1:3bff:fe00:15
+  linkState: up
+  mac: 02:a1:3b:00:00:15
+  name: default
+  podInterfaceName: pod37a8eec1ce1
+  queueCount: 1
+----
+
+We also know that our cluster has some default `NetworkPolicies` and `MultiNetworkPolicies` that get applied to every new `Namespace`.
+
+[source,yaml]
+----
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: default-deny
+  namespace: frontend
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+----
+
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-openshift-ingress
+  namespace: frontend
+spec:
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+  podSelector: {}
+  policyTypes:
+  - Ingress
+----
+
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-backend-to-siteb-frontend
+  namespace: frontend
+spec:
+  podSelector:
+    matchLabels:
+      deployment: siteb-frontend
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: backend
+  policyTypes:
+  - Ingress
+----
+
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: default/vlan530
+  name: deny-by-default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+----
+
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: default/vlan530
+  name: egressallow-gh
+spec:
+    egress:
+    - to:
+      - ipBlock:
+          cidr: 140.82.113.0/24
+      - ipBlock:
+          cidr: 8.8.8.8/32
+    podSelector:
+      matchLabels:
+        internet: "true"
+    policyTypes:
+    - Egress
+----
+
+Now that we know what our environment looks like, let's get into the first exercise.

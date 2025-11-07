@@ -17,6 +17,7 @@ Once you have reviewed `Module 1` and `Module 2`, feel free to continue to `Modu
 . `Module 3` uses `ocp_insights.py` to triage an OpenShift Cluster
 . `Module 4` uses `etcd-ocp-diag.py` to review etcd logs for performance related issues
 . `Module 5` uses `kubectl-dev_tool` to explore a cluster with an overloaded OpenShift API
-. `Module 6` OVN Lab Module 1
-. `Module 7` OVN Lab Module 2
-. `Module 8` OVN Lab Module 3
+. `Module 6` introduces the OVN debugging lab environment
+. `Module 7` uses `ovn-trace` and `ovn-nbctl` to debug why pods in the same namespace can not communicate
+. `Module 8` uses `ovn-trace` and `ovn-nbctl` to debug why some traffic between namesspaces works and some is failing
+. `Module 9` uses `ovn-trace` and `ovn-nbctl` to debug why a Virtual Machine can only reach a few external websites
