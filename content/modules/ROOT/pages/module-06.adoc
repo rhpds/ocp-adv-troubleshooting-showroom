@@ -42,6 +42,9 @@ The following scenarios we're deployed into a running OpenShift Cluster and a ba
 All commands and outputs yield the same results as if this OVN-Kubernetes dump was running in an OpenShift Cluster.
 =====
 
+[#theapplication]
+=== The Demo Application
+
 What does our example application look like?
 
 For this lab, we will trace traffic flows between 2 frontend pods, 2 backend pods and 1 virtual machine with each set residing in their own namespace.
@@ -189,4 +192,75 @@ spec:
     - Egress
 ----
 
-Now that we know what our environment looks like, let's get into the first exercise.
+[#environmentsetup]
+=== Setup the OVN Environment
+
+To begin, lets start our OVN environment by moving into the `ModuleOVN` directory and executing the start script.
+
+[source,console,role=execute]
+----
+cd ~/ModuleOVN/
+----
+
+[source,console,role=execute]
+----
+/home/lab-user/ModuleOVN/ovs-dbg/bin/ovs-offline -w /home/lab-user/ModuleOVN/ovs-offline start
+----
+
+After executing the above command, you will see output of 4 containers starting.
+
+[source,console]
+----
+Starting container ovsdb-server-ovn_nb
+7c3f080cf89e038255fc2b35825ce69dc85440dfd48864b8b4876bc14c4473ee
+Starting container ovsdb-server-ovn_sb
+270f9af1197081df32789c541eaf54c77e5ccadfee560ad9895fd19572432d16
+Starting container ovsdb-server-ovs
+066bd7f2e5d4c5023c7e552a273cd318add2489d06c4e46cfe9e2340bcac0bc6
+Starting container ovs-vswitchd
+b0bc4411308193f003731553655ec405fa04f6d9848a213e6b6c653ffbe80b5e
+----
+
+When that is finished, confirm your 4 containers are running.
+
+[source,console,role=execute]
+----
+podman ps
+----
+
+[source,console]
+----
+CONTAINER ID  IMAGE                         COMMAND         CREATED        STATUS        PORTS       NAMES
+7c3f080cf89e  localhost/ovs-offline:latest  ovsdb-ovn_nb    5 minutes ago  Up 5 minutes              ovsdb-server-ovn_nb
+270f9af11970  localhost/ovs-offline:latest  ovsdb-ovn_sb    5 minutes ago  Up 5 minutes              ovsdb-server-ovn_sb
+066bd7f2e5d4  localhost/ovs-offline:latest  ovsdb-ovs       5 minutes ago  Up 5 minutes              ovsdb-server-ovs
+b0bc44113081  localhost/ovs-offline:latest  vswitchd-dummy  4 minutes ago  Up 4 minutes              ovs-vswitchd
+----
+
+The last step is to move into the pre-created execution environment by sourcing the following file. This produces a number of `alias` commands to allow for easier execution of commands against the OVN environment.
+
+[source,console,role=execute]
+----
+source /tmp/ovs-offline/bin/activate
+----
+
+You will now see your terminal change, pre-pending `(ovs-offline)` to your existing prompt `[lab-user@rhel9 ModuleOVN]$`.
+
+[source,console]
+----
+* You can now run the following offline commands directly:
+      ovs-vsctl [...]
+      ovsdb-client [...]
+
+      ovn-nbctl [...]
+      ovsdb-client [...] $OVN_NB_DB
+
+      ovn-sbctl [...]
+      ovsdb-client [...] $OVN_SB_DB
+
+* You can restore your previous environment with:
+      ovs-offline-deactivate
+(ovs-offline) [lab-user@rhel9 ModuleOVN]$
+----
+
+Now that we know what our demo environment looks like and you have started the OVN environment, let's get into the first exercise! If you have any issues or questions, let us know.

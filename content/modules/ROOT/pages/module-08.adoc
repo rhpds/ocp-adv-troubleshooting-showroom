@@ -1,1 +1,316 @@
-= OVN Troubleshooting Module 8
+= OVN-Kubernetes - Some of my pods can communicate and some can not between two namespaces
+:prewrap!:
+
+[#theissue]
+== Issues with pod communication between namespace
+
+I have 2 pods in my `frontend` namespace and 2 pods in my `backend` namespace but some of them have communication issue.
+
+The 2 backend pods, `sitea-backend-796cf44b87-wx565` and `siteb-backend-5b765679b5-6wkvx` can communicate with `siteb-frontend-66f9f55ddc-97jkg` but communication hangs going to `sitea-frontend-8798d9cdc-sq7dk`.
+
+[#debugdiffnspodtopod]
+== Debug the Traffic Flow
+
+To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-src` pod name, `-dst-namespace` and `-dst` pod name:
+
+[TIP]
+=====
+[source,bash]
+----
+./ovnkube-trace -tcp -src-namespace backend -src sitea-backend-796cf44b87-wx565 -dst-namespace frontend -dst siteb-frontend-66f9f55ddc-97jkg -loglevel=4
+
+./ovnkube-trace -tcp -src-namespace backend -src sitea-backend-796cf44b87-wx565 -dst-namespace frontend -dst sitea-frontend-8798d9cdc-sq7dk -loglevel=4
+----
+=====
+
+[#runtrace]
+=== Running the Trace
+
+From your execution environment, run the following `ovn-trace`.
+
+As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
+
+. `worker-5.ocpv.tamlab.rdu2.redhat.com` -> is the OVN datapath which is a logical router or switch associated to the workloads
+. `inport` -> is the OVN port for instance we are tracing from
+. `eth.src` -> source pod mac address
+. `eth.dst` -> destination pod mac address
+. `ip4.src` -> source pod IP address
+. `ip4.dst` -> destination pod IP address
+. `tcp.dst` -> destination port
+. `tcp.src` -> source port
+
+[source,console,role=execute]
+----
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="backend_sitea-backend-796cf44b87-wx565" && eth.src==0a:58:0a:81:06:0b && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.11 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
+----
+
+When the `ovn-trace` runs, you get a full accounting of how that packet would traverse the SDN. Because we don't need to analyze the whole thing, we're going to focus on the last `egress` section.
+
+[source,console]
+----
+egress(dp="worker-5.ocpv.tamlab.rdu2.redhat.com", inport="stor-worker-5.ocpv.tamlab.rdu2.redhat.com", outport="frontend_siteb-frontend-66f9f55ddc-97jkg")
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ 2. ls_out_pre_acl (northd.c:6057): ip, priority 100, uuid c1ee92b5
+    reg0[0] = 1;
+    next;
+ 3. ls_out_pre_lb (northd.c:6267): ip, priority 100, uuid 2f4aa83e
+    reg0[2] = 1;
+    next;
+ 4. ls_out_pre_stateful (northd.c:6298): reg0[2] == 1, priority 110, uuid bcf2d2d5
+    ct_lb_mark;
+
+ct_lb_mark /* default (use --ct to customize) */
+------------------------------------------------
+ 5. ls_out_acl_hint (northd.c:6399): !ct.new && ct.est && !ct.rpl && ct_mark.blocked == 0, priority 4, uuid cfae0de0
+    reg0[8] = 1;
+    reg0[10] = 1;
+    next;
+ 8. ls_out_acl_action (northd.c:7308): reg8[30..31] == 0, priority 500, uuid 9ba0e4eb
+    reg8[30..31] = 1;
+    next(6);
+ 8. ls_out_acl_action (northd.c:7308): reg8[30..31] == 1, priority 500, uuid a72c3c38
+    reg8[30..31] = 2;
+    next(6);
+ 6. ls_out_acl_eval (northd.c:7089): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.src == {$a7965222081737101305} && outport == @a822482823149801400), priority 2001, uuid c5eeb01a
+    reg8[16] = 1;
+    next;
+ 8. ls_out_acl_action (northd.c:7276): reg8[16] == 1, priority 1000, uuid b2d321e2
+    reg8[16] = 0;
+    reg8[17] = 0;
+    reg8[18] = 0;
+    reg8[30..31] = 0;
+    next;
+11. ls_out_check_port_sec (northd.c:5866): 1, priority 0, uuid a87e1d41
+    reg0[15] = check_out_port_sec();
+    next;
+12. ls_out_apply_port_sec (northd.c:5874): 1, priority 0, uuid 7e9dcb6d
+    output;
+    /* output to "frontend_siteb-frontend-66f9f55ddc-97jkg", type "" */
+----
+
+What you should immediatly notice is that the trace was successful, as seen by the correct output to `frontend_siteb-frontend-66f9f55ddc-97jkg`.
+
+Let's run another `ovn-trace`, this time on the pods from the reported failure scenario.
+
+[source,console,role=execute]
+----
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="backend_sitea-backend-796cf44b87-wx565" && eth.src==0a:58:0a:81:06:0b && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.11 && ip4.dst==10.129.6.17 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
+----
+
+[source,console]
+----
+egress(dp="worker-5.ocpv.tamlab.rdu2.redhat.com", inport="stor-worker-5.ocpv.tamlab.rdu2.redhat.com", outport="frontend_sitea-frontend-8798d9cdc-sq7dk")
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ 2. ls_out_pre_acl (northd.c:6057): ip, priority 100, uuid c1ee92b5
+    reg0[0] = 1;
+    next;
+ 3. ls_out_pre_lb (northd.c:6267): ip, priority 100, uuid 2f4aa83e
+    reg0[2] = 1;
+    next;
+ 4. ls_out_pre_stateful (northd.c:6298): reg0[2] == 1, priority 110, uuid bcf2d2d5
+    ct_lb_mark;
+
+ct_lb_mark /* default (use --ct to customize) */
+------------------------------------------------
+ 5. ls_out_acl_hint (northd.c:6399): !ct.new && ct.est && !ct.rpl && ct_mark.blocked == 0, priority 4, uuid cfae0de0
+    reg0[8] = 1;
+    reg0[10] = 1;
+    next;
+ 8. ls_out_acl_action (northd.c:7308): reg8[30..31] == 0, priority 500, uuid 9ba0e4eb
+    reg8[30..31] = 1;
+    next(6);
+ 8. ls_out_acl_action (northd.c:7308): reg8[30..31] == 1, priority 500, uuid a72c3c38
+    reg8[30..31] = 2;
+    next(6);
+ 6. ls_out_acl_eval (northd.c:7137): reg8[30..31] == 2 && reg0[10] == 1 && (outport == @a3640229366109469754), priority 2000, uuid f5747c49
+    reg8[17] = 1;
+    ct_commit { ct_mark.blocked = 1; ct_label.obs_point_id = 0; };
+    next;
+ 8. ls_out_acl_action (northd.c:7281): reg8[17] == 1, priority 1000, uuid b201ae3a
+    reg8[16] = 0;
+    reg8[17] = 0;
+    reg8[18] = 0;
+    reg8[30..31] = 0;
+----
+
+This time we see an abrupt end to the trace after we commit `ct_mark.blocked = 1` to drop traffic.
+
+[#analyzetrace]
+=== Analyzing the Trace
+
+Now that we have traced a successful path and a failing path, lets answer the question: How can communication between 2 pods work fine and fail between 2 other pods between the same 2 namespaces?
+
+Looking at the `ls_out_acl_eval` output from the working trace, we can see evaluation against an `ip4.src` of `a7965222081737101305` and an outport of `a822482823149801400`.
+
+[source,console]
+----
+6. ls_out_acl_eval (northd.c:7089): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.src == {$a7965222081737101305} && outport == @a822482823149801400), priority 2001, uuid c5eeb01a
+----
+
+Leveraging our learning from module 7, we know the `outport` maps to a `portgroup` and the `ip4.src` maps to an address set.
+
+First, let's take a look at the `portgroup`.
+
+[source,console,role=execute]
+----
+ovn-nbctl find Port_Group  name="a822482823149801400"
+----
+
+[source,console]
+----
+_uuid               : e9544740-5733-4db9-a4db-56022e3fa7b9
+acls                : [975b140e-4b67-4a0b-8e50-8ffd468a8f55]
+external_ids        : {"k8s.ovn.org/id"="default-network-controller:NetworkPolicy:frontend:allow-from-backend-to-siteb-frontend", "k8s.ovn.org/name"="frontend:allow-from-backend-to-siteb-frontend", "k8s.ovn.org/owner-controller"=default-network-controller, "k8s.ovn.org/owner-type"=NetworkPolicy}
+name                : a822482823149801400
+ports               : [813df718-f961-4a2f-9606-97125b43c38a]
+----
+
+From the output, we can see 3 pieces of important information
+
+1. `acls` -> there is 1 `UUID` -> `[975b140e-4b67-4a0b-8e50-8ffd468a8f55]`
+2. `ports` -> there is 1 `UUIDs` -> `[813df718-f961-4a2f-9606-97125b43c38a]`
+3. `external_ids` -> shows the policy was created from a `NetworkPolicy` in the `frontend` named `allow-from-backend-to-siteb-frontend` -> `NetworkPolicy:frontend:allow-from-backend-to-siteb-frontend`
+
+Next, lets take a look at the `access control list (ACL)` object.
+
+[source,console,role=execute]
+----
+ovn-nbctl list ACL 975b140e-4b67-4a0b-8e50-8ffd468a8f55
+----
+
+[source,console]
+----
+_uuid               : 975b140e-4b67-4a0b-8e50-8ffd468a8f55
+action              : allow-related
+direction           : to-lport
+external_ids        : {direction=Ingress, gress-index="0", ip-block-index="-1", "k8s.ovn.org/id"="default-network-controller:NetworkPolicy:frontend:allow-from-backend-to-siteb-frontend:Ingress:0:None:-1", "k8s.ovn.org/name"="frontend:allow-from-backend-to-siteb-frontend", "k8s.ovn.org/owner-controller"=default-network-controller, "k8s.ovn.org/owner-type"=NetworkPolicy, port-policy-protocol=None}
+label               : 0
+log                 : false
+match               : "ip4.src == {$a7965222081737101305} && outport == @a822482823149801400"
+meter               : acl-logging
+name                : "NP:frontend:allow-from-backend-to-siteb-frontend:Ingress:0"
+options             : {}
+priority            : 1001
+sample_est          : []
+sample_new          : []
+severity            : []
+tier                : 2
+----
+
+We can see that the ACL matches what we saw in the trace command for the `ip4.src` and `outport` and that the action is `allow-related` for all traffic.
+
+The ACL looks fine, so lets take a look at the `ip4.src` object, which is an address set.
+
+[source,console,role=execute]
+----
+ovn-nbctl list address_set a7965222081737101305
+----
+
+[source,console]
+----
+_uuid               : 569bb6ea-9283-454e-bb7c-3263248d48e1
+addresses           : ["10.129.6.11", "10.129.6.16"]
+external_ids        : {ip-family=v4, "k8s.ovn.org/id"="default-network-controller:Namespace:backend:v4", "k8s.ovn.org/name"=backend, "k8s.ovn.org/owner-controller"=default-network-controller, "k8s.ovn.org/owner-type"=Namespace}
+name                : a7965222081737101305
+----
+
+We can see that the `ip4.src` address set lists both backend pods as valid sources.
+
+So what’s the issue? If you look closely at the previous output, the `portgroup` only has 1 port listed: `813df718-f961-4a2f-9606-97125b43c38a`
+
+We have 2 frontend pods, but only 1 has their `port` on the `portgroup`, which explains why only 1 pod can communicate. 
+
+Let's take a look at that `port`.
+
+[source,console,role=execute]
+----
+ovn-nbctl lsp-get-addresses 813df718-f961-4a2f-9606-97125b43c38a
+----
+
+Looking at the addresses, we can see that `10.129.6.15` matches `siteb-frontend-66f9f55ddc-97jkg`, which is our working pod.
+
+[source,console]
+----
+0a:58:0a:81:06:0f 10.129.6.15
+----
+
+Taking a quick look at the failure scenario. You can see:
+
+[source,console]
+----
+6. ls_out_acl_eval (northd.c:7137): reg8[30..31] == 2 && reg0[10] == 1 && (outport == @a3640229366109469754), priority 2000, uuid dd0081ed
+----
+
+The `ls_out_acl_eval` shows `outport == @a3640229366109469754` which results in `ct_mark.blocked = 1`. This is the exact same failure and `outport` we saw in module 7, meaning the outbound traffic to the backend pods is being blocked. You may think this is the same issue as module 7, but it is not. If we applied the `NetworkPolicy` we used to fix module 7, it would not fix module 8 because that `NetworkPolicy` only applied to the pods in the frontend (same) namespace. Because we are communicating between namespaces now, that policy will not help.
+
+If you look at the `NetworkPolicy` currently applied, you can see that the `podSelector` only matches on the `siteb-frontend` label, which only aligns to the `siteb` pods, allowing them to communicate with any pods from the backend namespace. This is why the `sitea-frontend` pods can not communicate.
+
+[source,console]
+----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-backend-to-siteb-frontend
+  namespace: frontend
+spec:
+  podSelector:
+    matchLabels:
+      deployment: siteb-frontend
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: backend
+  policyTypes:
+  - Ingress
+----
+
+[#resolvingtheissue]
+=== Resolving the Connectivity Issue
+
+Now that we know the issue, there are 2 possible solutions.
+
+1. Create a new `NetworkPolicy` that allows `sitea-frontend` to reach the backend pods. This would be the least permissive and most fine grained option.
+
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-backend-to-sitea-frontend
+  namespace: frontend
+spec:
+  podSelector:
+    matchLabels:
+      deployment: sitea-frontend
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: backend
+  policyTypes:
+  - Ingress
+----
+
+[start=2]
+2. Open up the existing `NetworkPolicy` by removing the `podSelector` `matchLabels`. This is a broader policy and would also allow any other new pod in frontend to be able to communicate with the backend pods.
+
+[source,yaml]
+----
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-backend-to-frontend
+spec:
+  podSelector: {}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: backend
+  policyTypes:
+  - Ingress
+----
+
+Let us know if you have any questions or feel free to move on to the next section!
