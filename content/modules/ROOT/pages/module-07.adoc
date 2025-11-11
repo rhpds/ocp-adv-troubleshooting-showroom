@@ -15,7 +15,7 @@ To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-s
 
 [TIP]
 =====
-[source,bash]
+[.wrap,bash]
 ----
 ./ovnkube-trace -tcp -src-namespace frontend -src sitea-frontend-8798d9cdc-sq7dk -dst-namespace frontend -dst siteb-frontend-66f9f55ddc-97jkg --loglevel=4
 ----
@@ -41,7 +41,7 @@ As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
 . `tcp.dst` -> destination port
 . `tcp.src` -> source port
 
-[source,console,role=execute]
+[.wrap,console,role=execute]
 ----
 ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="frontend_sitea-frontend-8798d9cdc-sq7dk" && eth.src==0a:58:0a:81:06:11 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.17 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
 ----

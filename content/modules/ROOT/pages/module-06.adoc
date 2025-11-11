@@ -49,19 +49,24 @@ What does our example application look like?
 
 For this lab, we will trace traffic flows between 2 frontend pods, 2 backend pods and 1 virtual machine with each set residing in their own namespace.
 
-[source,bash]
+[.wrap,bash]
 ----
 NAMESPACE  NAME                              READY   STATUS     RESTARTS  AGE   IP             NODE                                    NOM NODE   READINESS
+
 backend    sitea-backend-796cf44b87-wx565    1/1     Running    0         27h   10.129.6.11    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+
 backend    siteb-backend-5b765679b5-6wkvx    1/1     Running    0         27h   10.129.6.16    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+
 external   virt-launcher-external-vm-tfbr4   1/1     Running    0         13m   10.129.7.5     worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     1/1
+
 frontend   sitea-frontend-8798d9cdc-sq7dk    1/1     Running    0         27h   10.129.6.17    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+
 frontend   siteb-frontend-66f9f55ddc-97jkg   1/1     Running    0         27h   10.129.6.15    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
 ----
 
 Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network `default/vlan530`.
 
-[source,bash]
+[.wrap,bash]
 ----
 oc get pods sitea-frontend-8798d9cdc-sq7dk -o yaml | grep 'k8s.ovn.org/pod-networks'
     k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.17/23"],"mac_address":"0a:58:0a:81:06:11","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.17/23","gateway_ip":"10.129.6.1","role":"primary"}}'
@@ -81,12 +86,16 @@ oc get pods virt-launcher-external-vm-tfbr4 -o yaml | grep 'k8s.ovn.org/pod-netw
 
 You can also pull the networking information of the VM directly off the Virtual Machine Instance (vmi) object.
 
-[source,yaml]
+[.wrap,console]
 ----
 oc get vmi -o wide
 NAME          AGE   PHASE     IP             NODENAME                               READY   LIVE-MIGRATABLE   PAUSED
-external-vm   21m   Running   10.6.153.247   worker-5.ocpv.tamlab.rdu2.redhat.com   True    True
 
+external-vm   21m   Running   10.6.153.247   worker-5.ocpv.tamlab.rdu2.redhat.com   True    True
+----
+
+[.wrap,yaml]
+----
 oc get vmi external-vm -o yaml | yq .status.interfaces
 - infoSource: domain, guest-agent, multus-status
   interfaceName: eth0

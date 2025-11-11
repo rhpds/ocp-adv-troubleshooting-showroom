@@ -15,7 +15,7 @@ To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-s
 
 [TIP]
 =====
-[source,bash]
+[.wrap,bash]
 ----
 ./ovnkube-trace -tcp -src-namespace backend -src sitea-backend-796cf44b87-wx565 -dst-namespace frontend -dst siteb-frontend-66f9f55ddc-97jkg -loglevel=4
 
@@ -30,7 +30,7 @@ From your execution environment, run the following `ovn-trace`.
 
 As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
 
-. `worker-5.ocpv.tamlab.rdu2.redhat.com` -> is the OVN datapath which is a logical router or switch associated to the workloads
+. `worker-5.ocpv.tamlab.rdu2.redhat.com` -> is the OVN datapath which is a logical router or switch associated to the workload
 . `inport` -> is the OVN port for instance we are tracing from
 . `eth.src` -> source pod mac address
 . `eth.dst` -> destination pod mac address
@@ -39,7 +39,7 @@ As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
 . `tcp.dst` -> destination port
 . `tcp.src` -> source port
 
-[source,console,role=execute]
+[.wrap,console,role=execute]
 ----
 ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="backend_sitea-backend-796cf44b87-wx565" && eth.src==0a:58:0a:81:06:0b && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.11 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
 ----
