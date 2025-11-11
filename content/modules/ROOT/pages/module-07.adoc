@@ -28,16 +28,22 @@ It is a wrapper tool that takes the CLI inputs, looks at your cluster, gets all 
 [#environmentsetup]
 === Setup the OVN Environment
 
-To begin, lets start our OVN environment by moving into the ModuleOVN directory and executing the `/home/lab-user/ModuleOVN/ovs-dbg/bin/ovs-offline -w /home/lab-user/ModuleOVN/ovs-offline start` script.
+To begin, lets start our OVN environment by moving into the ModuleOVN directory and executing the start script.
+
+[source,console,role=execute]
+----
+cd ModuleOVN
+----
+
+[source,console,role=execute]
+----
+/home/lab-user/ModuleOVN/ovs-dbg/bin/ovs-offline -w /home/lab-user/ModuleOVN/ovs-offline start
+----
+
+After executing the above command, you will see 4 containers start.
 
 [source,console]
 ----
-[lab-user@rhel9 ~]$ cd ModuleOVN
-----
-
-[source,console]
-----
-[lab-user@rhel9 ModuleOVN]$ /home/lab-user/ModuleOVN/ovs-dbg/bin/ovs-offline -w /home/lab-user/ModuleOVN/ovs-offline start
 Starting container ovsdb-server-ovn_nb
 7c3f080cf89e038255fc2b35825ce69dc85440dfd48864b8b4876bc14c4473ee
 Starting container ovsdb-server-ovn_sb
@@ -48,11 +54,15 @@ Starting container ovs-vswitchd
 b0bc4411308193f003731553655ec405fa04f6d9848a213e6b6c653ffbe80b5e
 ----
 
-When that is finished, you should see 4 pods running with `podman ps`.
+When that is finished, you should see the 4 containers running.
+
+[source,console,role=execute]
+----
+podman ps
+----
 
 [source,console]
 ----
-[lab-user@rhel9 ModuleOVN]$ podman ps
 CONTAINER ID  IMAGE                         COMMAND         CREATED        STATUS        PORTS       NAMES
 7c3f080cf89e  localhost/ovs-offline:latest  ovsdb-ovn_nb    5 minutes ago  Up 5 minutes              ovsdb-server-ovn_nb
 270f9af11970  localhost/ovs-offline:latest  ovsdb-ovn_sb    5 minutes ago  Up 5 minutes              ovsdb-server-ovn_sb
@@ -60,11 +70,17 @@ CONTAINER ID  IMAGE                         COMMAND         CREATED        STATU
 b0bc44113081  localhost/ovs-offline:latest  vswitchd-dummy  4 minutes ago  Up 4 minutes              ovs-vswitchd
 ----
 
-The last step is to move into the pre-created execution environment by executing `source /tmp/ovs-offline/bin/activate`. This produces a number of `alias` commands to allow for easier execution of commands against our OVN environment.
+The last step is to move into the pre-created execution environment by sourcing the following file. This produces a number of `alias` commands to allow for easier execution of commands against the OVN environment.
+
+[source,console,role=execute]
+----
+source /tmp/ovs-offline/bin/activate
+----
+
+You will now see your terminal change, pre-pending `(ovs-offline)` to your existing prompt `[lab-user@rhel9 ModuleOVN]$`. 
 
 [source,console]
 ----
-[lab-user@rhel9 ModuleOVN]$ source /tmp/ovs-offline/bin/activate
 * You can now run the following offline commands directly:
       ovs-vsctl [...]
       ovsdb-client [...]
@@ -83,7 +99,7 @@ The last step is to move into the pre-created execution environment by executing
 [#firsttrace]
 === Running the First Trace
 
-From your execution environment, run the following ovn-trace.
+From your execution environment, run the following `ovn-trace`.
 
 As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
 
@@ -96,9 +112,9 @@ As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
 . `tcp.dst` -> destination port
 . `tcp.src` -> source port
 
-[source,console]
+[source,console,role=execute]
 ----
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="frontend_sitea-frontend-8798d9cdc-sq7dk" && eth.src==0a:58:0a:81:06:11 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.17 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="frontend_sitea-frontend-8798d9cdc-sq7dk" && eth.src==0a:58:0a:81:06:11 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.17 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
 ----
 
 When the `ovn-trace` runs, you get a full accounting of how that packet would traverse the SDN. Because we don't need to analyze the whole thing, we're going to focus on the last `egress` section.
@@ -160,20 +176,35 @@ So how do we determine why the connection was not allowed? Let's inspect the dat
 
 First, run the following command which will print a brief overview of the database contents.
 
-[source,console]
+[source,console,role=execute]
 ----
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl show
+ovn-nbctl show
 ----
 
 Next, run the following 2 commands to look at the list of `logical router (lr)` and `logical switch (ls)` objects in the database.
 
+[source,console,role=execute]
+----
+ovn-nbctl lr-list
+----
+
+Logical Router objects, defined by a UUID and name.
+
 [source,console]
 ----
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl lr-list
 9316827c-90ed-4943-bb63-1480ffbcffac (GR_worker-5.ocpv.tamlab.rdu2.redhat.com)
 07fef835-dcce-4db0-93df-5515f3dd0f49 (ovn_cluster_router)
+----
 
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl ls-list
+[source,console,role=execute]
+----
+ovn-nbctl ls-list
+----
+
+Logical Switch objects, defined by a UUID and name.
+
+[source,console]
+----
 cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 1524ecbe-0704-4e9f-b97d-9a09e984ef02 (cluster_udn_drenard.udn.tamlab_ovn_layer2_switch)
 4168b09e-0580-4d54-9ef2-3c5dc361a0bf (ext_worker-5.ocpv.tamlab.rdu2.redhat.com)
@@ -186,11 +217,17 @@ cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 
 From the output, you will notice one of the logical switches, `worker-5.ocpv.tamlab.rdu2.redhat.com` is the switch we used in our `ovn-trace`. So lets take a closer look at that switch by looking at the attached `logical switch ports (lsp)`.
 
-Because a cluster is going to have a lot of ports, we focus in with a `grep` on our specifc pods.
+Because a cluster is going to have a lot of ports, we focus in with a `grep` on our specifc pods. If you are interested, feel free to run the command again without the grep to see the full list.
+
+[source,console,role=execute]
+----
+ovn-nbctl lsp-list worker-5.ocpv.tamlab.rdu2.redhat.com | grep 'siteb\|sitea\|network-policy-demo-monitor\|external'
+----
+
+Logical Switch Port objects, defined by UUID and name, where the name aligns to the running pod within the cluster.
 
 [source,console]
 ----
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl lsp-list worker-5.ocpv.tamlab.rdu2.redhat.com | grep 'siteb\|sitea\|network-policy-demo-monitor\|external'
 b684138e-68b5-4249-9403-677700053205 (backend_sitea-backend-796cf44b87-wx565)
 296ccbb5-ea7c-4714-9669-031342907ae9 (backend_siteb-backend-5b765679b5-6wkvx)
 bc5892a3-a5a5-4f45-bbc3-b6dea0853403 (data_virt-launcher-sitea-data-6jv6x)
@@ -206,9 +243,13 @@ These outports correspond to portgroups and are created for each `NetworkPolicy`
 
 Let's take a look at our promlematic `portgroup`.
 
+[source,console,role=execute]
+----
+ovn-nbctl find Port_Group name="a3640229366109469754"
+----
+
 [source,console]
 ----
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl find Port_Group name="a3640229366109469754"
 _uuid               : 5a0d0fe2-bece-44df-9990-66f323e26f19
 acls                : [0cbe6f52-9cf1-4584-9237-7c23f65c82f1, 1fdd654d-f251-4e58-b4ce-d57804f1ba9b]
 external_ids        : {direction=Ingress, "k8s.ovn.org/id"="default-network-controller:NetpolNamespace:frontend:Ingress", "k8s.ovn.org/name"=frontend, "k8s.ovn.org/owner-controller"=default-network-controller, "k8s.ovn.org/owner-type"=NetpolNamespace}
@@ -225,9 +266,13 @@ What you will notice is that the 2 `ports` `UUIDs` correspond to the `UUIDs` of 
 
 Next, lets take a look at the 2 `access control list (ACL)` objects.
 
+[source,console,role=execute]
+----
+ovn-nbctl list ACL 0cbe6f52-9cf1-4584-9237-7c23f65c82f1
+----
+
 [source,console]
 ----
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl list ACL 0cbe6f52-9cf1-4584-9237-7c23f65c82f1
 _uuid               : 0cbe6f52-9cf1-4584-9237-7c23f65c82f1
 action              : drop
 direction           : to-lport
@@ -243,8 +288,15 @@ sample_est          : []
 sample_new          : []
 severity            : []
 tier                : 2
+----
 
-(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl list ACL 1fdd654d-f251-4e58-b4ce-d57804f1ba9b
+[source,console,role=execute]
+----
+ovn-nbctl list ACL 1fdd654d-f251-4e58-b4ce-d57804f1ba9b
+----
+
+[source,console]
+----
 _uuid               : 1fdd654d-f251-4e58-b4ce-d57804f1ba9b
 action              : allow
 direction           : to-lport
@@ -278,7 +330,7 @@ Looking back at our setup, we know that our cluster adds a `default-deny` `Netwo
 [#resolvingtheissue]
 === Resolving the Connectivity Issue
 
-Now that we know the issue, we can easily fix that with a new NetPol to allow traffic between pods in the namespace.
+Now that we know the issue, we can easily fix that with a new `NetworkPolicy` to allow traffic between pods in the namespace.
 
 [source,yaml]
 ----
@@ -385,7 +437,7 @@ name                : a3002123605838622674
 ports               : [813df718-f961-4a2f-9606-97125b43c38a, c8977c7e-e9a7-4548-9383-12ea8dc6df88]
 ----
 
-And on that portgroup, a new ACL exists. This ACL now has `allow-related` for any `to-lport` traffic that matches the ip4.src and outport for our pods in the `frontend` `Namespace`.
+And on that portgroup, a new `ACL` exists. This `ACL` now has `allow-related` for any `to-lport` traffic that matches the `ip4.src` and outport for our pods in the `frontend` `Namespace`.
 
 [source,console]
 ----
@@ -406,3 +458,5 @@ sample_new          : []
 severity            : []
 tier                : 2
 ----
+
+Let us know if you have any questions or feel free to move on to the next section!
