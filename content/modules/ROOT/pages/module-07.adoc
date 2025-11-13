@@ -103,14 +103,7 @@ When `ct_mark.blocked` is set to 1, it means that the connection is no longer al
 
 So how do we determine why the connection was not allowed? Let's inspect the database and find out.
 
-First, run the following command which will print a brief overview of the database contents.
-
-[source,console,role=execute]
-----
-ovn-nbctl show
-----
-
-Next, run the following 2 commands to look at the list of `logical router (lr)` and `logical switch (ls)` objects in the database.
+Let's start by running the following 2 commands to look at the list of `logical router (lr)` and `logical switch (ls)` objects in the database.
 
 [source,console,role=execute]
 ----
@@ -144,7 +137,7 @@ cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 217a444d-ef97-4d51-89d8-581d673e3cf0 (worker-5.ocpv.tamlab.rdu2.redhat.com)
 ----
 
-From the output, you will notice one of the logical switches, `worker-5.ocpv.tamlab.rdu2.redhat.com` is the switch we used in our `ovn-trace`. So lets take a closer look at that switch by looking at the attached `logical switch ports (lsp)`.
+From the output, you will notice one of the logical switches, `worker-5.ocpv.tamlab.rdu2.redhat.com` is the switch we used in our `ovn-trace`. So lets take a closer look at that switch by listing at the attached `logical switch ports (lsp)`.
 
 Because a cluster is going to have a lot of ports, we focus in with a `grep` on our specifc pods. If you are interested, feel free to run the command again without the grep to see the full list.
 
@@ -153,7 +146,7 @@ Because a cluster is going to have a lot of ports, we focus in with a `grep` on 
 ovn-nbctl lsp-list worker-5.ocpv.tamlab.rdu2.redhat.com | grep 'siteb\|sitea\|network-policy-demo-monitor\|external'
 ----
 
-Logical Switch Port objects, defined by UUID and name, where the name aligns to the running pod within the cluster.
+Logical Switch Port objects, defined by UUID and name, where the name maps to a running pod within the cluster.
 
 [source,console]
 ----
@@ -168,7 +161,7 @@ cc35c8dd-4999-497e-a3a8-58775aff23ae (network-policy-demo-monitor_monitor-956f5b
 
 Looking back at our trace, we see traffic is going to `outport == @a3640229366109469754` before it is marked as being dropped.
 
-These outports correspond to portgroups and are created for each `NetworkPolicy` in your cluster. All pods selected by the `podSelector` of that `NetworkPolicy` are added to the portgroup’s port list.
+These `outports` correspond to `portgroups` and are created for every `NetworkPolicy` in your cluster. All pods selected by the `podSelector` of that `NetworkPolicy` are added to the `portgroup` port list.
 
 Let's take a look at our promlematic `portgroup`.
 

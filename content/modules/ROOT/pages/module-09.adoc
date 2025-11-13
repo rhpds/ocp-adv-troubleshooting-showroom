@@ -14,9 +14,9 @@ The VirtualMachine can only access certain websites and external resources.
 [NOTE]
 =====
 In the previous modules we provided `ovnkube-trace` examples so you see how to easily run traces in a running OpenShift cluster. As of the wiriting of this lab, the `ovnkube-trace` wrapper does not support VMs or secondary interfaces.
-=====
 
 If you think that functionality would be valuable, add your input or customer to the feature request: https://issues.redhat.com/browse/RFE-8186[Debugging ovnkube-trace improvements - add ability to trace VMs on secondary networks]
+=====
 
 [#runtrace]
 === Running the Trace
@@ -34,7 +34,7 @@ From your execution environment, run the following `ovn-trace`.
 
 [.wrap,console,role=execute]
 ----
-ovn-trace --ct=new --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-tfbr4" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.3 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-tfbr4" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.3 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
 ----
 
 When the `ovn-trace` runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired exteral resource.
@@ -133,3 +133,6 @@ multicast(dp="br.ex.localnet_ovn_localnet_switch", mcgroup="_MC_unknown")
             output;
             /* output to "br.ex.localnet_ovn_localnet_port", type "localnet" */
 ----
+
+
+

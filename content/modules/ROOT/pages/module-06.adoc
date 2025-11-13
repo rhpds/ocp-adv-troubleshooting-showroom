@@ -272,4 +272,11 @@ You will now see your terminal change, pre-pending `(ovs-offline)` to your exist
 (ovs-offline) [lab-user@rhel9 ModuleOVN]$
 ----
 
-Now that we know what our demo environment looks like and you have started the OVN environment, let's get into the first exercise! If you have any issues or questions, let us know.
+To confirm your environment is up, run the following command which will print an overview of the database contents.
+
+[source,console,role=execute]
+----
+ovn-nbctl show
+----
+
+Now that we know what the demo environment looks like and you have started the OVN environment, let's get into the first exercise! If you have any issues or questions, let us know.
