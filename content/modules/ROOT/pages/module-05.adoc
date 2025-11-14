@@ -1,13 +1,15 @@
 = What is overloading my API?
 :prewrap!:
 
-A customer reported an issue where access to the OpenShift API was intermittent and or slow. +
+A customer reported an issue where the OpenShift API was down and `etcd`, `kube-apiserver` and other control plane pods were in a CrashLoopBackoff with extremely high memory usage.
 
 .The customer provided the following information:
 ************************************************
-While upgrading from OpenShift v4.12 to 4.13, we saw a spike in `Readiness probe for <pod> failed` logs. We usually see a few hundred of these per minute, but it has spiked to 11,000 in one minute from 09:55 PST / 17:55 UTC.
+The hardware of our 3 control plane nodes has reached end of life and we will be replacing them with new hardware.
 
-These probe failures caused several pods in a `Deployment` or `StatefulSet` to restart at the same time, causing application downtimes as the pods recovered.
+OpenShift 4.16.36
+
+I have removed the first old master node. Then the API became unaccessable. I believe our cluster is having issues running with just two masters.
 ************************************************
 
 [#theapi]
@@ -21,7 +23,7 @@ https://github.com/openshift/cluster-debug-tools/
 
 In addition to the standard must-gather, there are a number of additional variants for collecting data for special use cases.
 
-For this exercise, we asked the customer to collect the audit logs from their cluster so we can analyze every request going to the API.
+For this issue, we asked the customer to collect the audit logs from their cluster so we can analyze every request going to the API.
 
 [TIP]
 =====
@@ -30,6 +32,10 @@ Can you use the following command to collect an `audit log` `must-gather`:
 `oc adm must-gather -- /usr/bin/gather_audit_logs`
 
 This will produce a `must-gather` style directory that can be zipped and uploaded to a support case.
+
+If the API is not available, you can collect the audit logs manually under `/var/log/` using `ssh` and `scp` to the node.
+
+`/var/log/kube-apiserver` and the other directories, if necessary, such as `etcd`, `oauth-apiserver`, `openshift-apiserver` and `oauth-server`.
 =====
 
 [#explore]
@@ -51,7 +57,7 @@ When using the `-f` flag, you can pass a single file, as in the example, or the 
 
 Let's run a command against the `kube-apiserver` and see what kind of information we get back.
 
-[source,bash]
+[.wrap,console,role=execute]
 ----
 cd ~/module5/module5-must-gather-audit-log/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/
 ----
@@ -60,7 +66,7 @@ Depending on the amount of data and the complexity of the search, it can take so
 
 Using the example from the help page, we can run a command like this:
 
-[source,bash]
+[.wrap,console,role=execute]
 ----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --verb=get --resource='*.*' --resource='-subjectaccessreviews.*' --resource='-tokenreviews.*' | more
 ----
@@ -88,6 +94,24 @@ For this lab, each `kubectl-dev_tool` commands takes approximately 50 seconds to
 
 Now that we know a little bit about the `kubectl-dev_tool`, let's look at our `audit log must-gather` for potential issues.
 
+The first thing you want to do is narrow down and define a time range for the issue. Being as specific as possible will help ensure your results are accurate. As an example, 100,000 requests against a certain API over a 6 hour window may not be an issue. If those 100,000 requests actually occur during a 10 minute period of within those 6 hours of logs, when the issue occurs, it is likely worth looking into.
+
+Find the newest audit log timestamp looking at the newest `audit.log` file.
+[source,bash]
+----
+tail -n 1 cluster-master-0[1-3].dmz-audit.log
+----
+
+Find the oldest audit log timestamp looking at the oldest `audit.log` file.
+[source,bash]
+----
+cluster-master-01.dmz-audit-2025-09-08T14-20-37.493.log
+cluster-master-02.dmz-audit-2025-09-08T14-46-08.059.log
+cluster-master-03.dmz-audit-2025-09-08T14-15-11.014.log
+----
+
+For our case, our timerange was: `2025-09-08T14:15:00Z to 2025-09-08T15:34:57Z`
+
 [TIP]
 ====
 There is a helpful flag you can use `-o top` which will count, group and display the top 10 entries for your search.
@@ -95,158 +119,230 @@ There is a helpful flag you can use `-o top` which will count, group and display
 
 Start by taking a high level view. You can be both broad and granular with audit logs, but unless you know exactly what you're looking for, it's best to cast a wide net.
 
-Look at the top usage for the common `--by=` groups like `resource` and `user`
+Look at the top usage for the common `--by=` groups like `resource` and `user`. We can combine that using `--after` and `--before`, to narrow the results to focus in on our timerange.
+
+
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=resource -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
 
 The first thing you will see is a log outlining the `count` (number of records), followed by a time range and duration for the period the audit logs cover.
 
-[source,bash]
+[.wrap,console,role=execute]
 ----
-count: 2181977, first: 2022-02-07T20:11:40Z, last: 2022-02-08T00:59:59Z, duration: 4h48m18.666203s
+count: 4714125, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.999222s
 ----
 
 After that, you will see the returned data set.
 
-`data by resource`
 [source,bash]
 ----
-464191x              v1/nodes
-372952x              v1/configmaps
-357233x              v1/pods
-99403x               v1/secrets
-99280x               authorization.k8s.io/v1/subjectaccessreviews
-96385x               coordination.k8s.io/leases
-93652x               v1/persistentvolumeclaims
-92327x               v1/persistentvolumes
-50571x               v1/namespaces
-34385x               apps/deployments
+487532x        v1/endpoints
+442694x        v1/configmaps
+384736x        authorization.k8s.io/v1/subjectaccessreviews
+362910x        v1/persistentvolumeclaims
+338418x        v1/persistentvolumes
+328024x        v1/secrets
+320234x        discovery.k8s.io/endpointslices
+279757x        v1/pods
+202521x        authentication.k8s.io/v1/selfsubjectreviews
+195895x        metrics.k8s.io/pods
 ----
 
-`data by user`
-[source,bash]
-----
-446278x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
-76068x               system:apiserver
-63661x               system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
-39312x               user@identity
-36799x               system:serviceaccount:openshift-operators-redhat:elasticsearch-operator
-33976x               system:serviceaccount:kube-system:horizontal-pod-autoscaler
-33303x               system:serviceaccount:openshift-etcd-operator:etcd-operator
-30875x               system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
-29274x               system:serviceaccount:openshift-cluster-storage-operator:csi-snapshot-controller-operator
-28468x               system:serviceaccount:openshift-apiserver-operator:openshift-apiserver-operator
-----
+Similarily, you can run the same command, using `--by=user`.
 
-====
-[source,bash]
+[.wrap,console,role=execute]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=resource -otop
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop
+506725x        system:serviceaccount:kube-system:horizontal-pod-autoscaler
+298083x        system:serviceaccount:kube-system:endpointslicemirroring-controller
+268994x        system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
+184530x        system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
+158628x        system:serviceaccount:kyverno:kyverno-reports-controller
+105195x        system:serviceaccount:openshift-monitoring:metrics-server
+89860x         system:serviceaccount:d6af69-test:ha-postgres-crunchydb-instance
+87200x         system:serviceaccount:db4642-dev:pay-transparency-dev-crunchy-instance
+82254x         system:serviceaccount:e52f12-dev:pg-272ed005-crunchy-instance
+81997x         system:serviceaccount:d6af69-dev:ha-postgres-crunchydb-instance
 ----
-====
 
 [#thedata]
 == Evaluate and dig deeper
 
-We spotted something suspicious, so let's drill down a little deeper.
+Based on the above data, there is nothing glaringly obvious that is wrong with the cluster, but we can see that the API received `4,714,125` requests over an `80` minute period. That translates to almost `1000` API requests per second.
+
+Let's dig a little deeper.
 
 [TIP]
 ====
 When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
 ====
 
-====
-Our top 3 resources from the previous command were `nodes`, `configmaps` and `pods`:
+Our top resources from the previous command were `endpoints`, `configmaps`, `subjectaccessreviews`, `persistentvolumeclaims`, `persistentvolumes` and `secrets`:
 
 [source,bash]
 ----
-464191x              v1/nodes
-372952x              v1/configmaps
-357233x              v1/pods
+487532x        v1/endpoints
+442694x        v1/configmaps
+384736x        authorization.k8s.io/v1/subjectaccessreviews
+362910x        v1/persistentvolumeclaims
+338418x        v1/persistentvolumes
+328024x        v1/secrets
 ----
 
-Our top 3 users from the previous command were `sysdig-agent`, `apiserver` and `openshift-apiserver-sa`
-
-[source,bash]
-----
-446278x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
-76068x               system:apiserver
-63661x               system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
-----
-====
-
-One of those sticks out, but let's first take a look at our top 3 resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
-
-====
-[source,bash]
-----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps -otop --by=user
-----
+Our top users from the previous command were `horizontal-pod-autoscaler`, `endpointslicemirroring-controller`, `openshift-apiserver-sa`, `pgo[postgrescluster-controller]` and `kyverno-reports-controller`.
 
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=pods -otop --by=user
+506725x        system:serviceaccount:kube-system:horizontal-pod-autoscaler
+298083x        system:serviceaccount:kube-system:endpointslicemirroring-controller
+268994x        system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
+184530x        system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
+158628x        system:serviceaccount:kyverno:kyverno-reports-controller
 ----
+
+Again, none of those stick out as glaring issues, but lets dig into the top resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
+
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=endpoints -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
+
+We can see the `endpoint` activity is spread out, but you can also see the top consumers are `crunchy` / `postgres` instances from different namespaces.
 
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=nodes -otop --by=user
+count: 487532, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.967674s
+89645x         system:serviceaccount:d6af69-test:ha-postgres-crunchydb-instance
+87151x         system:serviceaccount:db4642-dev:pay-transparency-dev-crunchy-instance
+82088x         system:serviceaccount:e52f12-dev:pg-272ed005-crunchy-instance
+81963x         system:serviceaccount:d6af69-dev:ha-postgres-crunchydb-instance
+38591x         system:serviceaccount:c57ee7-dev:dev-crunchy-postgres-instance
+18316x         system:serviceaccount:kube-system:endpoint-controller
+4689x          system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
+1344x          system:serviceaccount:openshift-example-integration:strimzi-cluster-operator
+1309x          system:apiserver
+1148x          system:serviceaccount:openshift-monitoring:prometheus-k8s
 ----
-====
 
-The data for `configmaps` and `pods` looks pretty spread out across a variety of users. There are no obvious bad actors.
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps --by=user -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
 
-`data by user for configmaps`
+We can see the `configmap` activity is spread out.
+
 [source,bash]
 ----
-16947x               system:serviceaccount:openshift-etcd-operator:etcd-operator
-6470x                user@identity
-5197x                system:serviceaccount:openshift-kube-controller-manager-operator:kube-controller-manager-operator
-4157x                system:serviceaccount:openshift-operators-redhat:elasticsearch-operator
-4149x                system:serviceaccount:openshift-kube-apiserver-operator:kube-apiserver-operator
-3317x                system:serviceaccount:openshift-logging:cluster-logging-operator
-3285x                system:serviceaccount:9b301c-dev:tno
-3131x                system:serviceaccount:devops-archeobot:default
-3045x                system:kube-scheduler
-3016x                system:serviceaccount:openshift-kube-scheduler-operator:openshift-kube-scheduler-operator
+count: 442694, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.999222s
+40623x         system:serviceaccount:kyverno:kyverno-reports-controller
+25472x         system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
+6470x          system:node:cluster-app-109.dmz
+5870x          system:node:cluster-app-104.dmz
+5513x          system:node:cluster-app-40.dmz
+5453x          system:node:cluster-app-103.dmz
+5423x          system:node:cluster-app-101.dmz
+5407x          system:node:cluster-app-87.dmz
+5396x          system:node:cluster-app-108.dmz
+5389x          system:node:cluster-app-102.dmz
 ----
 
-`data by user for pods`
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='subjectaccessreviews.*' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
+
+We can see the `subjectaccessreviews` activity is mostly coming from the `openshift-apiserver`, which you would expect.
+
 [source,bash]
 ----
-13218x               system:serviceaccount:openshift-multus:multus
-8808x                system:node:cluster-app-13.dmz
-8763x                system:node:cluster-app-15.dmz
-6592x                system:node:cluster-app-16.dmz
-4805x                system:serviceaccount:openshift-logging:logcollector
-4777x                system:node:cluster-app-07.dmz
-4741x                system:node:cluster-app-12.dmz
-4644x                system:node:cluster-app-03.dmz
-4510x                system:node:cluster-app-31.dmz
-4380x                system:node:cluster-app-26.dmz
+252760x        system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
+105137x        system:serviceaccount:openshift-monitoring:metrics-server
+12701x         system:serviceaccount:openshift-oauth-apiserver:oauth-apiserver-sa
+2191x          system:serviceaccount:openshift-logging:cluster-logging-operator
+1900x          system:serviceaccount:openshift-monitoring:thanos-querier
+1444x          system:serviceaccount:openshift-keda:keda-operator
+1350x          system:serviceaccount:openshift-machine-config-operator:machine-config-daemon
+1292x          system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
+1027x          system:serviceaccount:openshift-monitoring:alertmanager-main
+629x           system:serviceaccount:openshift-logging:logging-loki-gateway
 ----
 
-But for nodes, there is one big outlier in the number of requests being executed. It aligns with the outlier we saw from the previous `--by=user` output.
 
-`data by user for nodes`
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='persistentvolumeclaims' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
+
+We can see a high number of `persistentvolumeclaims` activity across all nodes in the cluster, as well as from `crunchy`.
+
 [source,bash]
 ----
-440987x              system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent
-737x                 system:node:cluster-infra-03.dmz
-736x                 system:node:cluster-infra-04.dmz
-734x                 system:node:cluster-infra-06.dmz
-734x                 system:node:cluster-infra-02.dmz
-452x                 system:node:cluster-app-26.dmz
-449x                 system:node:cluster-app-07.dmz
-441x                 system:node:cluster-app-02.dmz
-437x                 system:node:cluster-app-41.dmz
-437x                 system:node:cluster-app-05.dmz
+count: 362910, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.992954s
+16115x         system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
+13138x         system:node:cluster-app-109.dmz
+11969x         system:node:cluster-app-104.dmz
+11681x         system:node:cluster-app-89.dmz
+11439x         system:node:cluster-app-87.dmz
+11247x         system:node:cluster-app-108.dmz
+10692x         system:node:cluster-app-94.dmz
+10191x         system:node:cluster-app-84.dmz
+10187x         system:node:cluster-app-92.dmz
+10028x         system:node:cluster-app-101.dmz
 ----
 
-So let's take a look at that specific user and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='persistentvolumes' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
+
+We can see a high number of `persistentvolumes` activity across all nodes in the cluster.
+
+[source,bash]
+----
+count: 338418, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.910381s
+13109x               system:node:cluster-app-109.dmz
+11952x               system:node:cluster-app-104.dmz
+11675x               system:node:cluster-app-89.dmz
+11429x               system:node:cluster-app-87.dmz
+11236x               system:node:cluster-app-108.dmz
+10677x               system:node:cluster-app-94.dmz
+10190x               system:node:cluster-app-84.dmz
+10185x               system:node:cluster-app-92.dmz
+10023x               system:node:cluster-app-101.dmz
+9551x                system:node:cluster-app-86.dmz
+----
+
+[.wrap,console,role=execute]
+----
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='secrets' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
+----
+
+We can see the `secrets` activity is spread out.
+
+[source,bash]
+----
+count: 328024, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.89568s
+78016x         system:serviceaccount:openshift-infra:serviceaccount-pull-secrets-controller[openshift.io/image-registry-pull-secrets_legacy-token-secrets-controller]
+46030x         system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
+12091x         system:serviceaccount:openshift-authentication-operator:authentication-operator
+10523x         system:serviceaccount:openshift-apiserver-operator:openshift-apiserver-operator
+5428x          system:node:cluster-app-109.dmz
+5376x          system:serviceaccount:openshift-example-integration:strimzi-cluster-operator
+4701x          system:serviceaccount:openshift-example-crunchy:pgo
+4567x          system:serviceaccount:e69aae-test:postgresql-operator-manager
+4358x          system:node:cluster-app-104.dmz
+4350x          system:node:cluster-app-103.dmz
+----
+
+Evaluating the output, the most common theme across all of the data points has been activity from `crunchy` / `postgress`. If you refer back to the original `--by=user` output, there was no glaring single user, but 5 of the tp 10 users driving API load were `crunchy` / `postgress`. If we add them all up, a conservative estimate of 621,383 of 4,714,125 request is 13.1% of API traffic. 
+
+So let's take a look at one of the users and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
 
 Let's try to answer the following:
 
@@ -256,26 +352,13 @@ What is the problem? +
 ====
 [source,bash]
 ----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user=system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent --by=verb -otop
+kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user='system:serviceaccount:openshift-example-crunchy:pgo*' --by=verb -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
 What we see is very interesting:
 
-. The majority are `GET` requests to the `/proxy/metrics` endpoint of every node.
-. They're all returning a HTTP `403` errors
-
-[NOTE]
-A HTTP 403 is an HTTP status code meaning access to the requested resource is forbidden. +
-A HTTP 403 is returned when the client is not permitted access to the resource, despite providing valid credentials, typically due issues like insufficient permissions for the authenticated account.
-
-
-[source,bash,subs="quotes"]
-----
-Top 10 "GET" (of 440076 total hits):
-   8313x [   274.335µs] [*403*-8312] /api/v1/nodes/cluster-app-38.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
-   8309x [   272.092µs] [*403*-8308] /api/v1/nodes/cluster-app-25.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
-   8308x [   270.327µs] [*403*-8307] /api/v1/nodes/cluster-app-02.dmz/proxy/metrics    [system:serviceaccount:openshift-example-sysdig-agent:sysdig-agent]
-----
+. The majority of activity is from `PATCH` and `LIST` commands
+. The user is also generating a lot of PV and PVC activity
 
 Based on this information, we could conclude that the API was being overloaded with requests from an application called `sysdig` which is a piece of 3rd party software used to monitor the OpenShift cluster. The service account `sysdig-agent` was failing to collect `node` metrics and in turn was spamming the API server.
 
