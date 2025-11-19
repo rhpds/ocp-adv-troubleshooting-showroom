@@ -386,11 +386,17 @@ With this information, we were able to have an informated discussion with the cu
 
 With no way of shutting down workloads or disabling the `Operator`, we had to get creative to stabalize the `Control Plane`.
 
-We applied 2 `iptables` rules on all of the `worker` nodes in the cluster.
+We applied 2 `iptables` rules on all of the `worker` nodes in the cluster to drop traffic to port 6443 on both the `FORWARD` and `OUTPUT` chains.
 
-This blocked both the `kubelet` and running `Pods` from sending traffic to the API and subsequently allow for the API to stabalize and recover.
+[source,bash]
+----
+iptables -I FORWARD -p tcp --dport 6443 -j DROP
+iptables -I OUTPUT -p tcp --dport 6443 -j DROP
+----
 
-Once the API was healthy, we removed the `iptables` rules in blocks of 5, allowing nodes to come back and workloads to fully recover.
+This blocked both the `kubelet` and running `Pods` from sending traffic to the API and subsequently allowed for the API to stabalize and recover.
+
+Once the API was healthy, we removed the `iptables` rules in blocks of 5 nodes, allowing them to come back and workloads to fully recover.
 
 I hope you found this introduction to the `kubectl-dev_tool` useful and can leverage it the next time you have an issue!
 
