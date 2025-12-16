@@ -28,14 +28,14 @@ https://github.com/gmeghnag/omc
 
 [source,bash]
 ----
-omc use module2-demo-must-gather
+omc use module2-demo-must-gather.tar.gz
 
 Must-Gather    : /home/lab-user/Module2/must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-1689ebb475fcb1d8021057f26ef090534fbe210716392ec68bdeba70774dc04f
 Project        : default
 ApiServerURL   : https://api.ci-ln-m6sdtw2-76ef8.aws-4.ci.openshift.org:6443
 Platform       : AWS
 ClusterID      : b26e0177-d855-48ed-aefd-79de416fcc06
-ClusterVersion : 4.18.0-0.nightly-2025-12-15-111314
+ClusterVersion : 4.18.30
 ClientVersion  : 4.19.4
 Image          : quay-io-openshift-release-dev-ocp-v4-0-art-dev
 ----
@@ -44,8 +44,8 @@ Image          : quay-io-openshift-release-dev-ocp-v4-0-art-dev
 ----
 omc get clusterversion
 
-NAME      VERSION                              AVAILABLE   PROGRESSING   SINCE   STATUS
-version   4.18.0-0.nightly-2025-12-15-111314   True        False         8m      Cluster version is 4.18.0-0.nightly-2025-12-15-111314
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.18.30   True        False         8m      Cluster version is 4.18.300
 ----
 
 Like with `oc`, you can use `-o yaml` to print out addition information about the object:
@@ -53,7 +53,6 @@ Like with `oc`, you can use `-o yaml` to print out addition information about th
 ----
 omc get clusterversion -o yaml
 
-apiVersion: v1
 apiVersion: v1
 items:
 - apiVersion: config.openshift.io/v1
@@ -128,32 +127,32 @@ items:
       status: "False"
       type: ImplicitlyEnabledCapabilities
     - lastTransitionTime: "2025-12-15T20:48:54Z"
-      message: Payload loaded version="4.18.0-0.nightly-2025-12-15-111314" image="registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf"
+      message: Payload loaded version="4.18.30" image="registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf"
         architecture="amd64"
       reason: PayloadLoaded
       status: "True"
       type: ReleaseAccepted
     - lastTransitionTime: "2025-12-15T21:23:16Z"
-      message: Done applying 4.18.0-0.nightly-2025-12-15-111314
+      message: Done applying 4.18.30
       status: "True"
       type: Available
     - lastTransitionTime: "2025-12-15T21:23:16Z"
       status: "False"
       type: Failing
     - lastTransitionTime: "2025-12-15T21:23:16Z"
-      message: Cluster version is 4.18.0-0.nightly-2025-12-15-111314
+      message: Cluster version is 4.18.30
       status: "False"
       type: Progressing
     desired:
       image: registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf
-      version: 4.18.0-0.nightly-2025-12-15-111314
+      version: 4.18.30
     history:
     - completionTime: "2025-12-15T21:23:16Z"
       image: registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf
       startedTime: "2025-12-15T20:48:54Z"
       state: Completed
       verified: false
-      version: 4.18.0-0.nightly-2025-12-15-111314
+      version: 4.18.30
     observedGeneration: 2
     versionHash: PqPMX3E67Uk=
 kind: List
