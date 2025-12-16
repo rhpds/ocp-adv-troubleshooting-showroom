@@ -21,8 +21,8 @@ cd ~/Module2/
 ----
 omc version
 
-omc version: v3.7.4
-hash: 45e91af
+omc version: v3.12.2
+hash: b7eee6a
 https://github.com/gmeghnag/omc
 ----
 
@@ -30,19 +30,22 @@ https://github.com/gmeghnag/omc
 ----
 omc use module2-demo-must-gather
 
-Must-Gather  : /home/lab-user/Module2/module2-demo-must-gather/sno_demo/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-2de07af89683678ae6bb7a939615fc0d4ced7fe185add38b050f2c6f60023b6f
-Project      : default
-ApiServerURL : https://api.cluster-6fmht.dynamic.redhatworkshops.io:6443
-Platform     : None
-ClusterID    : 1304b08d-2a73-410f-98ed-342233008cb0
+Must-Gather    : /home/lab-user/Module2/must-gather.local/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-1689ebb475fcb1d8021057f26ef090534fbe210716392ec68bdeba70774dc04f
+Project        : default
+ApiServerURL   : https://api.ci-ln-m6sdtw2-76ef8.aws-4.ci.openshift.org:6443
+Platform       : AWS
+ClusterID      : b26e0177-d855-48ed-aefd-79de416fcc06
+ClusterVersion : 4.18.0-0.nightly-2025-12-15-111314
+ClientVersion  : 4.19.4
+Image          : quay-io-openshift-release-dev-ocp-v4-0-art-dev
 ----
 
 [source,bash]
 ----
 omc get clusterversion
 
-NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
-version   4.16.20   True        False         20h     Cluster version is 4.16.20
+NAME      VERSION                              AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.18.0-0.nightly-2025-12-15-111314   True        False         8m      Cluster version is 4.18.0-0.nightly-2025-12-15-111314
 ----
 
 Like with `oc`, you can use `-o yaml` to print out addition information about the object:
@@ -51,18 +54,109 @@ Like with `oc`, you can use `-o yaml` to print out addition information about th
 omc get clusterversion -o yaml
 
 apiVersion: v1
+apiVersion: v1
 items:
 - apiVersion: config.openshift.io/v1
   kind: ClusterVersion
   metadata:
-    creationTimestamp: "2024-11-18T21:26:39Z"
+    creationTimestamp: "2025-12-15T20:48:21Z"
     generation: 2
     name: version
-    resourceVersion: "840317"
-    uid: 28b92950-43ce-4734-9589-f2205908c1ba
+    resourceVersion: "35472"
+    uid: 3c5ff6ba-55ae-416c-9702-ad5012cd8aff
   spec:
-    channel: stable-4.16
-    clusterID: 1304b08d-2a73-410f-98ed-342233008cb0
+    clusterID: b26e0177-d855-48ed-aefd-79de416fcc06
+  status:
+    availableUpdates: null
+    capabilities:
+      enabledCapabilities:
+      - Build
+      - CSISnapshot
+      - CloudControllerManager
+      - CloudCredential
+      - Console
+      - DeploymentConfig
+      - ImageRegistry
+      - Ingress
+      - Insights
+      - MachineAPI
+      - NodeTuning
+      - OperatorLifecycleManager
+      - OperatorLifecycleManagerV1
+      - Storage
+      - baremetal
+      - marketplace
+      - openshift-samples
+      knownCapabilities:
+      - Build
+      - CSISnapshot
+      - CloudControllerManager
+      - CloudCredential
+      - Console
+      - DeploymentConfig
+      - ImageRegistry
+      - Ingress
+      - Insights
+      - MachineAPI
+      - NodeTuning
+      - OperatorLifecycleManager
+      - OperatorLifecycleManagerV1
+      - Storage
+      - baremetal
+      - marketplace
+      - openshift-samples
+    conditions:
+    - lastTransitionTime: "2025-12-15T20:48:54Z"
+      message: The update channel has not been configured.
+      reason: NoChannel
+      status: "False"
+      type: RetrievedUpdates
+    - lastTransitionTime: "2025-12-15T20:48:54Z"
+      message: Kubernetes 1.32 and therefore OpenShift 4.19 remove several APIs which
+        require admin consideration. Please see the knowledge article https://access.redhat.com/articles/7112216
+        for details and instructions. This cluster is GCP or AWS but lacks a boot
+        image configuration. OCP will automatically opt this cluster into boot image
+        management in 4.19. Please add a configuration to disable boot image updates
+        if this is not desired. See https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_configuration/mco-update-boot-images#mco-update-boot-images-disable_machine-configs-configure
+        for more details.
+      reason: AdminAckRequired
+      status: "False"
+      type: Upgradeable
+    - lastTransitionTime: "2025-12-15T20:48:54Z"
+      message: Capabilities match configured spec
+      reason: AsExpected
+      status: "False"
+      type: ImplicitlyEnabledCapabilities
+    - lastTransitionTime: "2025-12-15T20:48:54Z"
+      message: Payload loaded version="4.18.0-0.nightly-2025-12-15-111314" image="registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf"
+        architecture="amd64"
+      reason: PayloadLoaded
+      status: "True"
+      type: ReleaseAccepted
+    - lastTransitionTime: "2025-12-15T21:23:16Z"
+      message: Done applying 4.18.0-0.nightly-2025-12-15-111314
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-12-15T21:23:16Z"
+      status: "False"
+      type: Failing
+    - lastTransitionTime: "2025-12-15T21:23:16Z"
+      message: Cluster version is 4.18.0-0.nightly-2025-12-15-111314
+      status: "False"
+      type: Progressing
+    desired:
+      image: registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf
+      version: 4.18.0-0.nightly-2025-12-15-111314
+    history:
+    - completionTime: "2025-12-15T21:23:16Z"
+      image: registry.build11.ci.openshift.org/ci-ln-m6sdtw2/release@sha256:3bf71637442f3e5e5d92dfbcba6e7d496afbbe6c3af975f043c5deaf792e6edf
+      startedTime: "2025-12-15T20:48:54Z"
+      state: Completed
+      verified: false
+      version: 4.18.0-0.nightly-2025-12-15-111314
+    observedGeneration: 2
+    versionHash: PqPMX3E67Uk=
+kind: List
 ----
 
 [#certs]
@@ -75,9 +169,15 @@ items:
 [source,bash]
 ----
 omc certs inspect
+NAME                                             KIND                        AGE   CERTTYPE    SUBJECT                                                                             NOTBEFORE                       NOTAFTER
+kube-root-ca.crt                                 ConfigMap                   43m   ca-bundle   CN=kube-apiserver-lb-signer,OU=openshift                                            2025-12-15 20:35:02 +0000 UTC   2035-12-13 20:35:02 +0000 UTC
+kube-root-ca.crt                                 ConfigMap                   43m   ca-bundle   CN=kube-apiserver-localhost-signer,OU=openshift                                     2025-12-15 20:35:02 +0000 UTC   2035-12-13 20:35:02 +0000 UTC
+...
+openshift-service-ca.crt                         ConfigMap                   43m   ca-bundle   CN=openshift-service-serving-signer@1765831901                                      2025-12-15 20:51:41 +0000 UTC   2028-02-13 20:51:42 +0000 UTC
+csr-258lr                                        CertificateSigningRequest   33m   ca-bundle   CN=system:ovn-node:ip-10-0-91-110.ec2.internal,O=system:ovn-nodes                   2025-12-15 20:52:46 +0000 UTC   2025-12-16 20:35:04 +0000 UTC
+csr-4c9l4                                        CertificateSigningRequest   10m   ca-bundle   CN=system:node:ip-10-0-110-54.ec2.internal,O=system:nodes                           2025-12-15 21:15:43 +0000 UTC   2025-12-16 20:35:04 +0000 UTC
+...
 
-NAME                     KIND                        AGE    CERTTYPE      SUBJECT                                                                                        NOTBEFORE                       NOTAFTER
-csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=system:multus:ocp4-2nvq7-worker-xdwch,O=system:multus                                     2024-08-14 14:27:20 +0000 UTC   2024-08-15 14:27:20 +0000 UTC
 ----
 
 [#etcd]
@@ -91,26 +191,26 @@ csr-zwmnc                CertificateSigningRequest   53m    ca-bundle     CN=sys
 ----
 omc etcd health
 
-+---------------------------+--------+-------------+-------+
-|         ENDPOINT          | HEALTH |    TOOK     | ERROR |
-+---------------------------+--------+-------------+-------+
-| https://10.36.18.138:2379 | true   | 26.26127ms  |       |
-| https://10.36.18.23:2379  | true   | 24.586699ms |       |
-| https://10.36.18.22:2379  | true   | 28.410291ms |       |
-+---------------------------+--------+-------------+-------+
++--------------------------+--------+-------------+-------+
+|         ENDPOINT         | HEALTH |    TOOK     | ERROR |
++--------------------------+--------+-------------+-------+
+| https://10.0.110.19:2379 | true   | 6.670232ms  |       |
+| https://10.0.37.185:2379 | true   | 10.701713ms |       |
+| https://10.0.97.114:2379 | true   | 14.002023ms |       |
++--------------------------+--------+-------------+-------+
 ----
 
 [source,bash]
 ----
 omc etcd status
 
-+---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
-|         ENDPOINT          |        ID        | VERSION | DB SIZE/IN USE | NOT USED | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
-+---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
-| https://10.36.18.138:2379 | 39ddb61a8f3bee1d | 3.5.13  | 325 MB/207 MB  | 37%      | true      | false      |       176 |  873809134 |          873809134 |        |
-| https://10.36.18.22:2379  | a2b2eb5b34d6a292 | 3.5.13  | 323 MB/207 MB  | 36%      | false     | false      |       176 |  873809136 |          873809136 |        |
-| https://10.36.18.23:2379  | dbb6cf331005ae32 | 3.5.13  | 291 MB/207 MB  | 30%      | false     | false      |       176 |  873809138 |          873809138 |        |
-+---------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
++--------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
+|         ENDPOINT         |        ID        | VERSION | DB SIZE/IN USE | NOT USED | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++--------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
+| https://10.0.110.19:2379 | bf9b0fa63f084685 | 3.5.18  | 60 MB/55 MB    | 9%       | true      | false      |         8 |      41342 |              41342 |        |
+| https://10.0.97.114:2379 | c05a125dae594a9b | 3.5.18  | 60 MB/55 MB    | 9%       | false     | false      |         8 |      41342 |              41342 |        |
+| https://10.0.37.185:2379 | f7b31c824b48036d | 3.5.18  | 60 MB/55 MB    | 9%       | false     | false      |         8 |      41342 |              41342 |        |
++--------------------------+------------------+---------+----------------+----------+-----------+------------+-----------+------------+--------------------+--------+
 ----
 
 [#haproxy]
@@ -122,10 +222,10 @@ omc etcd status
 ----
 omc haproxy backends
 
-NAMESPACE		NAME					INGRESSCONTROLLER	SERVICES				    PORT		TERMINATION
-aap			    frost-prod				default			    frost-prod-service			http(8052)	edge/Redirect
-ecomm			app-api-blue-p4lb5		default			    ecomm-api-blue				https(8443)	reencrypt/Redirect
-ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthrough/Redirect
+NAMESPACE		NAME					        INGRESSCONTROLLER	SERVICES				      PORT		    TERMINATION
+aap			    frost-prod    				default  			    frost-prod-service		http(8052)	edge/Redirect
+ecomm			  app-api-blue-p4lb5		default	  		    ecomm-api-blue				https(8443)	reencrypt/Redirect
+ecomm			  app-api-prod-kg8l6		default		  	    plaid-api-prod				https(8443)	passthrough/Redirect
 ----
 
 [#machine-config]
@@ -137,20 +237,30 @@ ecomm			app-api-prod-kg8l6		default			    plaid-api-prod				https(8443)	passthro
 .machine-config diff
 [source,bash]
 ----
-omc get machineconfigs -n openshift-machineconfig-operator
+omc get machineconfigs
 
 NAME                                               GENERATEDBYCONTROLLER                      IGNITIONVERSION   AGE
-00-master                                          20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
-00-worker                                          20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
-...
-99-worker-generated-registries                     20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
-rendered-master-c5f327c05f9e70b9ef90ad15b0610341   20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
-rendered-worker-cf392af65e20a73197f046cacaf156e5   20e767851f25a12f9be5701012abb881ac33ab25   3.4.0             8d
+00-master                                          a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+00-worker                                          a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+01-master-container-runtime                        a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+01-master-kubelet                                  a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+01-worker-container-runtime                        a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+01-worker-kubelet                                  a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+97-master-generated-kubelet                        a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+97-worker-generated-kubelet                        a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+98-master-generated-kubelet                        a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+98-worker-generated-kubelet                        a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+99-master-generated-registries                     a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+99-master-ssh                                                                                 3.2.0             42m
+99-worker-generated-registries                     a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+99-worker-ssh                                                                                 3.2.0             42m
+rendered-master-1acb4208fc6aef31cf85cb429bb918f7   a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
+rendered-worker-40c4ec5da61bfe22cb638e0699876a42   a51e963bdc11e1b49404d111c94e6257a637059f   3.4.0             38m
 ----
 
 [source,bash]
 ----
-omc machine-config diff rendered-master-c5f327c05f9e70b9ef90ad15b0610341 rendered-worker-cf392af65e20a73197f046cacaf156e5
+omc machine-config diff rendered-master-1acb4208fc6aef31cf85cb429bb918f7 rendered-worker-40c4ec5da61bfe22cb638e0699876a42
 ----
 
 [#node-logs]
@@ -185,16 +295,16 @@ is it possible to read the content by executing 'omc node-logs <SERVICE>'.
 ----
 omc node-logs kubelet | head -n 10
 
-Aug 07 15:25:30.970016 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.969893    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-apiserver/kube-apiserver-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.970016 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970031    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/coredns-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970074    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/haproxy-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970121    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-controller-manager/kube-controller-manager-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970159    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-machine-config-operator/kube-rbac-proxy-crio-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970180    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-vsphere-infra/keepalived-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970216    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-scheduler/openshift-kube-scheduler-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:30.971039 ocp4-2nvq7-master-0 kubenswrapper[1916]: I0807 15:25:30.970240    1916 kubelet_getters.go:187] "Pod status updated" pod="openshift-etcd/etcd-ocp4-2nvq7-master-0" status=Running
-Aug 07 15:25:56.027736 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.027649    1927 kubelet_getters.go:187] "Pod status updated" pod="openshift-kube-controller-manager/kube-controller-manager-ocp4-2nvq7-master-1" status=Running
-Aug 07 15:25:56.028592 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.027867    1927 kubelet_getters.go:187] "Pod status updated" pod="openshift-machine-config-operator/kube-rbac-proxy-crio-ocp4-2nvq7-master-1" status=Running
+Dec 15 20:49:28.345190 ip-10-0-110-19 systemd[1]: Starting Kubernetes Kubelet...
+Dec 15 20:49:28.845114 ip-10-0-110-19 kubenswrapper[2442]: Flag --container-runtime-endpoint has been deprecated, This parameter should be set via the config file specified by the Kubelet's --config flag. See https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/ for more information.
+Dec 15 20:49:28.845114 ip-10-0-110-19 kubenswrapper[2442]: Flag --minimum-container-ttl-duration has been deprecated, Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.
+Dec 15 20:49:28.845114 ip-10-0-110-19 kubenswrapper[2442]: Flag --volume-plugin-dir has been deprecated, This parameter should be set via the config file specified by the Kubelet's --config flag. See https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/ for more information.
+Dec 15 20:49:28.845114 ip-10-0-110-19 kubenswrapper[2442]: Flag --register-with-taints has been deprecated, This parameter should be set via the config file specified by the Kubelet's --config flag. See https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/ for more information.
+Dec 15 20:49:28.845114 ip-10-0-110-19 kubenswrapper[2442]: Flag --pod-infra-container-image has been deprecated, will be removed in a future release. Image garbage collector will get sandbox image information from CRI.
+Dec 15 20:49:28.845114 ip-10-0-110-19 kubenswrapper[2442]: Flag --system-reserved has been deprecated, This parameter should be set via the config file specified by the Kubelet's --config flag. See https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/ for more information.
+Dec 15 20:49:28.847145 ip-10-0-110-19 kubenswrapper[2442]: I1215 20:49:28.847038    2442 server.go:211] "--pod-infra-container-image will not be pruned by the image garbage collector in kubelet and should also be set in the remote runtime"
+Dec 15 20:49:28.855238 ip-10-0-110-19 kubenswrapper[2442]: W1215 20:49:28.855214    2442 feature_gate.go:330] unrecognized feature gate: ManagedBootImages
+Dec 15 20:49:28.855238 ip-10-0-110-19 kubenswrapper[2442]: W1215 20:49:28.855231    2442 feature_gate.go:330] unrecognized feature gate: ConsolePluginContentSecurityPolicy
 ----
 
 [#ovn]
@@ -207,8 +317,13 @@ Aug 07 15:25:56.028592 ocp4-2nvq7-master-1 kubenswrapper[1927]: I0807 15:25:56.0
 ----
 omc ovn subnets
 
-HOST/NODE                       ROLE                          HOST IP-ADDRESSES               PRIMARY IF-ADDRESS   HOST GATEWAY-IP   NODE SUBNET
-control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192.168.1.2/24   10.10.10.10/24       10.10.10.1        10.132.0.0/23
+HOST/NODE                     ROLE                   NODE SUBNET     NODE TRANSIT-SWITCH-IP
+ip-10-0-110-19.ec2.internal   control-plane,master   10.130.0.0/23   100.88.0.3/16
+ip-10-0-110-54.ec2.internal   worker                 10.129.4.0/23   100.88.0.11/16
+ip-10-0-37-185.ec2.internal   control-plane,master   10.129.0.0/23   100.88.0.4/16
+ip-10-0-62-69.ec2.internal    worker                 10.129.2.0/23   100.88.0.7/16
+ip-10-0-89-71.ec2.internal    worker                 10.130.4.0/23   100.88.0.12/16
+ip-10-0-97-114.ec2.internal   control-plane,master   10.128.0.0/23   100.88.0.2/16
 ----
 
 [#prometheus]
@@ -222,15 +337,15 @@ control-plane-cluster-6fmht-1   control-plane,master,worker   10.10.10.10/24,192
 omc prometheus alertgroup | head -n 10
 
 GROUP                                               FILENAME                                                                                                                AGE
-CloudCredentialOperator                             openshift-cloud-credential-operator-cloud-credential-operator-alerts-2b1b6efc-359d-41f1-910c-f759091ea8db.yaml          27s
-cluster-machine-approver.rules                      openshift-cluster-machine-approver-machineapprover-rules-559e1f58-cf67-435f-8e25-8fe67acc824f.yaml                      14s
-node-tuning-operator.rules                          openshift-cluster-node-tuning-operator-node-tuning-operator-2ed91e6f-a85e-48fe-bc8d-1df61349ecb2.yaml                   1s
-SamplesOperator                                     openshift-cluster-samples-operator-samples-operator-alerts-07e868fe-c246-493c-b948-963979fb222e.yaml                    28s
-default-storage-classes.rules                       openshift-cluster-storage-operator-prometheus-39ea760b-44d6-4c6d-b9c8-698cfed53b24.yaml                                 7s
-storage-operations.rules                            openshift-cluster-storage-operator-prometheus-39ea760b-44d6-4c6d-b9c8-698cfed53b24.yaml                                 7s
-storage-selinux.rules                               openshift-cluster-storage-operator-prometheus-39ea760b-44d6-4c6d-b9c8-698cfed53b24.yaml                                 11s
-cluster-operators                                   openshift-cluster-version-cluster-version-operator-af01a96b-d635-43af-935d-8c09f1b4ef0e.yaml                            24s
-cluster-version                                     openshift-cluster-version-cluster-version-operator-af01a96b-d635-43af-935d-8c09f1b4ef0e.yaml                            26s
+CloudCredentialOperator                             openshift-cloud-credential-operator-cloud-credential-operator-alerts-2ee2f7c9-a542-4f11-a391-ac8c0ee54224.yaml          11s
+cluster-machine-approver.rules                      openshift-cluster-machine-approver-machineapprover-rules-74b6c87d-07ed-4a75-aa52-e24905a846b4.yaml                      11s
+node-tuning-operator.rules                          openshift-cluster-node-tuning-operator-node-tuning-operator-465e993d-cb8e-44d5-88b0-7bc0f00cc5e1.yaml                   2s
+SamplesOperator                                     openshift-cluster-samples-operator-samples-operator-alerts-72d9774f-1e50-4c05-b511-7630f32c9544.yaml                    8s
+default-storage-classes.rules                       openshift-cluster-storage-operator-prometheus-f0c28350-cf99-4adb-b2b7-932aa3faf0da.yaml                                 3s
+kubernetes-storage                                  openshift-cluster-storage-operator-prometheus-f0c28350-cf99-4adb-b2b7-932aa3faf0da.yaml                                 9s
+storage-operations.rules                            openshift-cluster-storage-operator-prometheus-f0c28350-cf99-4adb-b2b7-932aa3faf0da.yaml                                 25s
+storage-selinux.rules                               openshift-cluster-storage-operator-prometheus-f0c28350-cf99-4adb-b2b7-932aa3faf0da.yaml                                 11s
+cluster-operators                                   openshift-cluster-version-cluster-version-operator-04905bfe-dfb3-4c78-8748-1da7e81b2591.yaml                            27s
 ----
 
 [source,bash]
@@ -238,29 +353,47 @@ cluster-version                                     openshift-cluster-version-cl
 omc prometheus alertrule | head -n 10
 
 RULE                                                    SEVERITY   STATE      AGE   ALERTS   ACTIVE SINCE
-CloudCredentialOperatorTargetNamespaceMissing           warning    inactive   27s   0        ----
-CloudCredentialOperatorProvisioningFailed               warning    inactive   27s   0        ----
-CloudCredentialOperatorDeprovisioningFailed             warning    inactive   27s   0        ----
-CloudCredentialOperatorInsufficientCloudCreds           warning    inactive   27s   0        ----
-CloudCredentialOperatorStaleCredentials                 warning    inactive   27s   0        ----
-MachineApproverMaxPendingCSRsReached                    warning    inactive   14s   0        ----
-NTOPodsNotReady                                         warning    inactive   1s    0        ----
-NTODegraded                                             warning    inactive   1s    0        ----
-SamplesRetriesMissingOnImagestreamImportFailing         warning    inactive   28s   0        ----
+CloudCredentialOperatorTargetNamespaceMissing           warning    inactive   11s   0        ----
+CloudCredentialOperatorProvisioningFailed               warning    inactive   11s   0        ----
+CloudCredentialOperatorDeprovisioningFailed             warning    inactive   11s   0        ----
+CloudCredentialOperatorInsufficientCloudCreds           warning    inactive   11s   0        ----
+CloudCredentialOperatorStaleCredentials                 warning    inactive   11s   0        ----
+MachineApproverMaxPendingCSRsReached                    warning    inactive   11s   0        ----
+NTOPodsNotReady                                         warning    inactive   2s    0        ----
+NTODegraded                                             warning    inactive   2s    0        ----
+SamplesRetriesMissingOnImagestreamImportFailing         warning    inactive   8s    0        ----
+----
+
+[source,bash]
+----
+omc prom alertrule -s firing
+
+RULE       SEVERITY   STATE    AGE   ALERTS   ACTIVE SINCE
+Watchdog   none       firing   23s   1        15 Dec 25 21:22 UTC
+----
+
+[source,bash]
+----
+
+omc prom alertrule -s pending
+
+RULE                                 SEVERITY   STATE     AGE   ALERTS   ACTIVE SINCE
+ClusterNotUpgradeable                info       pending   27s   1        15 Dec 25 21:22 UTC
+AlertmanagerReceiversNotConfigured   warning    pending   0s    1        15 Dec 25 21:23 UTC
 ----
 
 [source,bash]
 ----
 omc prometheus target | head -n 10
 
-TARGET                                                   SCRAPE URL                                        HEALTH   LAST ERROR
-openshift-apiserver-operator-5b89bd7bb8-z69dz            https://10.132.0.12:8443/metrics                  up
-apiserver-66dcdc546c-vxms2                               https://10.132.0.144:17698/metrics                up
-apiserver-66dcdc546c-vxms2                               https://10.132.0.144:8443/metrics                 up
-authentication-operator-595d65667-92gcg                  https://10.132.0.26:8443/metrics                  up
-oauth-openshift-545bf7bdf7-6n8xd                         https://10.132.0.253:6443/metrics                 up
-cloud-credential-operator-65d6f5df6d-wknks               https://10.132.0.47:8443/metrics                  up
-machine-approver-7d57ddd485-f6cv6                        https://10.10.10.10:9192/metrics                  up
-cluster-node-tuning-operator-56f7cbd8bc-k8qgq            https://10.132.0.24:60000/metrics                 up
-cluster-samples-operator-dbfb4c7b-jhqz6                  https://10.132.0.48:60000/metrics                 up
+TARGET                                                  SCRAPE URL                                      HEALTH   LAST ERROR
+openshift-apiserver-operator-677968d5cc-qt2zb           https://10.130.0.19:8443/metrics                up
+apiserver-69dbd4bc64-bpn8b                              https://10.128.0.65:17698/metrics               up
+apiserver-69dbd4bc64-b4vbt                              https://10.129.0.63:17698/metrics               up
+apiserver-69dbd4bc64-xxlbw                              https://10.130.0.89:17698/metrics               up
+apiserver-69dbd4bc64-bpn8b                              https://10.128.0.65:8443/metrics                up
+apiserver-69dbd4bc64-b4vbt                              https://10.129.0.63:8443/metrics                up
+apiserver-69dbd4bc64-xxlbw                              https://10.130.0.89:8443/metrics                up
+authentication-operator-57cb7b4459-jvxsp                https://10.130.0.24:8443/metrics                up
+oauth-openshift-7cb79d6c79-c7fwc                        https://10.128.0.56:6443/metrics                up
 ----
