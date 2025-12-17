@@ -1,18 +1,18 @@
-= Using OpenShift Insights to Proactively Analyze a Cluster
+= Using OpenShift Lightspeed (Insights) to Proactively Analyze a Cluster
 :prewrap!:
 
-OpenShift Insights is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on `SupportShell` allowing Support Engineers and Technical Account Managers to review that data.
+OpenShift Lightspeed (Insights) is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on `SupportShell` allowing Support Engineers and Technical Account Managers to review that data.
 
-In this module we will be reviewing how to look at a script that parses an `OpenShift Insights` archive to allow you to proactively analyze a cluster.
+In this module we will be reviewing how to look at a script that parses an `OpenShift Lightspeed (Insights)` archive to allow you to proactively analyze a cluster.
 
-You can find more details on OpenShift Insights and the entire remove health monitoring package in our documentation: link:https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/about-remote-health-monitoring.html[About remote health monitoring]
+You can find more details on OpenShift Lightspeed (Insights) and the entire remove health monitoring package in our documentation: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[About remote health monitoring]
 
-You can find details on what OpenShift Insights collects here: link:https://docs.openshift.com/container-platform/4.17/support/remote_health_monitoring/showing-data-collected-by-remote-health-monitoring.html[Showing data collected by remote health monitoring]
+You can find details on what OpenShift Lightspeed (Insights) collects here: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[Showing data collected by remote health monitoring]
 
 You can also review the source code to more information on what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_most_recent_metrics.go[GitHub: Insights Operator - gather_most_recent_metrics.go]
 
 [#gettingstarted]
-== The ocp_insights.sh script
+== The ocp_insights.py script
 With this script we will be able to parse the insights archive, review customer namespace memory usage, look for namespaces with overlapping UIDs, reivew storage classes, and look at etcd metrics.
 
 .Understanding ocp_insights
@@ -23,21 +23,21 @@ cd ~/Module3/
 
 [source,bash]
 ----
-ocp_insights.sh --help
+ocp_insights.py --help
+usage: ocp_insights.py [-h] [--id ID] [--file FILE] [--alerts] [--customer_memory] [--etcd_metrics] [--events] [--list] [--extract]
 
-USAGE: ocp_insights_file.sh
+OpenShift InsightsCluster Report.
 
-Displays information obtained from the latest Insights data for the cluster ID provided.
-
-Options:
-    --all                       Lists all of the following options
-        --customer_memory       Lists memory usage for non-OpenShift Cluster Namespaces
-        --uid                   Lists Namespaces with overlapping UIDs
-        --storage_classes       Lists Storage Class information
-    --file                      Run the script against a specific insights file
-                                    E.g.: ocp_insights_file.sh --file ~/insights_archive.tar.gz
-    --etcd_metrics              Returns metrics from Insights Metrics Data
-    -h, --help                  Shows this help message.
+options:
+  -h, --help         show this help message and exit
+  --id ID            ClusterID of a connected cluster used to find all connected Clusters
+  --file FILE        Use a specific Insights Archive File; must specify full path.
+  --alerts           Prints out Alerts in valid JSON
+  --customer_memory  Prints Customer Namespace memory usage.
+  --etcd_metrics     Prints etcd metrics for all Insights Archives for the cluster.
+  --events           Prints namespace events if they exist.
+  --list             List available archives for a specific cluster. Must be used with --id option. Can be combined with --extract.
+  --extract          Extract archive for a specific cluster to user's home directory. Must be used with --id option. Can be combined with --list to select which archive to extract.
 ----
 
 [#whatisoutput]
@@ -70,25 +70,28 @@ Options:
 
 [source,bash]
 ----
-ocp_insights.sh --file Module3-insights-data
+ocp_insights.py --file Module3-insights-data
 
-Cluster Version: 4.14.27
-Channel: eus-4.14
-Previous Version(s): 4.14.27, 4.14.18, 4.13.30, 4.12.36, 4.12.22, 4.12.13, 4.11.33, 4.11.20, 4.11.17, 4.11.12, 4.11.9
+Cluster ID: DB08D743-5559-4259-8ABB-7C5B528439B7
+Cluster Name: prod.example.com
+Cluster Version: 4.15.57
+Channel: stable-4.15
+Previous Versions: 4.15.57, 4.15.44, 4.15.43, 4.15.37, 4.15.24, 4.15.20, 4.15.19, 4.15.18, 4.15.17, 4.15.15, 4.15.14, 4.15.13, 4.15.12, 4.15.11, 4.14.23, 4.14.21, 4.13.40, 4.12.55, 4.11.59, 4.11.57, 4.11.56, 4.11.55, 4.11.54, 4.11.53, 4.11.50, 4.11.49, 4.11.48, 4.11.30, 4.10.37
+Cluster Status: Failing
+Reason: ClusterOperatorDegraded
+Message: Cluster operator authentication is degraded
+Platform: None
+Install Type: UPI
+Network Type: OVNKubernetes
+IPsec: Enabled
+Proxy Settings:
+   HTTP:  False
+   HTTPS: False
 
-Platform: VSphere
-Install Type: IPI
-NetworkType: OpenShiftSDN
-Proxy Configured:
-  HTTP: false
-  HTTPS: false
-apiServerInternalIP: 10.0.0.2
-ingressIP: 10.0.0.1
-
-etcd Encryption: None
+etcd Encryption: AES-CBC
 Audit Profile: Default
 
-etc...
+...
 ----
 
 [#customermemory]
@@ -98,7 +101,7 @@ etc...
 .Viewing Cluster Memory Usage
 [source,bash]
 ----
-$ ocp_insights.sh --file Module3-insights-data --customer_memory
+$ ocp_insights.py --file Module3-insights-data --customer_memory
 
 ...
 Customer Namespace Memory Usage.
@@ -127,7 +130,7 @@ Total Customer Namespace Memory Usage: 121.9884G
 .Looking at etcd metrics
 [source,bash]
 ----
-ocp_insights.sh --file Module3-insights-data --etcd_metrics
+ocp_insights.py --file Module3-insights-data --etcd_metrics
 
 etcd server slow apply total
 
@@ -149,7 +152,7 @@ etcd-ocp4-2nvq7-master-1,22
 .Storage Classes
 [source,bash]
 ----
-ocp_insights.sh --file Module3-insights-data --storage_classes
+ocp_insights.py --file Module3-insights-data --storage_classes
 ...
 StorageClass Information.
 
@@ -179,7 +182,7 @@ Beyond that, there is a ton of other other useful information about the cluster.
 
 [source,bash]
 ----
-ocp_insights.sh --file Module3-insights-data --all
+ocp_insights.py --file Module3-insights-data --all
 ----
 
 .All of the node information, including `coreos version`, `kubelet version` and the `cpu` and `memory` details of each server
