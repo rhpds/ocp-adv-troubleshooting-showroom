@@ -5,15 +5,15 @@ OpenShift Lightspeed (Insights) is a free tool that runs on your OpenShift clust
 
 In this module we will be reviewing how to look at a script that parses an `OpenShift Lightspeed (Insights)` archive to allow you to proactively analyze a cluster.
 
-You can find more details on OpenShift Lightspeed (Insights) and the entire remove health monitoring package in our documentation: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[About remote health monitoring]
+You can find more details on OpenShift Lightspeed (Insights) and the entire remote health monitoring package in our documentation: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[About remote health monitoring]
 
 You can find details on what OpenShift Lightspeed (Insights) collects here: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[Showing data collected by remote health monitoring]
 
-You can also review the source code to more information on what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_most_recent_metrics.go[GitHub: Insights Operator - gather_most_recent_metrics.go]
+You can also review the source code to see additional information on what is collected here: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_most_recent_metrics.go[GitHub: Insights Operator - gather_most_recent_metrics.go]
 
 [#gettingstarted]
 == The ocp_insights.py script
-With this script we will be able to parse the insights archive, review customer namespace memory usage, look for namespaces with overlapping UIDs, reivew storage classes, and look at etcd metrics.
+With this script we will be able to parse the insights archive, review customer namespace memory usage, look for namespaces with overlapping UIDs, review storage classes, and look at etcd metrics.
 
 .Understanding ocp_insights
 [source,bash]
@@ -23,26 +23,28 @@ cd ~/Module3/
 
 [source,bash]
 ----
-ocp_insights.py --help
-usage: ocp_insights.py [-h] [--id ID] [--file FILE] [--alerts] [--customer_memory] [--etcd_metrics] [--events] [--list] [--extract]
+usage: ocp_insights.py [-h] [--id ID] [--file FILE] [--alerts] [--customer_memory] [--etcd_metrics] [--events] [--list] [--extract] [--cluster_info] [--node_info] [--cluster_operators]
 
-OpenShift InsightsCluster Report.
+OpenShift Insights Cluster Report.
 
 options:
-  -h, --help         show this help message and exit
-  --id ID            ClusterID of a connected cluster used to find all connected Clusters
-  --file FILE        Use a specific Insights Archive File; must specify full path.
-  --alerts           Prints out Alerts in valid JSON
-  --customer_memory  Prints Customer Namespace memory usage.
-  --etcd_metrics     Prints etcd metrics for all Insights Archives for the cluster.
-  --events           Prints namespace events if they exist.
-  --list             List available archives for a specific cluster. Must be used with --id option. Can be combined with --extract.
-  --extract          Extract archive for a specific cluster to user's home directory. Must be used with --id option. Can be combined with --list to select which archive to extract.
+  -h, --help           show this help message and exit
+  --id ID              ClusterID of a connected cluster used to find all connected Clusters
+  --file FILE          Use a specific Insights Archive File; must specify full path.
+  --alerts             Prints out Alerts in valid JSON
+  --customer_memory    Prints Customer Namespace memory usage.
+  --etcd_metrics       Prints etcd Slow Apply metrics for all Insights Archives for the cluster.
+  --events             Prints namespace events if they exist.
+  --list               List available archives for a specific cluster. Must be used with --id option. Can be combined with --extract.
+  --extract            Extract archive for a specific cluster to user home directory. Must be used with --id option. Can be combined with --list to select which archive to extract.
+  --cluster_info       Prints only cluster information (ID, name, version, platform, network, encryption, etc.).
+  --node_info          Prints only node information (name, status, role, version, OS, CPU, memory).
+  --cluster_operators  Prints only cluster operator information (name, version, status).
 ----
 
 [#whatisoutput]
 == What is in the output?
-. This script was written with the intention to parse Insights Archives to display the data the same way it is output by OpenShift's CLI.
+. This script was written with the intention to parse Insights Archives to display the data the same way it is output by OpenShift's CLI. *All of the following information* is output when running the script unless specifically stated below.
 
 * We include the following information:
 ** ClusterVersion
@@ -65,18 +67,30 @@ options:
 ** MachineSets
 ** Failing Pods
 ** Alerts
-** Namespace Events
 ** PodNetworkConnectivityChecks
+** Namespace Events^
+** Alerts in JSON^
+** Customer Namespace Memory Usage^
 
+* ^ Indicates an additional flag is needed to view the data.
+
+[#cluster_info]
+== Cluster Information
+
+The `--cluster_info` option shows a detailed break down of the high level information regarding your cluster including `ID`, `Name`, `Version`, `Channel`, `Cluster Status`, `Platform`, `Install Type`, and more.
+
+.Viewing Cluster Information
 [source,bash]
 ----
-ocp_insights.py --file Module3-insights-data
+$ ocp_insights.py --cluster_info --file ~/Module3/Cluster_1/insights.tar.gz
 
 Cluster ID: DB08D743-5559-4259-8ABB-7C5B528439B7
 Cluster Name: prod.example.com
 Cluster Version: 4.15.57
 Channel: stable-4.15
-Previous Versions: 4.15.57, 4.15.44, 4.15.43, 4.15.37, 4.15.24, 4.15.20, 4.15.19, 4.15.18, 4.15.17, 4.15.15, 4.15.14, 4.15.13, 4.15.12, 4.15.11, 4.14.23, 4.14.21, 4.13.40, 4.12.55, 4.11.59, 4.11.57, 4.11.56, 4.11.55, 4.11.54, 4.11.53, 4.11.50, 4.11.49, 4.11.48, 4.11.30, 4.10.37
+Previous Versions: 4.15.57, 4.15.44, 4.15.43, 4.15.37, 4.15.24, 4.15.20, 4.15.19, 4.15.18, 4.15.17, 4.15.15, 4.15.14, 4.15.13,
+4.15.12, 4.15.11, 4.14.23, 4.14.21, 4.13.40, 4.12.55, 4.11.59, 4.11.57, 4.11.56, 4.11.55, 4.11.54, 4.11.53, 4.11.50, 4.11.49,
+4.11.48, 4.11.30, 4.10.37
 Cluster Status: Failing
 Reason: ClusterOperatorDegraded
 Message: Cluster operator authentication is degraded
@@ -90,141 +104,316 @@ Proxy Settings:
 
 etcd Encryption: AES-CBC
 Audit Profile: Default
+----
 
-...
+[#node_info]
+== Node Information
+
+The `--node_info` option displays all of the node information, including `Node Name`, `Node Status`, `Role(s)`, `Creation Date`, `Kubelet Version`, `CoreOS Version` and the `CPU` and `Memory` details of each server.
+
+[TIP]
+=====
+The total memory returned, is the memory available to the Kubelet and not the physical amount of memory on the node.
+=====
+
+[source,bash]
+----
+ocp_insights.py --node_info --file ~/Module3/Cluster_2/insights.tar.gz
+
+Node Information:
+
+NAME         READY  ROLE                  CREATED ON           VERSION           OS                                                     CPU  MEMORY
+master0-dev  True   control-plane,master  2024-05-11 07:30:21  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  6    31 GB
+master1-dev  True   control-plane,master  2024-05-11 07:30:23  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  6    31 GB
+master2-dev  True   control-plane,master  2024-05-11 07:30:20  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  6    31 GB
+infra0-dev   True   infra                 2024-05-11 07:48:46  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  4    16 GB
+infra1-dev   True   infra                 2024-05-11 07:48:45  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  4    16 GB
+infra2-dev   True   infra                 2024-05-11 07:48:43  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  4    16 GB
+worker0-dev  True   worker                2024-05-11 07:48:40  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  12   79 GB
+worker1-dev  True   worker                2024-05-11 07:48:41  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  12   79 GB
+worker2-dev  True   worker                2024-05-12 11:15:08  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  12   79 GB
+worker3-dev  True   worker                2025-01-22 15:47:13  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  12   79 GB
+worker4-dev  True   worker                2025-01-22 16:19:06  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  12   79 GB
+worker5-dev  True   worker                2025-01-22 16:53:23  v1.29.10+67d3387  Red Hat Enterprise Linux CoreOS 416.94.202412170927-0  12   79 GB
+----
+
+[#cluster_operators]
+== Cluster Operators
+
+The `--cluster_operators` returns the same output as running `oc get clusteroperators` or `oc get co`. All Cluster Operators are returned with the `Name`, `Version`, and `Status`.
+
+.Viewing Cluster Operators
+[source,bash]
+----
+$ ocp_insights.py --cluster_operators --file ~/Module3/Cluster_2/insights.tar.gz
+
+Cluster Operators:
+
+NAME                                      VERSION  AVAILABLE  PROGRESSING  DEGRADED
+authentication                            4.16.28  True       False        True
+baremetal                                 4.16.28  True       False        False
+cloud-controller-manager                  4.16.28  True       False        False
+cloud-credential                          4.16.28  True       False        False
+cluster-autoscaler                        4.16.28  True       False        False
+config-operator                           4.16.28  True       False        False
+console                                   4.16.28  True       False        False
+control-plane-machine-set                 4.16.28  True       False        False
+csi-snapshot-controller                   4.16.28  True       False        False
+dns                                       4.16.28  True       False        False
+etcd                                      4.16.28  True       False        False
+image-registry                            4.16.28  True       False        False
+ingress                                   4.16.28  True       False        False
+insights                                  4.16.28  True       False        False
+kube-apiserver                            4.16.28  True       False        False
+kube-controller-manager                   4.16.28  True       False        False
+kube-scheduler                            4.16.28  True       False        False
+kube-storage-version-migrator             4.16.28  True       False        False
+machine-api                               4.16.28  True       False        False
+machine-approver                          4.16.28  True       False        False
+machine-config                            4.16.28  True       False        False
+marketplace                               4.16.28  True       False        False
+monitoring                                4.16.28  True       False        False
+network                                   4.16.28  True       False        False
+node-tuning                               4.16.28  True       False        False
+openshift-apiserver                       4.16.28  True       False        False
+openshift-controller-manager              4.16.28  True       False        False
+openshift-samples                         4.16.28  True       False        False
+operator-lifecycle-manager                4.16.28  True       False        False
+operator-lifecycle-manager-catalog        4.16.28  True       False        False
+operator-lifecycle-manager-packageserver  4.16.28  True       False        False
+service-ca                                4.16.28  True       False        False
+storage                                   4.16.28  True       False        False
+----
+
+[#events]
+== Namespace Events
+
+The `--events` option returns any events collected by the Insights Operator when the archive was recreated.
+
+.Viewing Namespace Events
+[source,bash]
+----
+$ ocp_insights.py --events --file ~/Module3/Cluster_2/insights.tar.gz
+
+Namespace Errors:
+
+NAMESPACE                          TYPE     REASON                        TIME
+openshift-authentication-operator  Warning  OpenShiftAPICheckFailed       2025-11-17 22:23:11
+openshift-authentication-operator  Warning  OpenShiftAPICheckFailed       2025-11-17 22:23:11
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 21:09:54
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 21:39:58
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 21:39:58
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 22:49:50
+openshift-oauth-apiserver          Warning  FailedToUpdateEndpointSlices  2025-11-17 22:49:58
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 22:50:00
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 22:50:01
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 22:50:17
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 22:50:22
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 22:50:22
+openshift-oauth-apiserver          Warning  Unhealthy                     2025-11-17 22:59:51
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 22:59:52
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 23:00:24
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 23:00:35
+openshift-oauth-apiserver          Warning  ProbeError                    2025-11-17 23:00:35
 ----
 
 [#customermemory]
 == Customer Namespace Memory Usage
-. The Insights Operator, when installed, collects data about the cluster every two hours. One piece of that collected data is `container_memory_usage_bytes` which can then be converted to see total MB/GB usage of a namespace.
+
+The `--customer_memory` option returns the memory usage of each `Customer Namespace` based on the metric `container_memory_usage_bytes` which is collected by the `Insights Operator`.
 
 .Viewing Cluster Memory Usage
 [source,bash]
 ----
-$ ocp_insights.py --file Module3-insights-data --customer_memory
+$ ocp_insights.py --customer_memory --file ~/Module3/Cluster_2/insights.tar.gz
 
 ...
-Customer Namespace Memory Usage.
+Customer Namespace Memory Usage:
 
-NAMESPACE         MEMORY
-aap               2.7282G
-web-app           45.6647G
-falcon-operator   12.5485G
-frank-enterprise  14.8893G
-frank-monitoring  186.4453M
-frank-quay        21.7653G
-frank-test        109.0507M
-duck              22.3663G
-portworx          1.7372G
+NAMESPACE                   MEMORY
+app-dev                     3.82 GB
+app-test                    4.55 GB
+app-uat                     2.67 GB
+apps-dev                    11.40 GB
+apps-test                   12.68 GB
+apps-uat                    13.92 GB
+aseventas-uat               97.91 MB
+asociados-test              635.70 MB
+assistants-dev              338.67 MB
+assistants-test             290.35 MB
+assistants-uat              321.08 MB
+cicd                        7.17 GB
+cloudintegration-test       359.88 MB
+cloudintegration-uat        542.36 MB
+community-dev               3.74 GB
+community-test              3.61 GB
+community-uat               2.40 GB
+concepts-dev                514.27 MB
+concepts-test               503.07 MB
+dev-uat                     0.00 MB
+empresas-test               611.77 MB
+groups-dev                  601.91 MB
+groups-test                 591.89 MB
+kafka-dev                   2.63 GB
+kafka-test                  7.49 GB
+kafka-uat                   14.17 GB
+liquid-test                 691.91 MB
+liquid-uat                  604.99 MB
+mediflex-test               2.34 GB
+mediflex-uat                315.70 MB
+minio-operator              903.01 MB
+nexus                       2.28 GB
+nfs-provisioner             38.49 MB
+notification-observability  292.96 MB
+poc                         3.08 GB
+pos-system-dev              17.33 MB
+pos-system-test             248.90 MB
+prefab-dev                  626.19 MB
+prefab-test                 647.61 MB
+presto-test                 672.07 MB
+presto-uat                  703.39 MB
+providers-test              2.95 GB
+providers-uat               3.57 GB
+revproxy-test               578.97 MB
+revproxy-uat                248.02 MB
+rhdh-operator               1.00 GB
+rhpam-73                    2.85 GB
+sandbox                     569.27 MB
+sigo-dev                    7.29 GB
+sigo-test                   8.38 GB
+sigo-uat                    7.86 GB
+sso                         3.42 GB
+sso-lab                     1.82 GB
+testafip-test               660.54 MB
+testafip-uat                882.96 MB
+testcomisiones-test         355.80 MB
+testmobile-test             1.49 GB
+testmobile-uat              1.30 GB
+testproviders-test          4.80 GB
+testweb-test                1.55 GB
+testweb-uat                 1.18 GB
+threescale                  7.36 GB
+threescale-apicast-test     75.05 MB
+userdevops-test             6.01 GB
+users-test                  264.38 MB
+users-uat                   308.11 MB
+valor-dev                   315.38 MB
+valor-test                  335.54 MB
+zabbix                      224.45 MB
 
-Total Customer Namespace Memory Usage: 121.9884G
+Total Customer Namespace Memory Usage: 176.41 GB
 ...
 ----
 
 [#etcd_metrics]
 == etcd Metrics
-. Along with the customer namespace metrics, we also collect several etcd metrics including `etcd_server_slow_apply_total` and `etcd_server_slow_read_indexes_total`.
+Along with the customer namespace metrics, we also collect several etcd metrics including `etcd_server_slow_apply_total` and `etcd_server_slow_read_indexes_total`.
 
-. These two metrics are a great indicator of performance issues with the underlying disk that supports etcd. Tracking these over multiple Insights Archives is a good way to determine if the cluster is suffering from etcd performance problems.
+These two metrics are a great indicator of performance issues with the underlying disk that supports etcd. Tracking these over multiple Insights Archives is a good way to determine if the cluster is suffering from etcd performance problems.
 
-.Looking at etcd metrics
+The `ocp_insight.py` script currently returns the `etcd_server_slow_apply_total` which indicates how many `Took Too Long` messages have occurred since the pod's last restart.
+
+.Viewing etcd metrics
 [source,bash]
 ----
-ocp_insights.py --file Module3-insights-data --etcd_metrics
+$ ocp_insights.py --etcd_metrics --file ~/Module3/Cluster_4/insights.tar.gz
 
-etcd server slow apply total
-
-etcd-ocp4-2nvq7-master-0,3548
-etcd-ocp4-2nvq7-master-2,4488
-etcd-ocp4-2nvq7-master-1,4223
-
-etcd server slow read indexex total
-
-etcd-ocp4-2nvq7-master-0,21
-etcd-ocp4-2nvq7-master-2,24
-etcd-ocp4-2nvq7-master-1,22
+etcd-ocpmstr1.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,7
+etcd-ocpmstr2.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,1568
+etcd-ocpmstr3.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,181506
 ----
 
-[#storageclasses]
-== Storage Classes
-. For customer using persistent storage via OpenShift Data Foundations or through a 3rd party like Portworx, Infinidat or VMware, we collect storage class information which is helpful to determine what storage is being used by the cluster.
 
-.Storage Classes
+
+[#alloutput]
+== Additional Output
+
+=== Install Plans
+
+The `Insights Operator` captures all `Install Plans` on the cluster which is extremely helpful to see current and previous installed operators. We return `CSV` and `Namespace`.
+
+
+.Install Plans
 [source,bash]
 ----
-ocp_insights.py --file Module3-insights-data --storage_classes
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
 ...
-StorageClass Information.
+Install Plans:
 
-NAME                                PROVISIONER                    RECLAIM POLICY  BINDING MODE          VOLUME EXPANSION
-px-csi-db-cloud-snapshot-encrypted  pxd.portworx.com               Delete          Immediate             True
-px-csi-db-cloud-snapshot            pxd.portworx.com               Delete          Immediate             True
-px-csi-db-encrypted                 pxd.portworx.com               Delete          Immediate             True
-px-csi-db                           pxd.portworx.com               Delete          Immediate             True
-px-csi-db-local-snapshot-encrypted  pxd.portworx.com               Delete          Immediate             True
-px-csi-db-local-snapshot            pxd.portworx.com               Delete          Immediate             True
-px-csi-replicated-encrypted         pxd.portworx.com               Delete          Immediate             True
-px-csi-replicated                   pxd.portworx.com               Delete          Immediate             True
-px-db-cloud-snapshot-encrypted      kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-cloud-snapshot                kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-encrypted                     kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db                               kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-local-snapshot-encrypted      kubernetes.io/portworx-volume  Delete          Immediate             True
-px-db-local-snapshot                kubernetes.io/portworx-volume  Delete          Immediate             True
-px-replicated-encrypted             kubernetes.io/portworx-volume  Delete          Immediate             True
-px-replicated                       kubernetes.io/portworx-volume  Delete          Immediate             True
-thin-csi                            csi.vsphere.vmware.com         Delete          WaitForFirstConsumer  True
-thin                                kubernetes.io/vsphere-volume   Delete          Immediate             False
+CSV                                              NAMESPACE
+cephcsi-operator.v4.19.5-rhodf                   openshift-storage
+cephcsi-operator.v4.19.7-rhodf                   openshift-storage
+kubernetes-nmstate-operator.4.19.0-202510081435  openshift-nmstate
+kubernetes-nmstate-operator.4.19.0-202510142112  openshift-nmstate
+kubernetes-nmstate-operator.4.19.0-202510291015  openshift-nmstate
+kubernetes-nmstate-operator.4.19.0-202511111644  openshift-nmstate
+kubernetes-nmstate-operator.4.19.0-202511260712  openshift-nmstate
+kubevirt-hyperconverged-operator.v4.19.1         openshift-cnv
+kubevirt-hyperconverged-operator.v4.19.12        openshift-cnv
+kubevirt-hyperconverged-operator.v4.19.15        openshift-cnv
+kubevirt-hyperconverged-operator.v4.19.6         openshift-cnv
+local-storage-operator.v4.19.0-202510071855      openshift-local-storage
+local-storage-operator.v4.19.0-202510142112      openshift-local-storage
+local-storage-operator.v4.19.0-202510291015      openshift-local-storage
+local-storage-operator.v4.19.0-202511102034      openshift-local-storage
+local-storage-operator.v4.19.0-202511260712      openshift-local-storage
+mcg-operator.v4.19.6-rhodf                       openshift-storage
+recipe.v4.19.8-rhodf                             openshift-storage
+rook-ceph-operator.v4.19.4-rhodf                 openshift-storage
+sriov-network-operator.v4.19.0-202510060211      openshift-sriov-network-operator
+sriov-network-operator.v4.19.0-202510142112      openshift-sriov-network-operator
+sriov-network-operator.v4.19.0-202510211212      openshift-sriov-network-operator
+sriov-network-operator.v4.19.0-202511102034      openshift-sriov-network-operator
+sriov-network-operator.v4.19.0-202511260712      openshift-sriov-network-operator
 ...
 ----
 
-Beyond that, there is a ton of other other useful information about the cluster. The `--all` flag will show you:
+=== OLM Operators
 
+The `Insights Operator` captures all `OLM Operators` on the cluster which is extremely helpful to see current and previous installed operators. We return `Name`, `Display Name`, `Version`, and `Namespace` when applicable.
+
+
+.Installed OLM Operators
 [source,bash]
 ----
-ocp_insights.py --file Module3-insights-data --all
-----
-
-.All of the node information, including `coreos version`, `kubelet version` and the `cpu` and `memory` details of each server
-[source,bash]
-----
-NAME                          READY  ROLE    CREATED ON            VERSION           OS                                                            CPU  MEMORY
-prodshift-2nvq7-dmz-8qn4p     True   worker  2024-08-01T21:07:31Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-dmz-b2gvz     True   worker  2024-08-01T21:18:13Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-master-0      True   master  2022-11-17T16:30:11Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  8    63G
-prodshift-2nvq7-master-1      True   master  2022-11-17T16:29:32Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  8    63G
-prodshift-2nvq7-master-2      True   master  2022-11-17T16:29:53Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  8    63G
-prodshift-2nvq7-worker-8fkc9  True   worker  2022-11-17T16:40:10Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-worker-xdwch  True   worker  2022-11-17T16:38:55Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-prodshift-2nvq7-worker-zpwq6  True   worker  2022-11-17T16:39:38Z  v1.27.13+048520e  Red Hat Enterprise Linux CoreOS 414.92.202405162017-0 (Plow)  16   63G
-----
-
-.What operators are installed on the cluter:
-[source,bash]
-----
-Installed Operators:
-
-datagrid-operator.v8.5.0
-datagrid-operator.v8.5.1
-grafana-operator.v5.12.0
-openshift-gitops-operator.v1.12.5
-quay-operator.v3.10.6
-
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+...
 Installed OLM Operators:
 
-DISPLAY NAME                            VERSION              NAME
-Ansible Automation Platform             v2.4.0-0.1692675723  ansible-automation-platform-operator.aap
-Data Grid                               v8.5.1               datagrid.openshift-operators
-CrowdStrike Falcon Platform - Operator  v0.6.2               falcon-operator-rhmp.falcon-operator
-Grafana Operator                        v5.12.0              grafana-operator.openshift-operators
-Red Hat OpenShift GitOps                v1.12.5              openshift-gitops-operator.openshift-operators
-Portworx Enterprise                     v24.1.1              portworx-certified.openshift-operators
-Red Hat Quay                            v3.9.8               quay-operator.openshift-operators
+NAME                         DISPLAY NAME                      VERSION               NAMESPACE
+axyom                                                                                5gc
+axyom                                                                                openshift-operators
+casa-redis-operator          Casa Redis Operator               v0.2.33               5gc
+casa-redis-operator                                                                  openshift-operators
+cephcsi-operator             CephCSI operator                  v4.19.8-rhodf         openshift-storage
+kubernetes-nmstate-operator  Kubernetes NMState Operator       4.19.0-202511260712   openshift-nmstate
+kubevirt-hyperconverged      OpenShift Virtualization          v4.19.15              openshift-cnv
+local-storage-operator       Local Storage                     v4.19.0-202511260712  openshift-local-storage
+mcg-operator                 NooBaa Operator                   v4.19.8-rhodf         openshift-storage
+ocs-client-operator          OpenShift Data Foundation Client  v4.19.8-rhodf         openshift-storage
+ocs-operator                 OpenShift Container Storage       v4.19.8-rhodf         openshift-storage
+odf-csi-addons-operator      CSI Addons                        v4.19.8-rhodf         openshift-storage
+odf-dependencies             Data Foundation Dependencies      v4.19.8-rhodf         openshift-storage
+odf-operator                 OpenShift Data Foundation         v4.19.8-rhodf         openshift-storage
+odf-prometheus-operator      Prometheus Operator               v4.19.8-rhodf         openshift-storage
+recipe                       Recipe                            v4.19.8-rhodf         openshift-storage
+rook-ceph-operator           Rook-Ceph                         v4.19.8-rhodf         openshift-storage
+sgwc-operator                SGWC Operator                     v0.6.5                5gc
+sgwc-operator                                                                        openshift-operators
+sriov-network-operator       SR-IOV Network Operator           v4.19.0-202511260712  openshift-sriov-network-operator
+upf-operator                 UPF Operator                      v1.9.42               5gc
+upf-operator                                                                         openshift-operators
+...
 ----
 
-.The status of the `MachineConfigPools` and `MachineSets`:
+=== MachineConfigPools and MachineSets
+
+The `Insights Operator` also collects `MachineConfigPool` and `MachineConfigSet` information and returns them when applicable.
+
+.MachineConfigPool and MachineSets
 [source,bash]
 ----
+...
 MachineConfigPools:
 
 NAME    CONFIG                                            PAUSED  UPDATED  UPDATING  DEGRADED  MACHINECOUNT  READYMACHINECOUNT  UPDATEDMACHINECOUNT  DEGRADEDMACHINECOUNT
@@ -236,14 +425,158 @@ MachineSets:
 NAME                    DESIRED  CURRENT  READY  AVAILABLE
 prodshift-2nvq7-dmz     2        2        2      2
 prodshift-2nvq7-worker  3        3        3      3
+...
 ----
 
-.And finally, any alert that is currently firing on the cluster:
+=== Storage Classes
+
+For customers using persistent storage via OpenShift Data Foundations or through a 3rd party like Portworx, Infinidat or VMware, we collect storage class information which is helpful to determine what storage is being used by the cluster.
+
+.Storage Classes
 [source,bash]
 ----
-ALERT NAME                           STATE   START TIME
-ArgoCDSyncAlert                      ACTIVE  2024-08-12T18:52:43.454Z
-ArgoCDSyncAlert                      ACTIVE  2024-08-12T18:52:43.454Z
-UpdateAvailable                      ACTIVE  2024-08-13T14:57:25.650Z
-PrometheusOperatorRejectedResources  ACTIVE  2024-07-28T04:01:17.570Z
+$ ocp_insights.py --file ~/Module3/Cluster_4/insights.tar.gz
+...
+StorageClasses:
+
+NAME             PROVISIONER                                                    RECLAIM POLICY  BINDING MODE  VOLUME EXPANSION
+5gc-nfs-storage  cluster.local/nfs-provisioner-nfs-subdir-external-provisioner  Delete          Immediate     True
+...
+----
+
+=== Cluster Memory Usage
+Just like with the `Customer Memory Usage` option, the `Insights Operator` also collects the memory usage of the cluster namespaces. This is a great way to see if there has been a large growth in memory usage when comparing multiple must-gathers and to get an idea of what the memory usage is compared to the size of the cluster.
+
+.Cluster Memory Usage
+[source,bash]
+----
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+...
+Cluster Namespace Memory Usage:
+
+NAMESPACE                                         MEMORY
+openshift-apiserver                               1.21 GB
+openshift-apiserver-operator                      237.52 MB
+openshift-authentication                          204.72 MB
+openshift-authentication-operator                 192.42 MB
+openshift-catalogd                                400.57 MB
+openshift-cloud-controller-manager-operator       186.32 MB
+openshift-cloud-credential-operator               125.80 MB
+openshift-cluster-machine-approver                114.22 MB
+openshift-cluster-node-tuning-operator            1.10 GB
+openshift-cluster-olm-operator                    92.02 MB
+openshift-cluster-samples-operator                75.02 MB
+openshift-cluster-storage-operator                232.67 MB
+openshift-cluster-version                         116.95 MB
+openshift-cnv                                     2.99 GB
+openshift-config-operator                         76.99 MB
+...
+openshift-route-controller-manager                236.91 MB
+openshift-service-ca                              185.80 MB
+openshift-service-ca-operator                     80.82 MB
+openshift-sriov-network-operator                  660.84 MB
+openshift-storage                                 2.09 GB
+
+Total Cluster Namespace Memory Usage: 72.78 GB
+...
+----
+
+=== Restarting Containers
+The `Insights Operator` collects information on container restarts which is extremely useful when trying to understand problems in the cluster. We return `Namespace`, `Pod Name`, `Container Name`, `Restart Count`, and the last `Restart Time`.
+
+.Restarting Containers
+[source,bash]
+----
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+...
+Containers with more than 3 restarts:
+
+NAMESPACE                                    POD NAME                                                         CONTAINER NAME                               RESTARTS  RESTART TIME
+openshift-apiserver                          apiserver-75d755b989-qplnj                                       openshift-apiserver                          35        2025-12-08 18:32:39
+openshift-apiserver-operator                 openshift-apiserver-operator-c6fcd76c-w9dhr                      openshift-apiserver-operator                 23        2025-12-08 17:08:43
+openshift-authentication                     oauth-openshift-5f85d8547d-j5pgl                                 oauth-openshift                              14        2025-12-08 16:46:27
+openshift-authentication                     oauth-openshift-5f85d8547d-j9vhg                                 oauth-openshift                              8         2025-12-08 18:33:11
+openshift-authentication-operator            authentication-operator-55c75748d8-hrmjj                         authentication-operator                      28        2025-12-08 17:08:57
+openshift-catalogd                           catalogd-controller-manager-644c7b6647-jwbvm                     manager                                      37        2025-12-08 18:35:47
+openshift-cloud-controller-manager-operator  cluster-cloud-controller-manager-operator-7594f66d79-kp5wk       cluster-cloud-controller-manager             12        2025-12-08 16:39:36
+openshift-cloud-controller-manager-operator  cluster-cloud-controller-manager-operator-7594f66d79-kp5wk       config-sync-controllers                      12        2025-12-08 16:39:08
+openshift-cluster-machine-approver           machine-approver-66dd4cccf8-6h2cq                                machine-approver-controller                  28        2025-12-08 18:35:36
+openshift-cluster-version                    cluster-version-operator-76d4d9c9cb-2jjg9                        cluster-version-operator                     8         2025-12-08 18:32:45
+openshift-cnv                                aaq-operator-69dbd4dbcc-f8kht                                    aaq-operator                                 113       2025-12-09 02:16:23
+openshift-cnv                                cdi-deployment-8d44554f7-dzhmt                                   cdi-deployment                               120       2025-12-09 04:21:18
+openshift-cnv                                cdi-operator-655b595b9d-gm89z                                    cdi-operator                                 120       2025-12-09 04:16:16
+openshift-cnv                                hco-operator-67d948fc78-l7ff6                                    hyperconverged-cluster-operator              126       2025-12-09 04:21:30
+openshift-cnv                                hco-webhook-8546b78db4-nh89x                                     hyperconverged-cluster-webhook               140       2025-12-09 04:21:19
+openshift-cnv                                hostpath-provisioner-operator-98d45dd45-v9xzw                    hostpath-provisioner-operator                36        2025-12-09 02:16:22
+openshift-cnv                                kubevirt-ipam-controller-manager-6998cd6677-zhmrd                manager                                      116       2025-12-09 04:16:24
+...
+----
+
+=== Alerts
+The `Insights Operator` collects all alerts that are firing on the cluster. We return `Alert Name`, `State`, and `Start Time`.
+
+.Alerts
+[source,bash]
+----
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+...
+ALERT NAME                          STATE   START TIME
+InsightsRecommendationActive        ACTIVE  2025-12-08 20:31:14.889
+CDINoDefaultStorageClass            ACTIVE  2025-12-08 20:22:13.091
+KubeDaemonSetRolloutStuck           ACTIVE  2025-12-08 12:37:32.089
+KubeJobFailed                       ACTIVE  2025-12-08 12:37:32.089
+AlertmanagerReceiversNotConfigured  ACTIVE  2025-12-08 12:37:25.872
+UpdateAvailable                     ACTIVE  2025-12-08 18:35:39.959
+KubeJobFailed                       ACTIVE  2025-12-08 12:37:32.089
+ClusterOperatorDegraded             ACTIVE  2025-12-08 19:05:31.735
+CDIStorageProfilesIncomplete        ACTIVE  2025-12-09 02:22:13.091
+KubeJobFailed                       ACTIVE  2025-12-08 12:37:32.089
+ClusterOperatorDegraded             ACTIVE  2025-12-08 20:55:01.735
+KubeJobFailed                       ACTIVE  2025-12-08 12:37:32.089
+...
+----
+
+=== PodNetworkConnectivityChecks
+The `Insights Operator` also collects `PodNetworkConnectivityChecks` which is a service that runs on a `Compute` node in the cluster and then connects to listener pods on each node of the cluster. It checks for various services and it is helpful to determine if nodes or services become unreachable.
+
+
+.PodNetworkConnectivityChecks
+[source,bash]
+----
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+...
+PodNetworkConnectivityChecks:
+
+ERROR                                   TIMESTAMP
+kubernetes-apiserver-endpoint-ocpmstr3  2025-12-08 18:27:40Z
+kubernetes-apiserver-service-cluster    2025-12-08 16:36:38Z
+kubernetes-apiserver-service-cluster    2025-12-08 18:30:38Z
+kubernetes-default-service-cluster-0    2025-12-08 17:10:38Z
+kubernetes-default-service-cluster-0    2025-12-08 18:30:38Z
+openshift-apiserver-endpoint-ocpmstr3   2025-12-08 18:32:29Z
+openshift-apiserver-service-cluster     2025-12-08 16:40:38Z
+...
+----
+
+=== Conditional Update Risks
+Red Hat provides `Conditional Update Risks` to customers so that they are aware of any potential risk of a failed upgrade or an issue post upgrade.
+
+.Conditional Update Risks
+[source,bash]
+----
+ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+...
+Conditional Update Risks:
+
+RISK                                         REFERENCE                                         AFFECTED_VERSIONS
+ConsoleCrashOnMissingPlugin                  https://issues.redhat.com/browse/CONSOLE-4762     4.19.10, 4.19.11, 4.19.12, 4.19.13, 4.19.7, 4.19.9
+HyperShiftClusterVersionOperatorMetrics      https://issues.redhat.com/browse/OTA-1705         4.19.10, 4.19.11, 4.19.12, 4.19.13, 4.19.14, 4.19.15, 4.19.16, 4.19.9
+HyperShiftProxyScheme                        https://issues.redhat.com/browse/CNTRLPLANE-1407  4.19.10, 4.19.11, 4.19.12, 4.19.13, 4.19.4, 4.19.5, 4.19.6, 4.19.7, 4.19.9
+MachineConfigNodesV1AlphaControlPlaneLabels  https://issues.redhat.com/browse/MCO-1890         4.19.12, 4.19.13
+NMStateServiceFailure                        https://issues.redhat.com/browse/CORENET-6419     4.19.10, 4.19.11, 4.19.12, 4.19.13, 4.19.9
+NetworkManagerOVNBridgeMapping               https://issues.redhat.com/browse/CORENET-6483     4.19.13, 4.19.14, 4.19.15, 4.19.16, 4.19.17, 4.19.18
+OSUpdateFailureDueToImagePullPolicy          https://issues.redhat.com/browse/MCO-1896         4.19.12, 4.19.13, 4.19.14, 4.19.15
+RuncShareProcessNamespace                    https://issues.redhat.com/browse/RUN-3748         4.19.19
+SCOSBootImage                                https://issues.redhat.com/browse/COS-3765         4.19.18
+...
 ----
