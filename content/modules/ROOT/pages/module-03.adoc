@@ -18,7 +18,7 @@ With this script we will be able to parse the insights archive, review customer 
 .Understanding ocp_insights
 [source,bash]
 ----
-cd ~/Module3/
+cd ./
 ----
 
 [source,bash]
@@ -82,7 +82,7 @@ The `--cluster_info` option shows a detailed break down of the high level inform
 .Viewing Cluster Information
 [source,bash]
 ----
-$ ocp_insights.py --cluster_info --file ~/Module3/Cluster_1/insights.tar.gz
+$ ocp_insights.py --cluster_info --file ./Cluster_1/insights.tar.gz
 
 Cluster ID: DB08D743-5559-4259-8ABB-7C5B528439B7
 Cluster Name: prod.example.com
@@ -118,7 +118,7 @@ The total memory returned, is the memory available to the Kubelet and not the ph
 
 [source,bash]
 ----
-ocp_insights.py --node_info --file ~/Module3/Cluster_2/insights.tar.gz
+ocp_insights.py --node_info --file ./Cluster_2/insights.tar.gz
 
 Node Information:
 
@@ -145,7 +145,7 @@ The `--cluster_operators` returns the same output as running `oc get clusteroper
 .Viewing Cluster Operators
 [source,bash]
 ----
-$ ocp_insights.py --cluster_operators --file ~/Module3/Cluster_2/insights.tar.gz
+$ ocp_insights.py --cluster_operators --file ./Cluster_2/insights.tar.gz
 
 Cluster Operators:
 
@@ -193,7 +193,7 @@ The `--events` option returns any events collected by the Insights Operator when
 .Viewing Namespace Events
 [source,bash]
 ----
-$ ocp_insights.py --events --file ~/Module3/Cluster_2/insights.tar.gz
+$ ocp_insights.py --events --file ./Cluster_2/insights.tar.gz
 
 Namespace Errors:
 
@@ -225,7 +225,7 @@ The `--customer_memory` option returns the memory usage of each `Customer Namesp
 .Viewing Cluster Memory Usage
 [source,bash]
 ----
-$ ocp_insights.py --customer_memory --file ~/Module3/Cluster_2/insights.tar.gz
+$ ocp_insights.py --customer_memory --file ./Cluster_2/insights.tar.gz
 
 ...
 Customer Namespace Memory Usage:
@@ -316,7 +316,7 @@ The `ocp_insight.py` script currently returns the `etcd_server_slow_apply_total`
 .Viewing etcd metrics
 [source,bash]
 ----
-$ ocp_insights.py --etcd_metrics --file ~/Module3/Cluster_4/insights.tar.gz
+$ ocp_insights.py --etcd_metrics --file ./Cluster_4/insights.tar.gz
 
 etcd-ocpmstr1.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,7
 etcd-ocpmstr2.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,1568
@@ -336,7 +336,7 @@ The `Insights Operator` captures all `Install Plans` on the cluster which is ext
 .Install Plans
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Install Plans:
 
@@ -376,7 +376,7 @@ The `Insights Operator` captures all `OLM Operators` on the cluster which is ext
 .Installed OLM Operators
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Installed OLM Operators:
 
@@ -435,7 +435,7 @@ For customers using persistent storage via OpenShift Data Foundations or through
 .Storage Classes
 [source,bash]
 ----
-$ ocp_insights.py --file ~/Module3/Cluster_4/insights.tar.gz
+$ ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 StorageClasses:
 
@@ -450,7 +450,7 @@ Just like with the `Customer Memory Usage` option, the `Insights Operator` also 
 .Cluster Memory Usage
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Cluster Namespace Memory Usage:
 
@@ -487,7 +487,7 @@ The `Insights Operator` collects information on container restarts which is extr
 .Restarting Containers
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Containers with more than 3 restarts:
 
@@ -518,7 +518,7 @@ The `Insights Operator` collects all alerts that are firing on the cluster. We r
 .Alerts
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 ALERT NAME                          STATE   START TIME
 InsightsRecommendationActive        ACTIVE  2025-12-08 20:31:14.889
@@ -543,7 +543,7 @@ The `Insights Operator` also collects `PodNetworkConnectivityChecks` which is a 
 .PodNetworkConnectivityChecks
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 PodNetworkConnectivityChecks:
 
@@ -564,7 +564,7 @@ Red Hat provides `Conditional Update Risks` to customers so that they are aware 
 .Conditional Update Risks
 [source,bash]
 ----
-ocp_insights.py --file ../Module3/Cluster_4/insights.tar.gz
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Conditional Update Risks:
 
