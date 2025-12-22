@@ -18,7 +18,7 @@ With this script we will be able to parse the insights archive, review customer 
 .Understanding ocp_insights
 [source,bash]
 ----
-cd ./
+cd ~/Module3/
 ----
 
 [source,bash]
@@ -145,44 +145,44 @@ The `--cluster_operators` returns the same output as running `oc get clusteroper
 .Viewing Cluster Operators
 [source,bash]
 ----
-$ ocp_insights.py --cluster_operators --file ./Cluster_2/insights.tar.gz
+$ ocp_insights.py --cluster_operators --file ./Cluster_1/insights.tar.gz
 
 Cluster Operators:
 
-NAME                                      VERSION  AVAILABLE  PROGRESSING  DEGRADED
-authentication                            4.16.28  True       False        True
-baremetal                                 4.16.28  True       False        False
-cloud-controller-manager                  4.16.28  True       False        False
-cloud-credential                          4.16.28  True       False        False
-cluster-autoscaler                        4.16.28  True       False        False
-config-operator                           4.16.28  True       False        False
-console                                   4.16.28  True       False        False
-control-plane-machine-set                 4.16.28  True       False        False
-csi-snapshot-controller                   4.16.28  True       False        False
-dns                                       4.16.28  True       False        False
-etcd                                      4.16.28  True       False        False
-image-registry                            4.16.28  True       False        False
-ingress                                   4.16.28  True       False        False
-insights                                  4.16.28  True       False        False
-kube-apiserver                            4.16.28  True       False        False
-kube-controller-manager                   4.16.28  True       False        False
-kube-scheduler                            4.16.28  True       False        False
-kube-storage-version-migrator             4.16.28  True       False        False
-machine-api                               4.16.28  True       False        False
-machine-approver                          4.16.28  True       False        False
-machine-config                            4.16.28  True       False        False
-marketplace                               4.16.28  True       False        False
-monitoring                                4.16.28  True       False        False
-network                                   4.16.28  True       False        False
-node-tuning                               4.16.28  True       False        False
-openshift-apiserver                       4.16.28  True       False        False
-openshift-controller-manager              4.16.28  True       False        False
-openshift-samples                         4.16.28  True       False        False
-operator-lifecycle-manager                4.16.28  True       False        False
-operator-lifecycle-manager-catalog        4.16.28  True       False        False
-operator-lifecycle-manager-packageserver  4.16.28  True       False        False
-service-ca                                4.16.28  True       False        False
-storage                                   4.16.28  True       False        False
+NAME                                      VERSION  AVAILABLE  PROGRESSING  DEGRADED  REASON
+authentication                            4.15.57  True       False        True      OAuthServerConfigObservationDegraded: error validating configMap openshift-config/ca-config-map: certificate expired:...
+baremetal                                 4.15.57  True       False        False
+cloud-controller-manager                  4.15.57  True       False        False
+cloud-credential                          4.15.57  True       False        False
+cluster-autoscaler                        4.15.57  True       False        False
+config-operator                           4.15.57  True       False        False
+console                                   4.15.57  True       False        False
+control-plane-machine-set                 4.15.57  True       False        False
+csi-snapshot-controller                   4.15.57  True       False        False
+dns                                       4.15.57  True       True         False     DNS "default" reports Progressing=True: "Have 26 available DNS pods, want 27."
+etcd                                      4.15.57  True       False        False
+image-registry                            4.15.57  True       False        False
+ingress                                   4.15.57  True       False        False
+insights                                  4.15.57  True       False        False
+kube-apiserver                            4.15.57  True       False        False
+kube-controller-manager                   4.15.57  True       False        False
+kube-scheduler                            4.15.57  True       False        False
+kube-storage-version-migrator             4.15.57  True       False        False
+machine-api                               4.15.57  True       False        False
+machine-approver                          4.15.57  True       False        False
+machine-config                            4.15.57  True       False        False
+marketplace                               4.15.57  True       False        False
+monitoring                                4.15.57  True       False        False
+network                                   4.15.57  True       True         False     DaemonSet "/openshift-multus/multus" is not available (awaiting 1 nodes) DaemonSet "/openshift-multus/network-metrics...
+node-tuning                               4.15.57  True       False        False
+openshift-apiserver                       4.15.57  True       False        False
+openshift-controller-manager              4.15.57  True       False        False
+openshift-samples                         4.15.57  True       False        False
+operator-lifecycle-manager                4.15.57  True       False        False
+operator-lifecycle-manager-catalog        4.15.57  True       False        False
+operator-lifecycle-manager-packageserver  4.15.57  True       False        False
+service-ca                                4.15.57  True       False        False
+storage                                   4.15.57  True       False        False
 ----
 
 [#events]
@@ -579,4 +579,43 @@ OSUpdateFailureDueToImagePullPolicy          https://issues.redhat.com/browse/MC
 RuncShareProcessNamespace                    https://issues.redhat.com/browse/RUN-3748         4.19.19
 SCOSBootImage                                https://issues.redhat.com/browse/COS-3765         4.19.18
 ...
+----
+
+[#labs]
+== Lab Scenarios
+
+=== Scenario 1
+The Customer reported issues with the cluster and stated that they have Cluster Operators that are failing and issues with Container Networking. Review the output of the script and look at the Cluster Operators to which ones are having issues, then review the restarting pods to see which networking related pod is having issues and last restarted on 2025-11-25, and then check the alerts and look for OVN related alerts.
+
+To dig deeper, the matching Must-Gather is located in `~/Module4/Cluster_1`
+
+.Scenario 1
+[source,bash]
+----
+$ ocp_insights.py --file ./Cluster_1/insights.tar.gz
+
+$ ocp_insights.py --file ./Cluster_1/insights.tar.gz --alerts | jq -r . | less
+----
+
+=== Scenario 2
+The customer is having issues logging into the Cluster. They are currently falling back on the kubeadmin account. Review the output of the script to identify potential issues and potential resolutions.
+
+
+.Scenario 2
+[source,bash]
+----
+$ ocp_insights.py --file ./Cluster_2/insights.tar.gz
+----
+
+=== Scenario 3
+The customer reports the cluster is very unstable, multiple cluster operators are down, and they need help immediately. Review the control-plane nodes and take note the Creation Dates, review the numerous errors in the cluster operators and pay specific attention to the reasons, look at the failing pods, and the namespace events, and finally review the etcd_metrics and see if you can spot a major issue.
+
+.Scenario 3
+[source,bash]
+----
+$ ocp_insights.py --file ./Cluster_3/insights.tar.gz --node_info
+
+$ ocp_insights.py --file ./Cluster_3/insights.tar.gz --cluster_operators
+
+$ ocp_insights.py --file ./Cluster_3/insights.tar.gz --etcd_metrics
 ----

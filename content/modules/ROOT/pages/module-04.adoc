@@ -23,79 +23,143 @@ In this module we will utilize a python script to analyze the etcd pod logs in a
 
 [source,bash]
 ----
-etcd-ocp-diag.py --help
+cd ~/module4/
+----
 
-usage: etcd-ocp-diag.py [-h] --path PATH [--ttl] [--heartbeat] [--election] [--fdatasync] [--buffer] [--etcd_timeout] [--pod POD] [--date DATE] [--compare] [--errors] [--stats] [--previous] [--rotated]
+
+[source,bash]
+----
+usage: etcd-ocp-diag.py [-h] --path PATH [--ttl] [--heartbeat] [--election] [--lost_leader] [--fdatasync] [--buffer] [--overloaded] [--etcd_timeout] [--pod POD] [--date DATE] [--compare] [--errors] [--stats] [--previous] [--rotated] [-i]
 
 Process etcd logs and gather statistics.
 
 options:
-  -h, --help      show this help message and exit
-  --path PATH     Path to the must-gather
-  --ttl           Check apply request took too long
-  --heartbeat     Check failed to send out heartbeat
-  --election      Check election issues
-  --fdatasync     Check slow fdatasync
-  --buffer        Check sending buffer is full
-  --etcd_timeout  Check etcdserver: request timed out
-  --pod POD       Specify the pod to analyze
-  --date DATE     Specify date for error search in YYYY-MM-DD format
-  --compare       Display only dates or times that happen in all pods
-  --errors        Display etcd errors
-  --stats         Display etcd stats
-  --previous      Use previous logs
-  --rotated       Use rotated logs
-----
-
-[#stats]
-== etcd Error Stats
-
-. The first thing you should check is to see if there are performance issues affecting the etcd cluster. To do this we run the `--stats` which looks for `Took Too Long` error messages, collects the `expected` time, and then calculated the `maximum` time, the `minimum` time over the `expected` time, the `median`, and the `average` along with the `count` and then displays the information. It also does the same thing for the `slow fdatasync` error message.
-
-. If you encounter a large number (over 100 errors a day average) or your Maximums are near 1 Second or higher, then you want to dig deeper into the etcd performance to see when it is happening and if we see any issues elsewhere in the cluster.
-
-.Checking for etcd Error Stats
-[source,bash]
-----
-cd ~/module4/
-----
-
-[source,bash]
-----
-etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --stats
-
-Stats about etcd "apply request took too long" messages: etcd-ocp4-2nvq7-master-0
-	First Occurrence: 2024-07-28T04:00:27
-	Last Occurrence: 2024-08-14T15:18:23
-	Maximum: 2515.8442ms
-	Minimum: 200.1755ms
-	Median: 554.2048ms
-	Average: 607.3171ms
-	Count: 3614
-	Expected: 200ms
-
-etc..
+  -h, --help         show this help message and exit
+  --path PATH        Path to the must-gather
+  --ttl              Check apply request took too long
+  --heartbeat        Check failed to send out heartbeat
+  --election         Checks for leader elections messages
+  --lost_leader      Checks for lost leader errors
+  --fdatasync        Check slow fdatasync
+  --buffer           Check sending buffer is full
+  --overloaded       Check leader is overloaded likely from slow disk
+  --etcd_timeout     Check etcdserver: request timed out
+  --pod POD          Specify the pod to analyze
+  --date DATE        Specify date for error search in YYYY-MM-DD format
+  --compare          Display only dates or times that happen in all pods
+  --errors           Display etcd errors
+  --stats            Display etcd stats
+  --previous         Use previous logs
+  --rotated          Use rotated logs
+  -i, --interactive  Run in interactive mode
 ----
 
 [#commonerrors]
 == Common Errors
 
-. etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
+When investigating potential `etcd` performance issues, we first need to establish which errors are ocurring in the `etcd` pods. To do this we utilize the `--errors` option of the `etcd-ocp-diag.py` script.
 
-. To do this you run `etcd-ocp-diag.py --path <path_to_must_gather> --errors` and it will search all of the etcd Pods and return the Pod Name, Error, and the Count.
+Comparing these two clusters below we can see that both have errors for `Apply Request Took Too Long` which is a great indicator of performance issues but we also see `leader is overloaded likely from slow disk`, and in the second cluster we see `leader elections` which is a potential sign of major issues.
 
 .Reviewing Common Errors
 [source,bash]
 ----
-etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --errors
+$ etcd-ocp-diag.py --path Cluster_1/must-gather.local --errors
+POD                             ERROR                                                   COUNT
+etcd-master-0.prod.example.com  waiting for ReadIndex response took too long, retrying    24
+etcd-master-0.prod.example.com  apply request took too long                             6105
+etcd-master-0.prod.example.com  request stats                                           2829
+etcd-master-1.prod.example.com  waiting for ReadIndex response took too long, retrying     9
+etcd-master-1.prod.example.com  apply request took too long                             2593
+etcd-master-1.prod.example.com  leader is overloaded likely from slow disk               330
+etcd-master-1.prod.example.com  request stats                                           1075
 
-POD                       	ERROR                                                 	COUNT
-etcd-ocp4-2nvq7-master-0	waiting for ReadIndex response took too long, retrying	 295
-etcd-ocp4-2nvq7-master-0	slow fdatasync                                        	  60
-etcd-ocp4-2nvq7-master-0	apply request took too long                           	3614
-etcd-ocp4-2nvq7-master-0	leader is overloaded likely from slow disk            	 500
-etcd-ocp4-2nvq7-master-0	elected leader                                        	   9
+$ etcd-ocp-diag.py --path Cluster_2/must-gather.local --errors
+POD                     ERROR                                                   COUNT
+etcd-master0-openshift  waiting for ReadIndex response took too long, retrying    505
+etcd-master0-openshift  slow fdatasync                                             25
+etcd-master0-openshift  apply request took too long                             17339
+etcd-master0-openshift  leader is overloaded likely from slow disk                504
+etcd-master0-openshift  elected leader                                              3
+etcd-master0-openshift  lost leader                                                 3
+etcd-master0-openshift  lease not found                                             1
+etcd-master0-openshift  request stats                                           16229
+etcd-master1-openshift  waiting for ReadIndex response took too long, retrying    273
+etcd-master1-openshift  slow fdatasync                                             17
+etcd-master1-openshift  apply request took too long                              7087
+etcd-master1-openshift  leader is overloaded likely from slow disk                214
+etcd-master1-openshift  elected leader                                              1
+etcd-master1-openshift  lost leader                                                 1
+etcd-master1-openshift  request stats                                            6103
+etcd-master2-openshift  waiting for ReadIndex response took too long, retrying    354
+etcd-master2-openshift  etcdserver: request timed out                               3
+etcd-master2-openshift  slow fdatasync                                              7
+etcd-master2-openshift  apply request took too long                             12577
+etcd-master2-openshift  leader is overloaded likely from slow disk                448
+etcd-master2-openshift  elected leader                                              2
+etcd-master2-openshift  lost leader                                                 2
+etcd-master2-openshift  lease not found                                             2
+etcd-master2-openshift  request stats                                           11688
 ----
+
+[#stats]
+== etcd Error Stats
+
+Now that we know there are performance related errors in the pod logs, we need to see the severity of the performance issues. To do this we run the `--stats` which looks for `Took Too Long` error messages, collects the `expected` time, and then calculated the `maximum` time and when it occurred, the `minimum` time over the `expected` time, the `median`, and the `average` along with the `count` and then displays the information. It also does the same thing for the `slow fdatasync` error message.
+
+If you encounter a large number (over 100 errors a day average) or your Maximums are near 1 Second or higher, then you want to dig deeper into the etcd performance to see when it is happening and if we see any issues elsewhere in the cluster.
+
+In the below output we can see the Cluster_2 is seeing significant performance issues on all 3 etcd nodes, while on Cluster_3 we only see performance issues, though significant, on one node.
+
+.Checking for etcd Error Stats
+[source,bash]
+----
+$ etcd-ocp-diag.py --path Cluster_2/must-gather.local --stats
+
+Stats about etcd "apply request took too long" messages: etcd-master0-openshift
+        First Occurrence: 2025-11-17T23:36:03
+        Last Occurrence: 2025-11-18T00:30:53
+        Maximum: 82615.2260ms 2025-11-17T23:50:23
+        Minimum: 200.0120ms
+        Median: 531.3509ms
+        Average: 3519.0608ms
+        Count: 17339
+        Expected: 200ms
+
+Stats about etcd "apply request took too long" messages: etcd-master1-openshift
+        First Occurrence: 2025-11-18T00:05:36
+        Last Occurrence: 2025-11-18T00:31:05
+        Maximum: 23307.2911ms 2025-11-18T00:30:31
+        Minimum: 200.0794ms
+        Median: 478.6989ms
+        Average: 830.3278ms
+        Count: 7087
+        Expected: 200ms
+
+Stats about etcd "apply request took too long" messages: etcd-master2-openshift
+        First Occurrence: 2025-11-17T23:58:06
+        Last Occurrence: 2025-11-18T00:31:27
+        Maximum: 43226.6834ms 2025-11-18T00:04:10
+        Minimum: 200.0175ms
+        Median: 540.8824ms
+        Average: 1761.9831ms
+        Count: 12577
+        Expected: 200ms
+
+$ etcd-ocp-diag.py --path Cluster_3/must-gather.local --stats
+
+Stats about etcd "apply request took too long" messages: etcd-master1.prod-b.openshift.example.com
+        First Occurrence: 2025-12-03T19:23:37
+        Last Occurrence: 2025-12-03T19:27:05
+        Maximum: 13997.5810ms 2025-12-03T19:25:14
+        Minimum: 201.5809ms
+        Median: 9999.7021ms
+        Average: 9151.5463ms
+        Count: 4907
+        Expected: 200ms
+----
+
+
 
 [#singleerrors]
 == Searching for Specific Errors
@@ -108,11 +172,13 @@ etcd-ocp4-2nvq7-master-0	elected leader                                        	
 
 [source,bash]
 ----
-  --heartbeat     Check failed to send out heartbeat
-  --election      Check election issues
-  --fdatasync     Check slow fdatasync
-  --buffer        Check sending buffer is full
-  --etcd_timeout  Check etcdserver: request timed out
+  --ttl              Check apply request took too long
+  --heartbeat        Check failed to send out heartbeat
+  --election         Checks for leader elections messages
+  --lost_leader      Checks for lost leader errors
+  --fdatasync        Check slow fdatasync
+  --buffer           Check sending buffer is full
+  --overloaded       Check leader is overloaded likely from slow disk
 ----
 
 .Using Sub-Commands to look for Specific Errors
@@ -136,64 +202,151 @@ etcd-prodshift-2nvq7-master-1	2024-08-10	288
 etcd-prodshift-2nvq7-master-2	2024-08-09	268
 ----
 
-. After you return the results for all dates and pods, you can then drill down further by specifying the `--date` and/or the `--pod` command to return the hour and minute the error happened and results just for one specific pod.
+After you return the results for all dates and pods, you can then drill down further by specifying the `--date` and/or the `--pod` command to return the hour and minute the error happened and results just for one specific pod.
+
+In this example we can see that a large number of `Took Too Long` errors occurred on `2025-12-03` and when we drill down into that date using the `--date` option, we can see that node experienced significant performance issues over a short period of time which warrants further investigation in the Must-Gather and with the Customer's infrastructure team.
 
 .Using the Date and Pod Options
 
 [source,bash]
 ----
-etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl --date 2024-08-14 --pod etcd-prodshift-2nvq7-master-1 | sort -k3,3rn
+$ etcd-ocp-diag.py --path Cluster_3/must-gather.local --ttl
 
-POD                       	DATE 	COUNT
-etcd-prodshift-2nvq7-master-1	00:10	26
-etcd-prodshift-2nvq7-master-1	05:39	21
-etcd-prodshift-2nvq7-master-1	06:08	21
-etcd-prodshift-2nvq7-master-1	05:41	20
-etcd-prodshift-2nvq7-master-1	14:21	20
-etcd-prodshift-2nvq7-master-1	15:12	20
-etcd-prodshift-2nvq7-master-1	05:54	19
+POD                                             DATE            COUNT
+etcd-master1.prod-b.openshift.example.com       2025-12-03      4907
+
+$ etcd-ocp-diag.py --path Cluster_3/must-gather.local --ttl --date 2025-12-03
+
+POD                                             DATE    COUNT   MAX_TIME
+etcd-master1.prod-b.openshift.example.com       19:23    482    13687.0232ms
+etcd-master1.prod-b.openshift.example.com       19:24   1315    13996.3965ms
+etcd-master1.prod-b.openshift.example.com       19:25   1432    13997.5810ms
+etcd-master1.prod-b.openshift.example.com       19:26   1404    13990.8706ms
+etcd-master1.prod-b.openshift.example.com       19:27    274    12668.7780ms
 ----
 
-. Finally, you can use the `--compare` command to see when errors happened on the same date. You can combine it with the `--date` command to narrow issues down to specifics hours or minutes.
+Finally, you can use the `--compare` command to see when errors happened on the same date. You can combine it with the `--date` command to narrow issues down to specifics hours or minutes.
 
 .Using Compare
 [source,bash]
 ----
-etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl --compare
+$ etcd-ocp-diag.py --path Cluster_2/must-gather.local --ttl --compare
 
-Date: 2024-07-28
+Date: 2025-11-17
 POD                            COUNT
-etcd-ocp4-2nvq7-master-0     121
-etcd-ocp4-2nvq7-master-1     60
-etcd-ocp4-2nvq7-master-2     98
+etcd-master0-openshift         10079
+etcd-master2-openshift         646
 
-Date: 2024-07-29
+Date: 2025-11-18
 POD                            COUNT
-etcd-ocp4-2nvq7-master-0     112
-etcd-ocp4-2nvq7-master-1     83
-etcd-ocp4-2nvq7-master-2     58
-
-Date: 2024-07-30
-POD                            COUNT
-etcd-ocp4-2nvq7-master-0     133
-etcd-ocp4-2nvq7-master-1     114
-etcd-ocp4-2nvq7-master-2     152
+etcd-master0-openshift         7260
+etcd-master1-openshift         7087
+etcd-master2-openshift         11931
 ----
 
 [source,bash]
 ----
-etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl --date 2024-07-28 --compare
+$ etcd-ocp-diag.py --path Cluster_2/must-gather.local --ttl --compare --date 2025-11-18
 
-Date: 04:02
-POD                            COUNT
-etcd-ocp4-2nvq7-master-0     8
-etcd-ocp4-2nvq7-master-2     13
+Date: 00:00
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         158        3465.4064ms
+etcd-master2-openshift         121        2342.1259ms
 
-Date: 05:16
-POD                            COUNT
-etcd-ocp4-2nvq7-master-0     14
-etcd-ocp4-2nvq7-master-1     12
-etcd-ocp4-2nvq7-master-2     15
+Date: 00:01
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         308        1403.4716ms
+etcd-master2-openshift         213        1148.7342ms
+
+Date: 00:02
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         577        1453.5319ms
+etcd-master2-openshift         593        1384.3426ms
+
+Date: 00:03
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         204        2280.3111ms
+etcd-master2-openshift         327        31136.6423ms
+
+Date: 00:04
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         73         520.2907ms
+etcd-master2-openshift         1154       43226.6834ms
+
+Date: 00:05
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         1256       1981.6568ms
+etcd-master1-openshift         352        1140.6648ms
+etcd-master2-openshift         1245       4330.4708ms
+
+Date: 00:06
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         489        1660.3067ms
+etcd-master1-openshift         475        1766.2286ms
+etcd-master2-openshift         296        1592.4008ms
+
+Date: 00:07
+POD                            COUNT      MAX_TIME
+etcd-master0-openshift         479        7130.0045ms
+etcd-master1-openshift         463        4976.1788ms
+etcd-master2-openshift         475        4981.3866ms
 ----
 
 Debugging etcd can be complex and there are often a handful of potential root causes. If you find a customer cluster that is showing signs of etcd performance issues, the best course of action is to open a support ticket to engage with our experts. You can also determine next steps by reviewing our detailed etcd debugging article found at https://access.redhat.com/articles/6271341
+
+[#labs]
+== Lab Scenarios
+
+=== Scenario 1
+The Customer reports cluster performance was bad around midnight from 2025-11-17 into 2025-11-18. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the `errors` and `stats` for the etcd cluster. Next look for any `overloaded` messages using the `--overloaded` flag. Finally, look at the `Took Too Long` messages using the `--ttl` option and compare them using `--date` and `--compare` to see if it's on Node or all of the Nodes.
+
+
+.Scenario 1
+[source,bash]
+----
+$ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --errors
+
+$ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --stats
+
+$ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl
+
+$ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-17 --compare
+
+$ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18 --compare
+----
+
+=== Scenario 2
+The customer reported a couple errors popped up on the cluster, they had a few connection issues, and then it went back to normal. They need someone to look into the cluster and see what they can find.
+
+Like in the previous scenario, lets take a look at the `stats` and `errors, and then try to pinpoint when the issue happened and where the customer can investigate next.
+
+
+.Scenario 2
+[source,bash]
+----
+$ etcd-ocp-diag.py --path ./Cluster_3/must-gather.local/ --errors
+
+$ etcd-ocp-diag.py --path ./Cluster_3/must-gather.local/ --stats
+
+$ etcd-ocp-diag.py --path ./Cluster_3/must-gather.local/ --ttl
+
+$ etcd-ocp-diag.py --path ./Cluster_3/must-gather.local/ --ttl --date 2025-12-03
+----
+
+=== Scenario 3
+This is a tricky situation. Checking the `--stats` we can see etcd node 2 and 3 are experiencing significant performance issues but node 1 is running as expected.
+
+In this scenario we will need to look a range and a pattern to then help narrow down why these nodes are having such high performance issues. Look for a pattern starting on `2025-12-08` and going into `2025-12-09`.
+
+
+.Scenario 3
+[source,bash]
+----
+$ etcd-ocp-diag.py --path ./Cluster_4/must-gather.local/ --errors
+
+$ etcd-ocp-diag.py --path ./Cluster_4/must-gather.local/ --stats
+
+$ etcd-ocp-diag.py --path ./Cluster_4/must-gather.local/ --ttl --pod etcd-ocpmstr2.openshift.example.com --date 2025-12-08
+
+$ etcd-ocp-diag.py --path ./Cluster_4/must-gather.local/ --ttl --pod etcd-ocpmstr2.openshift.example.com --date 2025-12-09
+----
