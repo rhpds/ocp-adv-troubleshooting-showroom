@@ -6,12 +6,12 @@
 
 I have multiple pods running in the same namespace, but they can not communicate with eachother.
 
-When `sitea-frontend-8798d9cdc-sq7dk` or `siteb-frontend-66f9f55ddc-97jkg` in the `frontend` namespace try to reach eachother, communication just hangs.
+When *sitea-frontend-8798d9cdc-sq7dk* or *siteb-frontend-66f9f55ddc-97jkg* in the *frontend* namespace try to reach eachother, communication just hangs.
 
 [#debugnspodtopod]
 == Debug the Traffic Flow
 
-To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-src` pod name, `-dst-namespace` and `-dst` pod name:
+To trace the path with *ovnkube-trace*, simply pass in the *-src-namespace*, *-src* pod name, *-dst-namespace* and *-dst* pod name:
 
 [TIP]
 =====
@@ -21,32 +21,32 @@ To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-s
 ----
 =====
 
-What does `ovnkube-trace` do and how is it going to help us determine why our pods can not communicate?
+What does *ovnkube-trace* do and how is it going to help us determine why our pods can not communicate?
 
-It is a wrapper tool that takes the CLI inputs, looks at your cluster, gets all of the IP and MAC information and builds an `ovn-trace` command to actually trace the trafic flow.
+It is a wrapper tool that takes the CLI inputs, looks at your cluster, gets all of the IP and MAC information and builds an *ovn-trace* command to actually trace the trafic flow.
 
 [#firsttrace]
 === Running the First Trace
 
-From your execution environment, run the following `ovn-trace`.
+From your execution environment, run the following *ovn-trace*.
 
-As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
+As you can see, the *ovn-trace* is far more complex than then *ovnkube-trace*:
 
-. `worker-5.ocpv.tamlab.rdu2.redhat.com` -> is the OVN datapath which is a logical router or switch associated to the workloads
-. `inport` -> is the OVN port for instance we are tracing from
-. `eth.src` -> source pod mac address
-. `eth.dst` -> destination pod mac address
-. `ip4.src` -> source pod IP address
-. `ip4.dst` -> destination pod IP address
-. `tcp.dst` -> destination port
-. `tcp.src` -> source port
+. *worker-5.ocpv.tamlab.rdu2.redhat.com* -> is the OVN datapath which is a logical router or switch associated to the workloads
+. *inport* -> is the OVN port for instance we are tracing from
+. *eth.src* -> source pod mac address
+. *eth.dst* -> destination pod mac address
+. *ip4.src* -> source pod IP address
+. *ip4.dst* -> destination pod IP address
+. *tcp.dst* -> destination port
+. *tcp.src* -> source port
 
 [.wrap,console,role=execute]
 ----
 ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="frontend_sitea-frontend-8798d9cdc-sq7dk" && eth.src==0a:58:0a:81:06:11 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.17 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
 ----
 
-When the `ovn-trace` runs, you get a full accounting of how that packet would traverse the SDN. Because we don't need to analyze the whole thing, we're going to focus on the last `egress` section.
+When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN. Because we don't need to analyze the whole thing, we're going to focus on the last *egress* section.
 
 [source,console]
 ----
@@ -89,9 +89,9 @@ ct_lb_mark /* default (use --ct to customize) */
 
 What we see is an abrupt end with no clear indication of sucess or failure.
 
-Focusing in, you can see that during `ls_out_acl_eval` we commit `ct_mark.blocked = 1`.
+Focusing in, you can see that during *ls_out_acl_eval* we commit *ct_mark.blocked = 1*.
 
-When `ct_mark.blocked` is set to 1, it means that the connection is no longer allowed by the policy and anything in reply will be dropped.
+When *ct_mark.blocked* is set to 1, it means that the connection is no longer allowed by the policy and anything in reply will be dropped.
 
 [source,console]
 ----
@@ -103,7 +103,7 @@ When `ct_mark.blocked` is set to 1, it means that the connection is no longer al
 
 So how do we determine why the connection was not allowed? Let's inspect the database and find out.
 
-Let's start by running the following 2 commands to look at the list of `logical router (lr)` and `logical switch (ls)` objects in the database.
+Let's start by running the following 2 commands to look at the list of *logical router (lr)* and *logical switch (ls)* objects in the database.
 
 [source,console,role=execute]
 ----
@@ -137,9 +137,9 @@ cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 217a444d-ef97-4d51-89d8-581d673e3cf0 (worker-5.ocpv.tamlab.rdu2.redhat.com)
 ----
 
-From the output, you will notice one of the logical switches, `worker-5.ocpv.tamlab.rdu2.redhat.com` is the switch we used in our `ovn-trace`. So lets take a closer look at that switch by listing at the attached `logical switch ports (lsp)`.
+From the output, you will notice one of the logical switches, *worker-5.ocpv.tamlab.rdu2.redhat.com* is the switch we used in our *ovn-trace*. So lets take a closer look at that switch by listing at the attached *logical switch ports (lsp)*.
 
-Because a cluster is going to have a lot of ports, we focus in with a `grep` on our specifc pods. If you are interested, feel free to run the command again without the grep to see the full list.
+Because a cluster is going to have a lot of ports, we focus in with a *grep* on our specifc pods. If you are interested, feel free to run the command again without the grep to see the full list.
 
 [source,console,role=execute]
 ----
@@ -159,11 +159,11 @@ c8977c7e-e9a7-4548-9383-12ea8dc6df88 (frontend_sitea-frontend-8798d9cdc-sq7dk)
 cc35c8dd-4999-497e-a3a8-58775aff23ae (network-policy-demo-monitor_monitor-956f5b8d7-xqjmx)
 ----
 
-Looking back at our trace, we see traffic is going to `outport == @a3640229366109469754` before it is marked as being dropped.
+Looking back at our trace, we see traffic is going to *outport == @a3640229366109469754* before it is marked as being dropped.
 
-These `outports` correspond to `portgroups` and are created for every `NetworkPolicy` in your cluster. All pods selected by the `podSelector` of that `NetworkPolicy` are added to the `portgroup` port list.
+These *outports* correspond to *portgroups* and are created for every *NetworkPolicy* in your cluster. All pods selected by the *podSelector* of that *NetworkPolicy* are added to the *portgroup* port list.
 
-Let's take a look at our promlematic `portgroup`.
+Let's take a look at our promlematic *portgroup*.
 
 [source,console,role=execute]
 ----
@@ -181,12 +181,12 @@ ports               : [813df718-f961-4a2f-9606-97125b43c38a, c8977c7e-e9a7-4548-
 
 From the output there are 2 pieces of important information:
 
-1. `acls` -> there are 2 `UUIDs` -> `[0cbe6f52-9cf1-4584-9237-7c23f65c82f1, 1fdd654d-f251-4e58-b4ce-d57804f1ba9b]`
-2. `ports` -> there are 2 `UUIDs` -> `[813df718-f961-4a2f-9606-97125b43c38a, c8977c7e-e9a7-4548-9383-12ea8dc6df88]`
+1. *acls* -> there are 2 *UUIDs* -> *[0cbe6f52-9cf1-4584-9237-7c23f65c82f1, 1fdd654d-f251-4e58-b4ce-d57804f1ba9b]*
+2. *ports* -> there are 2 *UUIDs* -> *[813df718-f961-4a2f-9606-97125b43c38a, c8977c7e-e9a7-4548-9383-12ea8dc6df88]*
 
-What you will notice is that the 2 `ports` `UUIDs` correspond to the `UUIDs` of the `logical switch port` entries for the 2 `frontend` pods from the `lsp-list` output above. This confirms that the portgroup is influencing our 2 pods.
+What you will notice is that the 2 *ports* *UUIDs* correspond to the *UUIDs* of the *logical switch port* entries for the 2 *frontend* pods from the *lsp-list* output above. This confirms that the portgroup is influencing our 2 pods.
 
-Next, lets take a look at the 2 `access control list (ACL)` objects.
+Next, lets take a look at the 2 *access control list (ACL)* objects.
 
 [source,console,role=execute]
 ----
@@ -236,23 +236,23 @@ severity            : []
 tier                : 2
 ----
 
-You can see that the second ACL, `1fdd654d-f251-4e58-b4ce-d57804f1ba9b`, is matching on `arp || nd`, we can ignore it as we are sending `tcp` requests.
+You can see that the second ACL, *1fdd654d-f251-4e58-b4ce-d57804f1ba9b*, is matching on *arp || nd*, we can ignore it as we are sending *tcp* requests.
 
-Focusing in on the output from the first ACL `0cbe6f52-9cf1-4584-9237-7c23f65c82f1`, we can see a few key points:
+Focusing in on the output from the first ACL *0cbe6f52-9cf1-4584-9237-7c23f65c82f1*, we can see a few key points:
 
-1. `action` -> `drop`
-2. `direction` -> `to-lport`
-3. `external_ids` -> `frontend:Ingress:defaultDeny`
-4. `match` -> `outport == @a3640229366109469754`
+1. *action* -> *drop*
+2. *direction* -> *to-lport*
+3. *external_ids* -> *frontend:Ingress:defaultDeny*
+4. *match* -> *outport == @a3640229366109469754*
 
-This tells us that any traffic that is forwarded to a logical port that matches `outport == @a3640229366109469754` will be dropped due to a `defaultDeny` policy in the `frontend` namespace.
+This tells us that any traffic that is forwarded to a logical port that matches *outport == @a3640229366109469754* will be dropped due to a *defaultDeny* policy in the *frontend* namespace.
 
-Looking back at our setup, we know that our cluster adds a `default-deny` `NetworkPolicy` to every new `Namespace` and that aligns to the policy above that is impacting our pod to pod communication.
+Looking back at our setup, we know that our cluster adds a *default-deny* *NetworkPolicy* to every new *Namespace* and that aligns to the policy above that is impacting our pod to pod communication.
 
 [#resolvingtheissue]
 === Resolving the Connectivity Issue
 
-Now that we know the issue, we can easily fix that with a new `NetworkPolicy` to allow traffic between pods in the namespace.
+Now that we know the issue, we can easily fix that with a new *NetworkPolicy* to allow traffic between pods in the namespace.
 
 [source,yaml]
 ----
@@ -272,10 +272,10 @@ spec:
 
 [NOTE]
 =====
-Because this is a static lab, we can not directly demonstrate the resolution of the issue. So you can see the difference, the output of a successful trace, after applying the above `NetworkPolicy`, is included below for completeness.
+Because this is a static lab, we can not directly demonstrate the resolution of the issue. So you can see the difference, the output of a successful trace, after applying the above *NetworkPolicy*, is included below for completeness.
 =====
 
-Looking at the new trace, focusing in on the same `egress` section, there are 2 key differences.
+Looking at the new trace, focusing in on the same *egress* section, there are 2 key differences.
 
 [source,console]
 ----
@@ -319,7 +319,7 @@ ct_lb_mark /* default (use --ct to customize) */
     /* output to "frontend_siteb-frontend-66f9f55ddc-97jkg", type "" */
 ----
 
-1. The `ls_out_acl_eval` is different and is no longer dropping the packet
+1. The *ls_out_acl_eval* is different and is no longer dropping the packet
 
 [source,console]
 ----
@@ -327,11 +327,11 @@ ls_out_acl_eval (northd.c:7089): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.src =
 ----
 
 [start=2]
-2. We see a successful output to our destination pod -> `/* output to "frontend_siteb-frontend-66f9f55ddc-97jkg", type "" */`
+2. We see a successful output to our destination pod -> */* output to "frontend_siteb-frontend-66f9f55ddc-97jkg", type "" */*
 
-If we take it a step further, we can take a look at our new `ls_out_acl_eval` with `ip4.src == {$a16799780576945479038} && outport == @a3002123605838622674`.
+If we take it a step further, we can take a look at our new *ls_out_acl_eval* with *ip4.src == {$a16799780576945479038} && outport == @a3002123605838622674*.
 
-The `ip4.src` is a hash corresponding to an address set of pods:
+The *ip4.src* is a hash corresponding to an address set of pods:
 
 [source,console]
 ----
@@ -344,10 +344,10 @@ name                : a16799780576945479038
 
 [TIP]
 =====
-In your execution environment, you can run `ovn-nbctl list address_set` to see a list of all address sets in the cluster.
+In your execution environment, you can run *ovn-nbctl list address_set* to see a list of all address sets in the cluster.
 =====
 
-The `outport`, like above, corresponds to a `portgroup`. You can see that this `portgroup` now comes from our new `NetworkPolicy` -> `NetworkPolicy:frontend:allow-same-namespace`.
+The *outport*, like above, corresponds to a *portgroup*. You can see that this *portgroup* now comes from our new *NetworkPolicy* -> *NetworkPolicy:frontend:allow-same-namespace*.
 
 [source,console]
 ----
@@ -359,7 +359,7 @@ name                : a3002123605838622674
 ports               : [813df718-f961-4a2f-9606-97125b43c38a, c8977c7e-e9a7-4548-9383-12ea8dc6df88]
 ----
 
-And on that portgroup, a new `ACL` exists. This `ACL` now has `allow-related` for any `to-lport` traffic that matches the `ip4.src` and outport for our pods in the `frontend` `Namespace`.
+And on that portgroup, a new *ACL* exists. This *ACL* now has *allow-related* for any *to-lport* traffic that matches the *ip4.src* and outport for our pods in the *frontend* *Namespace*.
 
 [source,console]
 ----

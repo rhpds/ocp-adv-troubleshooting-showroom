@@ -7,7 +7,7 @@ OVN-Kubernetes (Open Virtual Networking - Kubernetes) is an open-source project 
 
 Everyone knows it's there, but how do we debug it? When you run into an issue, how do you narrow down the cause?
 
-In this section of the lab, we are going to walk you through 3 scenarios and how to leverage tools like `ovnkube-trace`, `ovn-trace` and `ovn-nbctl` to identify and resolve network communication issues between internal and external resouces.
+In this section of the lab, we are going to walk you through 3 scenarios and how to leverage tools like *ovnkube-trace*, *ovn-trace* and *ovn-nbctl* to identify and resolve network communication issues between internal and external resouces.
 
 [#thesetup]
 == Lab Setup
@@ -43,7 +43,7 @@ frontend   sitea-frontend-8798d9cdc-sq7dk    1/1     Running    0         27h   
 frontend   siteb-frontend-66f9f55ddc-97jkg   1/1     Running    0         27h   10.129.6.15    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
 ----
 
-Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network `default/vlan530`.
+Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network *default/vlan530*.
 
 [.wrap,bash]
 ----
@@ -90,7 +90,7 @@ oc get vmi external-vm -o yaml | yq .status.interfaces
   queueCount: 1
 ----
 
-We also know that our cluster has some default `NetworkPolicies` and `MultiNetworkPolicies` that get applied to every new `Namespace`.
+We also know that our cluster has some default *NetworkPolicies* and *MultiNetworkPolicies* that get applied to every new *Namespace*.
 
 [source,yaml]
 ----
@@ -183,7 +183,7 @@ spec:
 [#environmentsetup]
 === Setup the OVN Environment
 
-To begin, lets start our OVN environment by moving into the `ModuleOVN` directory and executing the start script.
+To begin, lets start our OVN environment by moving into the *ModuleOVN* directory and executing the start script.
 
 [source,console,role=execute]
 ----
@@ -225,14 +225,14 @@ CONTAINER ID  IMAGE                         COMMAND         CREATED        STATU
 b0bc44113081  localhost/ovs-offline:latest  vswitchd-dummy  4 minutes ago  Up 4 minutes              ovs-vswitchd
 ----
 
-The last step is to move into the pre-created execution environment by sourcing the following file. This produces a number of `alias` commands to allow for easier execution of commands against the OVN environment.
+The last step is to move into the pre-created execution environment by sourcing the following file. This produces a number of *alias* commands to allow for easier execution of commands against the OVN environment.
 
 [source,console,role=execute]
 ----
 source /tmp/ovs-offline/bin/activate
 ----
 
-You will now see your terminal change, pre-pending `(ovs-offline)` to your existing prompt `[lab-user@rhel9 ModuleOVN]$`.
+You will now see your terminal change, pre-pending *(ovs-offline)* to your existing prompt *[lab-user@rhel9 ModuleOVN]$*.
 
 [source,console]
 ----

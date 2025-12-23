@@ -4,14 +4,14 @@
 [#theissue]
 == Issues with pod communication between namespace
 
-I have 2 pods in my `frontend` namespace and 2 pods in my `backend` namespace but some of them have communication issue.
+I have 2 pods in my *frontend* namespace and 2 pods in my *backend* namespace but some of them have communication issue.
 
-The 2 backend pods, `sitea-backend-796cf44b87-wx565` and `siteb-backend-5b765679b5-6wkvx` can communicate with `siteb-frontend-66f9f55ddc-97jkg` but communication hangs going to `sitea-frontend-8798d9cdc-sq7dk`.
+The 2 backend pods, *sitea-backend-796cf44b87-wx565* and *siteb-backend-5b765679b5-6wkvx* can communicate with *siteb-frontend-66f9f55ddc-97jkg* but communication hangs going to *sitea-frontend-8798d9cdc-sq7dk*.
 
 [#debugdiffnspodtopod]
 == Debug the Traffic Flow
 
-To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-src` pod name, `-dst-namespace` and `-dst` pod name:
+To trace the path with *ovnkube-trace*, simply pass in the *-src-namespace*, *-src* pod name, *-dst-namespace* and *-dst* pod name:
 
 [TIP]
 =====
@@ -26,25 +26,25 @@ To trace the path with `ovnkube-trace`, simply pass in the `-src-namespace`, `-s
 [#runtrace]
 === Running the Trace
 
-From your execution environment, run the following `ovn-trace`.
+From your execution environment, run the following *ovn-trace*.
 
-As you can see, the `ovn-trace` is far more complex than then `ovnkube-trace`:
+As you can see, the *ovn-trace* is far more complex than then *ovnkube-trace*:
 
-. `worker-5.ocpv.tamlab.rdu2.redhat.com` -> is the OVN datapath which is a logical router or switch associated to the workload
-. `inport` -> is the OVN port for instance we are tracing from
-. `eth.src` -> source pod mac address
-. `eth.dst` -> destination pod mac address
-. `ip4.src` -> source pod IP address
-. `ip4.dst` -> destination pod IP address
-. `tcp.dst` -> destination port
-. `tcp.src` -> source port
+. *worker-5.ocpv.tamlab.rdu2.redhat.com* -> is the OVN datapath which is a logical router or switch associated to the workload
+. *inport* -> is the OVN port for instance we are tracing from
+. *eth.src* -> source pod mac address
+. *eth.dst* -> destination pod mac address
+. *ip4.src* -> source pod IP address
+. *ip4.dst* -> destination pod IP address
+. *tcp.dst* -> destination port
+. *tcp.src* -> source port
 
 [.wrap,console,role=execute]
 ----
 ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock worker-5.ocpv.tamlab.rdu2.redhat.com 'inport=="backend_sitea-backend-796cf44b87-wx565" && eth.src==0a:58:0a:81:06:0b && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.129.6.11 && ip4.dst==10.129.6.15 && ip.ttl==64 && tcp.dst==80 && tcp.src==52888'
 ----
 
-When the `ovn-trace` runs, you get a full accounting of how that packet would traverse the SDN. Because we don't need to analyze the whole thing, we're going to focus on the last `egress` section.
+When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN. Because we don't need to analyze the whole thing, we're going to focus on the last *egress* section.
 
 [source,console]
 ----
@@ -88,9 +88,9 @@ ct_lb_mark /* default (use --ct to customize) */
     /* output to "frontend_siteb-frontend-66f9f55ddc-97jkg", type "" */
 ----
 
-What you should immediatly notice is that the trace was successful, as seen by the correct output to `frontend_siteb-frontend-66f9f55ddc-97jkg`.
+What you should immediatly notice is that the trace was successful, as seen by the correct output to *frontend_siteb-frontend-66f9f55ddc-97jkg*.
 
-Let's run another `ovn-trace`, this time on the pods from the reported failure scenario.
+Let's run another *ovn-trace*, this time on the pods from the reported failure scenario.
 
 [source,console,role=execute]
 ----
@@ -133,23 +133,23 @@ ct_lb_mark /* default (use --ct to customize) */
     reg8[30..31] = 0;
 ----
 
-This time we see an abrupt end to the trace after we commit `ct_mark.blocked = 1` to drop traffic.
+This time we see an abrupt end to the trace after we commit *ct_mark.blocked = 1* to drop traffic.
 
 [#analyzetrace]
 === Analyzing the Trace
 
 Now that we have traced a successful path and a failing path, lets answer the question: How can communication between 2 pods work fine and fail between 2 other pods between the same 2 namespaces?
 
-Looking at the `ls_out_acl_eval` output from the working trace, we can see evaluation against an `ip4.src` of `a7965222081737101305` and an outport of `a822482823149801400`.
+Looking at the *ls_out_acl_eval* output from the working trace, we can see evaluation against an *ip4.src* of *a7965222081737101305* and an outport of *a822482823149801400*.
 
 [source,console]
 ----
 6. ls_out_acl_eval (northd.c:7089): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.src == {$a7965222081737101305} && outport == @a822482823149801400), priority 2001, uuid c5eeb01a
 ----
 
-Leveraging our learning from module 7, we know the `outport` maps to a `portgroup` and the `ip4.src` maps to an address set.
+Leveraging our learning from module 7, we know the *outport* maps to a *portgroup* and the *ip4.src* maps to an address set.
 
-First, let's take a look at the `portgroup`.
+First, let's take a look at the *portgroup*.
 
 [source,console,role=execute]
 ----
@@ -167,11 +167,11 @@ ports               : [813df718-f961-4a2f-9606-97125b43c38a]
 
 From the output, we can see 3 pieces of important information
 
-1. `acls` -> there is 1 `UUID` -> `[975b140e-4b67-4a0b-8e50-8ffd468a8f55]`
-2. `ports` -> there is 1 `UUIDs` -> `[813df718-f961-4a2f-9606-97125b43c38a]`
-3. `external_ids` -> shows the policy was created from a `NetworkPolicy` in the `frontend` named `allow-from-backend-to-siteb-frontend` -> `NetworkPolicy:frontend:allow-from-backend-to-siteb-frontend`
+1. *acls* -> there is 1 *UUID* -> *[975b140e-4b67-4a0b-8e50-8ffd468a8f55]*
+2. *ports* -> there is 1 *UUIDs* -> *[813df718-f961-4a2f-9606-97125b43c38a]*
+3. *external_ids* -> shows the policy was created from a *NetworkPolicy* in the *frontend* named *allow-from-backend-to-siteb-frontend* -> *NetworkPolicy:frontend:allow-from-backend-to-siteb-frontend*
 
-Next, lets take a look at the `access control list (ACL)` object.
+Next, lets take a look at the *access control list (ACL)* object.
 
 [source,console,role=execute]
 ----
@@ -197,9 +197,9 @@ severity            : []
 tier                : 2
 ----
 
-We can see that the ACL matches what we saw in the trace command for the `ip4.src` and `outport` and that the action is `allow-related` for all traffic.
+We can see that the ACL matches what we saw in the trace command for the *ip4.src* and *outport* and that the action is *allow-related* for all traffic.
 
-The ACL looks fine, so lets take a look at the `ip4.src` object, which is an address set.
+The ACL looks fine, so lets take a look at the *ip4.src* object, which is an address set.
 
 [source,console,role=execute]
 ----
@@ -214,20 +214,20 @@ external_ids        : {ip-family=v4, "k8s.ovn.org/id"="default-network-controlle
 name                : a7965222081737101305
 ----
 
-We can see that the `ip4.src` address set lists both backend pods as valid sources.
+We can see that the *ip4.src* address set lists both backend pods as valid sources.
 
-So what’s the issue? If you look closely at the previous output, the `portgroup` only has 1 port listed: `813df718-f961-4a2f-9606-97125b43c38a`
+So what’s the issue? If you look closely at the previous output, the *portgroup* only has 1 port listed: *813df718-f961-4a2f-9606-97125b43c38a*
 
-We have 2 frontend pods, but only 1 has their `port` on the `portgroup`, which explains why only 1 pod can communicate. 
+We have 2 frontend pods, but only 1 has their *port* on the *portgroup*, which explains why only 1 pod can communicate. 
 
-Let's take a look at that `port`.
+Let's take a look at that *port*.
 
 [source,console,role=execute]
 ----
 ovn-nbctl lsp-get-addresses 813df718-f961-4a2f-9606-97125b43c38a
 ----
 
-Looking at the addresses, we can see that `10.129.6.15` matches `siteb-frontend-66f9f55ddc-97jkg`, which is our working pod.
+Looking at the addresses, we can see that *10.129.6.15* matches *siteb-frontend-66f9f55ddc-97jkg*, which is our working pod.
 
 [source,console]
 ----
@@ -241,9 +241,9 @@ Taking a quick look at the failure scenario. You can see:
 6. ls_out_acl_eval (northd.c:7137): reg8[30..31] == 2 && reg0[10] == 1 && (outport == @a3640229366109469754), priority 2000, uuid dd0081ed
 ----
 
-The `ls_out_acl_eval` shows `outport == @a3640229366109469754` which results in `ct_mark.blocked = 1`. This is the exact same failure and `outport` we saw in module 7, meaning the outbound traffic to the backend pods is being blocked. You may think this is the same issue as module 7, but it is not. If we applied the `NetworkPolicy` we used to fix module 7, it would not fix module 8 because that `NetworkPolicy` only applied to the pods in the frontend (same) namespace. Because we are communicating between namespaces now, that policy will not help.
+The *ls_out_acl_eval* shows *outport == @a3640229366109469754* which results in *ct_mark.blocked = 1*. This is the exact same failure and *outport* we saw in module 7, meaning the outbound traffic to the backend pods is being blocked. You may think this is the same issue as module 7, but it is not. If we applied the *NetworkPolicy* we used to fix module 7, it would not fix module 8 because that *NetworkPolicy* only applied to the pods in the frontend (same) namespace. Because we are communicating between namespaces now, that policy will not help.
 
-If you look at the `NetworkPolicy` currently applied, you can see that the `podSelector` only matches on the `siteb-frontend` label, which only aligns to the `siteb` pods, allowing them to communicate with any pods from the backend namespace. This is why the `sitea-frontend` pods can not communicate.
+If you look at the *NetworkPolicy* currently applied, you can see that the *podSelector* only matches on the *siteb-frontend* label, which only aligns to the *siteb* pods, allowing them to communicate with any pods from the backend namespace. This is why the *sitea-frontend* pods can not communicate.
 
 [source,console]
 ----
@@ -270,7 +270,7 @@ spec:
 
 Now that we know the issue, there are 2 possible solutions.
 
-1. Create a new `NetworkPolicy` that allows `sitea-frontend` to reach the backend pods. This would be the least permissive and most fine grained option.
+1. Create a new *NetworkPolicy* that allows *sitea-frontend* to reach the backend pods. This would be the least permissive and most fine grained option.
 
 [source,yaml]
 ----
@@ -293,7 +293,7 @@ spec:
 ----
 
 [start=2]
-2. Open up the existing `NetworkPolicy` by removing the `podSelector` `matchLabels`. This is a broader policy and would also allow any other new pod in frontend to be able to communicate with the backend pods.
+2. Open up the existing *NetworkPolicy* by removing the *podSelector* *matchLabels*. This is a broader policy and would also allow any other new pod in frontend to be able to communicate with the backend pods.
 
 [source,yaml]
 ----

@@ -13,7 +13,7 @@ The VirtualMachine can only access certain websites and external resources.
 
 [NOTE]
 =====
-In the previous modules we provided `ovnkube-trace` examples so you see how to easily run traces in a running OpenShift cluster. As of the wiriting of this lab, the `ovnkube-trace` wrapper does not support VMs or secondary interfaces.
+In the previous modules we provided *ovnkube-trace* examples so you see how to easily run traces in a running OpenShift cluster. As of the wiriting of this lab, the *ovnkube-trace* wrapper does not support VMs or secondary interfaces.
 
 If you think that functionality would be valuable, add your input or customer to the feature request: https://issues.redhat.com/browse/RFE-8186[Debugging ovnkube-trace improvements - add ability to trace VMs on secondary networks]
 =====
@@ -21,23 +21,23 @@ If you think that functionality would be valuable, add your input or customer to
 [#runtrace]
 === Running the Trace
 
-From your execution environment, run the following `ovn-trace`.
+From your execution environment, run the following *ovn-trace*.
 
-. `default.vlan530_external_virt-launcher-external-vm-tfbr4` -> is the OVN datapath which is a logical router or switch associated to the workload
-. `inport` -> is the OVN port for instance we are tracing from
-. `eth.src` -> source pod mac address
-. `eth.dst` -> destination router to switch (rtos) port mac address
-. `ip4.src` -> source pod IP address
-. `ip4.dst` -> external destination address
-. `tcp.dst` -> destination port
-. `tcp.src` -> source port
+. *default.vlan530_external_virt-launcher-external-vm-tfbr4* -> is the OVN datapath which is a logical router or switch associated to the workload
+. *inport* -> is the OVN port for instance we are tracing from
+. *eth.src* -> source pod mac address
+. *eth.dst* -> destination router to switch (rtos) port mac address
+. *ip4.src* -> source pod IP address
+. *ip4.dst* -> external destination address
+. *tcp.dst* -> destination port
+. *tcp.src* -> source port
 
 [.wrap,console,role=execute]
 ----
 ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-tfbr4" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.3 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
 ----
 
-When the `ovn-trace` runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired exteral resource.
+When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired exteral resource.
 
 [source,console]
 ----

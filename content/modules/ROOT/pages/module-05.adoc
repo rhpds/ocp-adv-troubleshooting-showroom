@@ -1,7 +1,7 @@
 = What is overloading my API?
 :prewrap!:
 
-A customer reported an issue where the OpenShift API was down and `etcd`, `kube-apiserver` and other control plane pods were in a CrashLoopBackoff with extremely high memory usage.
+A customer reported an issue where the OpenShift API was down and *etcd*, *kube-apiserver* and other control plane pods were in a CrashLoopBackoff with extremely high memory usage.
 
 .The customer provided the following information:
 ************************************************
@@ -17,7 +17,7 @@ I removed the first old master node and the API became unaccessable. I believe o
 
 How do we check who, what and how often something is hitting the API of an OpenShift cluster?
 
-In this lab we are going to explore the usage of the `OpenShift Cluster Debug Tools`, specifically `kubectl-dev_tool` and the `kubectl-dev_tool audit` subcommand.
+In this lab we are going to explore the usage of the *OpenShift Cluster Debug Tools*, specifically *kubectl-dev_tool* and the *kubectl-dev_tool audit* subcommand.
 
 https://github.com/openshift/cluster-debug-tools/
 
@@ -27,35 +27,35 @@ For this issue, we asked the customer to collect the audit logs from their clust
 
 [TIP]
 =====
-Can you use the following command to collect an `audit log` `must-gather`:
+Can you use the following command to collect an *audit log* *must-gather*:
 
-`oc adm must-gather -- /usr/bin/gather_audit_logs`
+*oc adm must-gather -- /usr/bin/gather_audit_logs*
 
-This will produce a `must-gather` style directory that can be zipped and uploaded to a support case.
+This will produce a *must-gather* style directory that can be zipped and uploaded to a support case.
 
-If the API is not available, you can collect the audit logs manually under `/var/log/` using `ssh` and `scp` to the node.
+If the API is not available, you can collect the audit logs manually under */var/log/* using *ssh* and *scp* to the node.
 
-`/var/log/kube-apiserver` and the other directories, if necessary, such as `etcd`, `oauth-apiserver`, `openshift-apiserver` and `oauth-server`.
+*/var/log/kube-apiserver* and the other directories, if necessary, such as *etcd*, *oauth-apiserver*, *openshift-apiserver* and *oauth-server*.
 =====
 
 [#explore]
-== Explore the `kubectl-dev_tool audit` command
+== Explore the *kubectl-dev_tool audit* command
 
-Lets take a look at the `kubectl-dev_tool audit` subcommand by running it with the `-h` flag to look at the help screen.
+Lets take a look at the *kubectl-dev_tool audit* subcommand by running it with the *-h* flag to look at the help screen.
 
 On this screen, you will find 5 examples to give you some understanding of how to use the tool.
 
 [TIP]
 ====
-When using the `-f` flag, you can pass a single file, as in the example, or the entire directory.
+When using the *-f* flag, you can pass a single file, as in the example, or the entire directory.
 
-`-f 'audit_logs/kube-apiserver'`
+*-f 'audit_logs/kube-apiserver'*
 ====
 
 [#firstrun]
 == Run a command
 
-Let's run a command against the `kube-apiserver` and see what kind of information we get back.
+Let's run a command against the *kube-apiserver* and see what kind of information we get back.
 
 [.wrap,console,role=execute]
 ----
@@ -71,7 +71,7 @@ Using the example from the help page, we can run a command like this:
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --verb=get --resource='*.*' --resource='-subjectaccessreviews.*' --resource='-tokenreviews.*' | more
 ----
 
-In this case, we are looking at individual `GET` requests, how long they took, what they accessed and who made the request.
+In this case, we are looking at individual *GET* requests, how long they took, what they accessed and who made the request.
 
 [source,bash]
 ----
@@ -86,23 +86,23 @@ The larger and busier the cluster, the shorter the audit log duration will be.
 
 If you have a requirement to maintain or potentially review the audit logs, you need to send them to an external logging source for retention.
 
-For this lab, each `kubectl-dev_tool` commands takes approximately 50 seconds to run.
+For this lab, each *kubectl-dev_tool* commands takes approximately 50 seconds to run.
 ====
 
 [#theissue]
 == Checking for issues
 
-Now that we know a little bit about the `kubectl-dev_tool`, let's look at our `audit log must-gather` for potential issues.
+Now that we know a little bit about the *kubectl-dev_tool*, let's look at our *audit log must-gather* for potential issues.
 
 The first thing you want to do is narrow down and define a time range for the issue. Being as specific as possible will help ensure your results are accurate. As an example, 100,000 requests against a certain API over a 6 hour window may not be an issue. If those 100,000 requests actually occur during a 10 minute period of within those 6 hours of logs, when the issue occurs, it is likely worth looking into.
 
-Find the newest audit log timestamp looking at the newest `audit.log` file.
-[source,bash]
+Find the newest audit log timestamp looking at the newest *audit.log* file.
+[.wrap,console,role=execute]
 ----
 tail -n 1 cluster-master-0[1-3].dmz-audit.log
 ----
 
-Find the oldest audit log timestamp looking at the oldest `audit.log` file.
+Find the oldest audit log timestamp looking at the oldest *audit.log* file.
 [source,bash]
 ----
 cluster-master-01.dmz-audit-2025-09-08T14-20-37.493.log
@@ -110,16 +110,16 @@ cluster-master-02.dmz-audit-2025-09-08T14-46-08.059.log
 cluster-master-03.dmz-audit-2025-09-08T14-15-11.014.log
 ----
 
-For our case, our timerange was: `2025-09-08T14:15:00Z to 2025-09-08T15:34:57Z`
+For our case, our timerange was: *2025-09-08T14:15:00Z to 2025-09-08T15:34:57Z*
 
 [TIP]
 ====
-There is a helpful flag you can use `-o top` which will count, group and display the top 10 entries for your search.
+There is a helpful flag you can use *-o top* which will count, group and display the top 10 entries for your search.
 ====
 
 Start by taking a high level view. You can be both broad and granular with audit logs, but unless you know exactly what you're looking for, it's best to cast a wide net.
 
-Look at the top usage for the common `--by=` groups like `resource` and `user`. We can combine that using `--after` and `--before`, to narrow the results to focus in on our timerange.
+Look at the top usage for the common *--by=* groups like *resource* and *user*. We can combine that using *--after* and *--before*, to narrow the results to focus in on our timerange.
 
 
 [.wrap,console,role=execute]
@@ -127,9 +127,9 @@ Look at the top usage for the common `--by=` groups like `resource` and `user`. 
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=resource -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-The first thing you will see is a log outlining the `count` (number of records), followed by a time range and duration for the period the audit logs cover.
+The first thing you will see is a log outlining the *count* (number of records), followed by a time range and duration for the period the audit logs cover.
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 count: 4714125, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.999222s
 ----
@@ -150,7 +150,7 @@ After that, you will see the returned data set.
 195895x        metrics.k8s.io/pods
 ----
 
-Similarily, you can run the same command, using `--by=user`.
+Similarily, you can run the same command, using *--by=user*.
 
 [.wrap,console,role=execute]
 ----
@@ -174,7 +174,7 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop --after 20
 [#thedata]
 == Evaluate and dig deeper
 
-Based on the above data, there is nothing glaringly obvious that is wrong with the cluster, but we can see that the API received `4,714,125` requests over an `80` minute period. That translates to almost `1000` API requests per second.
+Based on the above data, there is nothing glaringly obvious that is wrong with the cluster, but we can see that the API received *4,714,125* requests over an *80* minute period. That translates to almost *1000* API requests per second.
 
 Let's dig a little deeper.
 
@@ -183,7 +183,7 @@ Let's dig a little deeper.
 When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
 ====
 
-Our top resources from the previous command were `endpoints`, `configmaps`, `subjectaccessreviews`, `persistentvolumeclaims`, `persistentvolumes` and `secrets`:
+Our top resources from the previous command were *endpoints*, *configmaps*, *subjectaccessreviews*, *persistentvolumeclaims*, *persistentvolumes* and *secrets*:
 
 [source,bash]
 ----
@@ -195,7 +195,7 @@ Our top resources from the previous command were `endpoints`, `configmaps`, `sub
 328024x        v1/secrets
 ----
 
-Our top users from the previous command were `horizontal-pod-autoscaler`, `endpointslicemirroring-controller`, `openshift-apiserver-sa`, `pgo[postgrescluster-controller]` and `kyverno-reports-controller`.
+Our top users from the previous command were *horizontal-pod-autoscaler*, *endpointslicemirroring-controller*, *openshift-apiserver-sa*, *pgo[postgrescluster-controller]* and *kyverno-reports-controller*.
 
 [source,bash]
 ----
@@ -206,14 +206,14 @@ Our top users from the previous command were `horizontal-pod-autoscaler`, `endpo
 158628x        system:serviceaccount:kyverno:kyverno-reports-controller
 ----
 
-Again, none of those stick out as glaring issues, but lets dig into the top resources. For this we can use the `--resource=` flag, in addition to `--by=` and `-o top` to down on a specific resource.
+Again, none of those stick out as glaring issues, but lets dig into the top resources. For this we can use the *--resource=* flag, in addition to *--by=* and *-o top* to down on a specific resource.
 
 [.wrap,console,role=execute]
 ----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=endpoints -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see the `endpoint` activity is spread out, but you can also see the top consumers are `crunchy` / `postgres` instances from different namespaces.
+We can see the *endpoint* activity is spread out, but you can also see the top consumers are *crunchy* / *postgres* instances from different namespaces.
 
 [source,bash]
 ----
@@ -235,7 +235,7 @@ count: 487532, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps --by=user -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see the `configmap` activity is spread out.
+We can see the *configmap* activity is spread out.
 
 [source,bash]
 ----
@@ -254,7 +254,7 @@ count: 442694, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 
 [NOTE]
 ====
-The parsing of `subjectaccessreviews` is very slow and does not yield anything useful. Feel free to skip it.
+The parsing of *subjectaccessreviews* is very slow and does not yield anything useful in this case, so feel free to skip it.
 
 [.wrap,console,role=execute]
 ----
@@ -267,7 +267,7 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='subjectaccessr
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='persistentvolumeclaims' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see a high number of `persistentvolumeclaims` activity across all nodes in the cluster, as well as from `crunchy`.
+We can see a high number of *persistentvolumeclaims* activity across all nodes in the cluster, as well as from *crunchy*.
 
 [source,bash]
 ----
@@ -289,7 +289,7 @@ count: 362910, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='persistentvolumes' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see a high number of `persistentvolumes` activity across all nodes in the cluster.
+We can see a high number of *persistentvolumes* activity across all nodes in the cluster.
 
 [source,bash]
 ----
@@ -311,7 +311,7 @@ count: 338418, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='secrets' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see the `secrets` activity is spread out.
+We can see the *secrets* activity is spread out.
 
 [source,bash]
 ----
@@ -328,11 +328,11 @@ count: 328024, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 4350x          system:node:cluster-app-103.dmz
 ----
 
-Evaluating the output, the most common theme across all of the data points has been activity from `crunchy` / `postgress`. If you refer back to the original `--by=user` output, there was no glaring single user, but 5 of the top 10 users driving API load were `crunchy` / `postgress` related. If we add them all up, a conservative estimate, without secondary and follow-on factors, is 621,383 of 4,714,125 requests, totalling 13.1% of API traffic.
+Evaluating the output, the most common theme across all of the data points has been activity from *crunchy* / *postgress*. If you refer back to the original *--by=user* output, there was no glaring single user, but 5 of the top 10 users driving API load were *crunchy* / *postgress* related. If we add them all up, a conservative estimate, without secondary and follow-on factors, is 621,383 of 4,714,125 requests, totalling 13.1% of API traffic.
 
-Given that `crunchy` / `postgress` are databases, we can also look into the high level of activity taking place against `PersistentVolumes` and `PersistentVolumeClaims`.
+Given that *crunchy* / *postgress* are databases, we can also look into the high level of activity taking place against *PersistentVolumes* and *PersistentVolumeClaims*.
 
-Let's take a look at one of the users and see what they are doing. You can do this by passing in the `--user=` flag along with `--by=verb` and `-o top`.
+Let's take a look at one of the users and see what they are doing. You can do this by passing in the *--user=* flag along with *--by=verb* and *-o top*.
 
 Let's try to answer the following:
 
@@ -346,7 +346,7 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user='system:serviceacco
 
 What we see is interesting:
 
-. The majority of activity is from `PATCH` commands on endpoints
+. The majority of activity is from *PATCH* commands on endpoints
 . Requests are mostly successful with HTTP 200 errors
 
 [.wrap,console,role=execute]
@@ -356,7 +356,7 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user='system:node:cluste
 
 What we see is:
 
-. The majority of activity is from `GET` commands on `PersistentVolumes` and `PersistentVolumeClaims` across dozens of different `Namespaces`.
+. The majority of activity is from *GET* commands on *PersistentVolumes* and *PersistentVolumeClaims* across dozens of different *Namespaces*.
 
 [NOTE]
 ====
@@ -370,23 +370,23 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user='system:serviceacco
 
 What we see is:
 
-. The majority of activity is from `PATCH` and `LIST `commands across dozens of different namespaces
+. The majority of activity is from *PATCH* and *LIST *commands across dozens of different namespaces
 
 Based on this information, we could make a few informed deductions. 
 
 1. Even though the API pool members are marked as down in the F5, millions of requests are still making it API server.
-2. We see 13% of our API traffic coming from `crunchy` / `postgress` related pods.
-3. We see another 14.9% of our API traffic coming from `PersistentVolumes` and `PersistentVolumeClaims`.
+2. We see 13% of our API traffic coming from *crunchy* / *postgress* related pods.
+3. We see another 14.9% of our API traffic coming from *PersistentVolumes* and *PersistentVolumeClaims*.
 
-The conclusion was that `Crunchy Postgres Operator` was under significant stress due to the API flapping. This lead to an unexpected influx of traffic trying to `GET`, `LIST` and `UPDATE` its owned resources.
+The conclusion was that *Crunchy Postgres Operator* was under significant stress due to the API flapping. This lead to an unexpected influx of traffic trying to *GET*, *LIST* and *UPDATE* its owned resources.
 
 With this information, we were able to have an informated discussion with the customer and they were able to take to data to the 3rd party vendor and get the issue addressed to avoid such an API storm in the future.
 
 *How did we recover the cluster?*
 
-With no way of shutting down workloads or disabling the `Operator`, we had to get creative to stabalize the `Control Plane`.
+With no way of shutting down workloads or disabling the *Operator*, we had to get creative to stabalize the *Control Plane*.
 
-We applied 2 `iptables` rules on all of the `worker` nodes in the cluster to drop traffic to port 6443 on both the `FORWARD` and `OUTPUT` chains.
+We applied 2 *iptables* rules on all of the *worker* nodes in the cluster to drop traffic to port 6443 on both the *FORWARD* and *OUTPUT* chains.
 
 [source,bash]
 ----
@@ -394,17 +394,17 @@ iptables -I FORWARD -p tcp --dport 6443 -j DROP
 iptables -I OUTPUT -p tcp --dport 6443 -j DROP
 ----
 
-This blocked both the `kubelet` and running `Pods` from sending traffic to the API and subsequently allowed for the API to stabalize and recover.
+This blocked both the *kubelet* and running *Pods* from sending traffic to the API and subsequently allowed for the API to stabalize and recover.
 
-Once the API was healthy, we removed the `iptables` rules in blocks of 5 nodes, allowing them to come back and workloads to fully recover.
+Once the API was healthy, we removed the *iptables* rules in blocks of 5 nodes, allowing them to come back and workloads to fully recover.
 
-I hope you found this introduction to the `kubectl-dev_tool` useful and can leverage it the next time you have an issue!
+I hope you found this introduction to the *kubectl-dev_tool* useful and can leverage it the next time you have an issue!
 
 [TIP]
 ====
 You don't need to have an overloaded API or a performance issue to take a look at the audit logs.
 
-The audit logs and `kubectl-dev_tool` are equally useful if you want to understand who or what did something in your cluster.
+The audit logs and *kubectl-dev_tool* are equally useful if you want to understand who or what did something in your cluster.
 
-Something or someone deleted your pod, secret, service or other object? That's in the audit logs! Use the `kubectl-dev_tool` to find out who did it and when!
+Something or someone deleted your pod, secret, service or other object? That's in the audit logs! Use the *kubectl-dev_tool* to find out who did it and when!
 ====
