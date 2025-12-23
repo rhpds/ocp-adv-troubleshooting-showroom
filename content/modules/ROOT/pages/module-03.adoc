@@ -1,9 +1,9 @@
 = Using OpenShift Lightspeed (Insights) to Proactively Analyze a Cluster
 :prewrap!:
 
-OpenShift Lightspeed (Insights) is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on `SupportShell` allowing Support Engineers and Technical Account Managers to review that data.
+OpenShift Lightspeed (Insights) is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on *SupportShell* allowing Support Engineers and Technical Account Managers to review that data.
 
-In this module we will be reviewing how to look at a script that parses an `OpenShift Lightspeed (Insights)` archive to allow you to proactively analyze a cluster.
+In this module we will be reviewing how to look at a script that parses an *OpenShift Lightspeed (Insights)* archive to allow you to proactively analyze a cluster.
 
 You can find more details on OpenShift Lightspeed (Insights) and the entire remote health monitoring package in our documentation: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[About remote health monitoring]
 
@@ -15,10 +15,14 @@ You can also review the source code to see additional information on what is col
 == The ocp_insights.py script
 With this script we will be able to parse the insights archive, review customer namespace memory usage, look for namespaces with overlapping UIDs, review storage classes, and look at etcd metrics.
 
-.Understanding ocp_insights
-[source,bash]
+[.wrap,console,role=execute]
 ----
 cd ~/Module3/
+----
+
+[.wrap,console,role=execute]
+----
+ocp_insights.py -h
 ----
 
 [source,bash]
@@ -59,7 +63,7 @@ options:
 ** Audit Profile
 ** Node Information
 *** Name, State, Role, Created Date, Version, OS, CPU, and Memory
-** Cluster Operator status with the same output as `oc get clusteroperators`
+** Cluster Operator status with the same output as *oc get clusteroperators*
 ** Installed Operators
 ** Installed OLM Operators
 *** Display Name, Version, and Namespace
@@ -77,13 +81,16 @@ options:
 [#cluster_info]
 == Cluster Information
 
-The `--cluster_info` option shows a detailed break down of the high level information regarding your cluster including `ID`, `Name`, `Version`, `Channel`, `Cluster Status`, `Platform`, `Install Type`, and more.
+The *--cluster_info* option shows a detailed break down of the high level information regarding your cluster including *ID*, *Name*, *Version*, *Channel*, *Cluster Status*, *Platform*, *Install Type*, and more.
 
 .Viewing Cluster Information
+[.wrap,console,role=execute]
+----
+ocp_insights.py --cluster_info --file ./Cluster_1/insights.tar.gz
+----
+
 [source,bash]
 ----
-$ ocp_insights.py --cluster_info --file ./Cluster_1/insights.tar.gz
-
 Cluster ID: DB08D743-5559-4259-8ABB-7C5B528439B7
 Cluster Name: prod.example.com
 Cluster Version: 4.15.57
@@ -109,17 +116,21 @@ Audit Profile: Default
 [#node_info]
 == Node Information
 
-The `--node_info` option displays all of the node information, including `Node Name`, `Node Status`, `Role(s)`, `Creation Date`, `Kubelet Version`, `CoreOS Version` and the `CPU` and `Memory` details of each server.
+The *--node_info* option displays all of the node information, including *Node Name*, *Node Status*, *Role(s)*, *Creation Date*, *Kubelet Version*, *CoreOS Version* and the *CPU* and *Memory* details of each server.
 
 [TIP]
 =====
-The total memory returned, is the memory available to the Kubelet and not the physical amount of memory on the node.
+The total memory returned, is the memory available to the Kubelet and not necessarily equal to the physical amount of memory on the node.
 =====
+
+.Viewing Node Information
+[.wrap,console,role=execute]
+----
+ocp_insights.py --node_info --file ./Cluster_2/insights.tar.gz
+----
 
 [source,bash]
 ----
-ocp_insights.py --node_info --file ./Cluster_2/insights.tar.gz
-
 Node Information:
 
 NAME         READY  ROLE                  CREATED ON           VERSION           OS                                                     CPU  MEMORY
@@ -140,13 +151,16 @@ worker5-dev  True   worker                2025-01-22 16:53:23  v1.29.10+67d3387 
 [#cluster_operators]
 == Cluster Operators
 
-The `--cluster_operators` returns the same output as running `oc get clusteroperators` or `oc get co`. All Cluster Operators are returned with the `Name`, `Version`, and `Status`.
+The *--cluster_operators* returns the same output as running *oc get clusteroperators* or *oc get co*. All Cluster Operators are returned with the *Name*, *Version*, and *Status*.
 
 .Viewing Cluster Operators
+[.wrap,console,role=execute]
+----
+ocp_insights.py --cluster_operators --file ./Cluster_1/insights.tar.gz
+----
+
 [source,bash]
 ----
-$ ocp_insights.py --cluster_operators --file ./Cluster_1/insights.tar.gz
-
 Cluster Operators:
 
 NAME                                      VERSION  AVAILABLE  PROGRESSING  DEGRADED  REASON
@@ -188,13 +202,16 @@ storage                                   4.15.57  True       False        False
 [#events]
 == Namespace Events
 
-The `--events` option returns any events collected by the Insights Operator when the archive was recreated.
+The *--events* option returns any events collected by the Insights Operator when the archive was recreated.
 
 .Viewing Namespace Events
+[.wrap,console,role=execute]
+----
+ocp_insights.py --events --file ./Cluster_2/insights.tar.gz
+----
+
 [source,bash]
 ----
-$ ocp_insights.py --events --file ./Cluster_2/insights.tar.gz
-
 Namespace Errors:
 
 NAMESPACE                          TYPE     REASON                        TIME
@@ -220,14 +237,16 @@ openshift-oauth-apiserver          Warning  ProbeError                    2025-1
 [#customermemory]
 == Customer Namespace Memory Usage
 
-The `--customer_memory` option returns the memory usage of each `Customer Namespace` based on the metric `container_memory_usage_bytes` which is collected by the `Insights Operator`.
+The *--customer_memory* option returns the memory usage of each *Customer Namespace* based on the metric *container_memory_usage_bytes* which is collected by the *Insights Operator*.
 
 .Viewing Cluster Memory Usage
+[.wrap,console,role=execute]
+----
+ocp_insights.py --customer_memory --file ./Cluster_2/insights.tar.gz
+----
+
 [source,bash]
 ----
-$ ocp_insights.py --customer_memory --file ./Cluster_2/insights.tar.gz
-
-...
 Customer Namespace Memory Usage:
 
 NAMESPACE                   MEMORY
@@ -302,41 +321,45 @@ valor-test                  335.54 MB
 zabbix                      224.45 MB
 
 Total Customer Namespace Memory Usage: 176.41 GB
-...
 ----
 
 [#etcd_metrics]
 == etcd Metrics
-Along with the customer namespace metrics, we also collect several etcd metrics including `etcd_server_slow_apply_total` and `etcd_server_slow_read_indexes_total`.
+Along with the customer namespace metrics, we also collect several etcd metrics including *etcd_server_slow_apply_total* and *etcd_server_slow_read_indexes_total*.
 
 These two metrics are a great indicator of performance issues with the underlying disk that supports etcd. Tracking these over multiple Insights Archives is a good way to determine if the cluster is suffering from etcd performance problems.
 
-The `ocp_insight.py` script currently returns the `etcd_server_slow_apply_total` which indicates how many `Took Too Long` messages have occurred since the pod's last restart.
+The *ocp_insight.py* script currently returns the *etcd_server_slow_apply_total* which indicates how many *Took Too Long* messages have occurred since the pod's last restart.
 
 .Viewing etcd metrics
+[.wrap,console,role=execute]
+----
+ocp_insights.py --etcd_metrics --file ./Cluster_4/insights.tar.gz
+----
+
 [source,bash]
 ----
-$ ocp_insights.py --etcd_metrics --file ./Cluster_4/insights.tar.gz
-
 etcd-ocpmstr1.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,7
 etcd-ocpmstr2.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,1568
 etcd-ocpmstr3.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,181506
 ----
 
-
-
 [#alloutput]
 == Additional Output
 
+Looking at the full *--file* output, we can review additional information such as:
+[.wrap,console,role=execute]
+----
+ocp_insights.py --file ./Cluster_4/insights.tar.gz
+----
+
 === Install Plans
 
-The `Insights Operator` captures all `Install Plans` on the cluster which is extremely helpful to see current and previous installed operators. We return `CSV` and `Namespace`.
-
+The *Insights Operator* captures all *Install Plans* on the cluster which is extremely helpful to see current and previous installed operators. We return *CSV* and *Namespace*.
 
 .Install Plans
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Install Plans:
 
@@ -370,13 +393,11 @@ sriov-network-operator.v4.19.0-202511260712      openshift-sriov-network-operato
 
 === OLM Operators
 
-The `Insights Operator` captures all `OLM Operators` on the cluster which is extremely helpful to see current and previous installed operators. We return `Name`, `Display Name`, `Version`, and `Namespace` when applicable.
-
+The *Insights Operator* captures all *OLM Operators* on the cluster which is extremely helpful to see current and previous installed operators. We return *Name*, *Display Name*, *Version*, and *Namespace* when applicable.
 
 .Installed OLM Operators
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Installed OLM Operators:
 
@@ -408,7 +429,7 @@ upf-operator                                                                    
 
 === MachineConfigPools and MachineSets
 
-The `Insights Operator` also collects `MachineConfigPool` and `MachineConfigSet` information and returns them when applicable.
+The *Insights Operator* also collects *MachineConfigPool* and *MachineConfigSet* information and returns them when applicable.
 
 .MachineConfigPool and MachineSets
 [source,bash]
@@ -435,7 +456,6 @@ For customers using persistent storage via OpenShift Data Foundations or through
 .Storage Classes
 [source,bash]
 ----
-$ ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 StorageClasses:
 
@@ -445,12 +465,11 @@ NAME             PROVISIONER                                                    
 ----
 
 === Cluster Memory Usage
-Just like with the `Customer Memory Usage` option, the `Insights Operator` also collects the memory usage of the cluster namespaces. This is a great way to see if there has been a large growth in memory usage when comparing multiple must-gathers and to get an idea of what the memory usage is compared to the size of the cluster.
+Just like with the *Customer Memory Usage* option, the *Insights Operator* also collects the memory usage of the cluster namespaces. This is a great way to see if there has been a large growth in memory usage when comparing multiple must-gathers and to get an idea of what the memory usage is compared to the size of the cluster.
 
 .Cluster Memory Usage
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Cluster Namespace Memory Usage:
 
@@ -482,12 +501,11 @@ Total Cluster Namespace Memory Usage: 72.78 GB
 ----
 
 === Restarting Containers
-The `Insights Operator` collects information on container restarts which is extremely useful when trying to understand problems in the cluster. We return `Namespace`, `Pod Name`, `Container Name`, `Restart Count`, and the last `Restart Time`.
+The *Insights Operator* collects information on container restarts which is extremely useful when trying to understand problems in the cluster. We return *Namespace*, *Pod Name*, *Container Name*, *Restart Count*, and the last *Restart Time*.
 
 .Restarting Containers
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Containers with more than 3 restarts:
 
@@ -513,12 +531,11 @@ openshift-cnv                                kubevirt-ipam-controller-manager-69
 ----
 
 === Alerts
-The `Insights Operator` collects all alerts that are firing on the cluster. We return `Alert Name`, `State`, and `Start Time`.
+The *Insights Operator* collects all alerts that are firing on the cluster. We return *Alert Name*, *State*, and *Start Time*.
 
 .Alerts
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 ALERT NAME                          STATE   START TIME
 InsightsRecommendationActive        ACTIVE  2025-12-08 20:31:14.889
@@ -537,13 +554,12 @@ KubeJobFailed                       ACTIVE  2025-12-08 12:37:32.089
 ----
 
 === PodNetworkConnectivityChecks
-The `Insights Operator` also collects `PodNetworkConnectivityChecks` which is a service that runs on a `Compute` node in the cluster and then connects to listener pods on each node of the cluster. It checks for various services and it is helpful to determine if nodes or services become unreachable.
+The *Insights Operator* also collects *PodNetworkConnectivityChecks* which is a service that runs on a *Compute* node in the cluster and then connects to listener pods on each node of the cluster. It checks for various services and it is helpful to determine if nodes or services become unreachable.
 
 
 .PodNetworkConnectivityChecks
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 PodNetworkConnectivityChecks:
 
@@ -559,12 +575,11 @@ openshift-apiserver-service-cluster     2025-12-08 16:40:38Z
 ----
 
 === Conditional Update Risks
-Red Hat provides `Conditional Update Risks` to customers so that they are aware of any potential risk of a failed upgrade or an issue post upgrade.
+Red Hat provides *Conditional Update Risks* to customers so that they are aware of any potential risk of a failed upgrade or an issue post upgrade.
 
 .Conditional Update Risks
 [source,bash]
 ----
-ocp_insights.py --file ./Cluster_4/insights.tar.gz
 ...
 Conditional Update Risks:
 
@@ -587,35 +602,43 @@ SCOSBootImage                                https://issues.redhat.com/browse/CO
 === Scenario 1
 The Customer reported issues with the cluster and stated that they have Cluster Operators that are failing and issues with Container Networking. Review the output of the script and look at the Cluster Operators to which ones are having issues, then review the restarting pods to see which networking related pod is having issues and last restarted on 2025-11-25, and then check the alerts and look for OVN related alerts.
 
-To dig deeper, the matching Must-Gather is located in `~/Module4/Cluster_1`
+To dig deeper, the matching Must-Gather is located in *~/Module4/Cluster_1*
 
 .Scenario 1
-[source,bash]
+[.wrap,console,role=execute]
 ----
-$ ocp_insights.py --file ./Cluster_1/insights.tar.gz
+ocp_insights.py --file ./Cluster_1/insights.tar.gz
+----
 
-$ ocp_insights.py --file ./Cluster_1/insights.tar.gz --alerts | jq -r . | less
+[.wrap,console,role=execute]
+----
+ocp_insights.py --file ./Cluster_1/insights.tar.gz --alerts | jq -r . | less
 ----
 
 === Scenario 2
 The customer is having issues logging into the Cluster. They are currently falling back on the kubeadmin account. Review the output of the script to identify potential issues and potential resolutions.
 
-
 .Scenario 2
-[source,bash]
+[.wrap,console,role=execute]
 ----
-$ ocp_insights.py --file ./Cluster_2/insights.tar.gz
+ocp_insights.py --file ./Cluster_2/insights.tar.gz
 ----
 
 === Scenario 3
 The customer reports the cluster is very unstable, multiple cluster operators are down, and they need help immediately. Review the control-plane nodes and take note the Creation Dates, review the numerous errors in the cluster operators and pay specific attention to the reasons, look at the failing pods, and the namespace events, and finally review the etcd_metrics and see if you can spot a major issue.
 
 .Scenario 3
-[source,bash]
+[.wrap,console,role=execute]
 ----
-$ ocp_insights.py --file ./Cluster_3/insights.tar.gz --node_info
+ocp_insights.py --file ./Cluster_3/insights.tar.gz --node_info
+----
 
-$ ocp_insights.py --file ./Cluster_3/insights.tar.gz --cluster_operators
+[.wrap,console,role=execute]
+----
+ocp_insights.py --file ./Cluster_3/insights.tar.gz --cluster_operators
+----
 
-$ ocp_insights.py --file ./Cluster_3/insights.tar.gz --etcd_metrics
+[.wrap,console,role=execute]
+----
+ocp_insights.py --file ./Cluster_3/insights.tar.gz --etcd_metrics
 ----
