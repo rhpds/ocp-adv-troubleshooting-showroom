@@ -151,7 +151,7 @@ worker5-dev  True   worker                2025-01-22 16:53:23  v1.29.10+67d3387 
 [#cluster_operators]
 == Cluster Operators
 
-The *--cluster_operators* returns the same output as running *oc get clusteroperators* or *oc get co*. All Cluster Operators are returned with the *Name*, *Version*, and *Status*.
+The *--cluster_operators* returns the same output as running *oc get clusteroperators* or *oc get co*. All Cluster Operators are returned with the *Name*, *Version*, *Status*, and the *Reason* if the operator is having issues.
 
 .Viewing Cluster Operators
 [.wrap,console,role=execute]
@@ -600,7 +600,7 @@ SCOSBootImage                                https://issues.redhat.com/browse/CO
 == Lab Scenarios
 
 === Scenario 1
-The Customer reported issues with the cluster and stated that they have Cluster Operators that are failing and issues with Container Networking. Review the output of the script and look at the Cluster Operators to which ones are having issues, then review the restarting pods to see which networking related pod is having issues and last restarted on 2025-11-25, and then check the alerts and look for OVN related alerts.
+The Customer reported issues with the cluster and stated that they have Cluster Operators that are failing and issues with Container Networking. Review the output of the script and look at the Cluster Operators to determine which operators are having issues, then review the restarting pods to see which networking related pod is having issues and last restarted on 2025-11-25, and then check the alerts and look for OVN related alerts.
 
 To dig deeper, the matching Must-Gather is located in *~/Module4/Cluster_1*
 

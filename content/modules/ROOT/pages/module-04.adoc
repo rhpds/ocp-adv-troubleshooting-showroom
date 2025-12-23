@@ -185,11 +185,11 @@ Stats about etcd "apply request took too long" messages: etcd-master1.prod-b.ope
 [#singleerrors]
 == Searching for Specific Errors
 
-. etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
+etcd has common errors to let you know what issues are affecting your cluster this script lets you look for them quickly to then help determine what problems you should be focusing on.
 
-. To do this you run *etcd-ocp-diag.py --path <path_to_must_gather> --ttl* and it will search all of the etcd Pods and return the Pod Name, Date, and the Count.
+To do this you run *etcd-ocp-diag.py --path <path_to_must_gather> --ttl* and it will search all of the etcd Pods and return the Pod Name, Date, and the Count.
 
-. In addition to "Took Too Long" errors you can also use the following sub-commands:
+In addition to *Took Too Long* errors you can also use the following sub-commands:
 
 [source,bash]
 ----
@@ -205,25 +205,29 @@ Stats about etcd "apply request took too long" messages: etcd-master1.prod-b.ope
 .Using Sub-Commands to look for Specific Errors
 [.wrap,console,role=execute]
 ----
-etcd-ocp-diag.py --path module4-must-gather.6521552859184261155/ --ttl | sort -u -k3,3nr
+etcd-ocp-diag.py --path Cluster_2/must-gather.local --overloaded
 ----
 
 [source,bash]
 ----
-POD                       	DATE      	COUNT
-etcd-prodshift-2nvq7-master-2	2024-08-14	952
-etcd-prodshift-2nvq7-master-1	2024-08-14	887
-etcd-prodshift-2nvq7-master-1	2024-08-13	805
-etcd-prodshift-2nvq7-master-2	2024-08-13	744
-etcd-prodshift-2nvq7-master-0	2024-08-14	702
-etcd-prodshift-2nvq7-master-2	2024-08-12	627
-etcd-prodshift-2nvq7-master-1	2024-08-12	579
-etcd-prodshift-2nvq7-master-0	2024-08-13	550
-etcd-prodshift-2nvq7-master-0	2024-08-12	455
-etcd-prodshift-2nvq7-master-2	2024-08-11	360
-etcd-prodshift-2nvq7-master-1	2024-08-11	333
-etcd-prodshift-2nvq7-master-1	2024-08-10	288
-etcd-prodshift-2nvq7-master-2	2024-08-09	268
+POD                     DATE            COUNT
+etcd-master0-openshift  2025-11-18      504
+etcd-master1-openshift  2025-11-18      214
+etcd-master2-openshift  2025-11-17      162
+etcd-master2-openshift  2025-11-18      286
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path Cluster_4/must-gather.local --election
+----
+
+[source,bash]
+----
+POD                                     DATE            COUNT
+etcd-ocpmstr1.openshift.example.com     2025-12-08       1
+etcd-ocpmstr2.openshift.example.com     2025-12-08       1
+etcd-ocpmstr3.openshift.example.com     2025-12-08      46
 ----
 
 After you return the results for all dates and pods, you can then drill down further by specifying the *--date* and/or the *--pod* command to return the hour and minute the error happened and results just for one specific pod.
@@ -362,7 +366,7 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-17 -
 
 [.wrap,console,role=execute]
 ----
-$ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18 --compare
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18 --compare
 ----
 
 === Scenario 2

@@ -241,6 +241,11 @@ omc etcd status
 omc haproxy backends
 ----
 
+[NOTE]
+=====
+The example must-gather used for this module does not contain HAProxy backends, so the above command will not return any data. The output below is an example output.
+=====
+
 [source,bash]
 ----
 NAMESPACE	NAME			 INGRESSCONTROLLER	SERVICES	      PORT	     TERMINATION
