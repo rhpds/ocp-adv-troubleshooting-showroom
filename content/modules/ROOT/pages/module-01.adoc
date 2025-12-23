@@ -6,51 +6,59 @@ These are some of the many Community Created Tools available to speed up debuggi
 [#intro]
 == Tools we will use
 
-During this lab, we will run through a number of exercises that show the power and effective use of the following 7 tools.
+During this lab, we will run through a number of exercises that show the power and effective use of the following 8 tools.
 
 [#omcintro]
-=== `omc`
+=== *omc*
 
-The `omc` tool (OpenShift Must‑Gather Client) is a CLI that lets engineers inspect and query OpenShift `must-gather` archives using oc-like commands to view resources, logs, metrics, and diagnostics.
+The *omc* tool (OpenShift Must‑Gather Client) is a CLI that lets engineers inspect and query OpenShift *must-gather* archives using oc-like commands to view resources, logs, metrics, and diagnostics.
 
-You can find and download `omc` from github at: link:https://github.com/gmeghnag/omc/releases/[omc releases^]
+You can find and download *omc* from github at: link:https://github.com/gmeghnag/omc/releases/[omc releases^]
 
-For more in-depth details on how to collect a `must-gather` and for alternative `must-gather` commands for other OpenShift components, you can refer to the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/support/gathering-cluster-data[Gathering data about your cluster^] section of our doc.
+For more in-depth details on how to collect a *must-gather* and for alternative *must-gather* commands for other OpenShift components, you can refer to the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/gathering-cluster-data[Gathering data about your cluster^] section of our doc.
 
 [#kcdevtoolintro]
-=== `kubectl-dev_tool`
+=== *kubectl-dev_tool*
 
-`kubectl-dev_tool` is a kubectl plugin that provides developer-friendly commands for Kubernetes workflows—like port-forwarding, log streaming, interactive pod shells, and simplified deploy/rollback operations—wrapped in shorter, higher-level subcommands. It focuses on speeding local development and debugging by combining common kubectl actions into convenient, opinionated shortcuts.
+*kubectl-dev_tool* is a kubectl plugin that provides developer-friendly commands for Kubernetes workflows—like port-forwarding, log streaming, interactive pod shells, and simplified deploy/rollback operations—wrapped in shorter, higher-level subcommands. It focuses on speeding local development and debugging by combining common kubectl actions into convenient, opinionated shortcuts.
 
-For our use case we will be using the `audit` function of the `kubectl-dev_tool` to filter by `user`, `resource`, `verb`, and sort the data in an easy to ready format.
+For our use case we will be using the *audit* function of the *kubectl-dev_tool* to analyze audit log data by *user*, *resource*, *verb*, and sort it in an easy to ready format.
 
 ==== Installation
-To install `kubectl-dev_tool` from github use ensure `golang` is installed and run the command `go get` or you can follow the build instructions located in the link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools^] repository.
+To install *kubectl-dev_tool* from github ensure *golang* is installed and run the *go get* command or follow the build instructions located in the link:https://github.com/openshift/cluster-debug-tools/[cluster debug tools^] repository.
 
-Example: `go get github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_tool`
+.Example
+[source,console,role=execute]
+----
+go get github.com/openshift/cluster-debug-tools/cmd/kubectl-dev_tool
+----
 
 ==== Usage
 
-In order to use the `kubectl-dev_tool` you need to collect the audit logs from the problematic cluster. You can find more information on using the `gather_audit_logs` sub-command with `must-gather` in the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/support/gathering-cluster-data#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
+In order to use the *kubectl-dev_tool* you need to collect audit logs from the problematic cluster. You can find more information on using the *gather_audit_logs* sub-command with *must-gather* in the link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/support/gathering-cluster-data#about-must-gather_gathering-cluster-data[gather_audit_logs^] section of our docs.
 
 [#yqjqintro]
-=== `yq` and `jq`
+=== *yq* and *jq*
 
-`jq` is a lightweight command-line `JSON` processor that reads `JSON`, applies queries and filters to transform, extract, and format data, and outputs the result—useful for slicing, mapping, and aggregating `JSON` in scripts and pipelines.
+*jq* is a lightweight command-line *JSON* processor that reads *JSON*, applies queries and filters to transform, extract, and format data, and outputs the result. This is useful for slicing, mapping, and aggregating *JSON* in scripts and pipelines.
 
-`yq` is a command-line `YAML` processor (also supports `JSON`) that applies jq-like queries and transformations to read, update, convert, and write `YAML`/`JSON—useful` for scripting config files and pipelines.
+*yq* is a command-line *YAML* processor (also supports *JSON*) that applies jq-like queries and transformations to read, update, convert, and write *YAML*/*JSON—useful* for scripting config files and pipelines.
 
 ==== Installation
 
-`jq` and `yq` are provided by most Package Managers
+*jq* and *yq* are provided by most Package Managers
 
-Example: `dnf install jq yq -y`
+.Example
+[source,console,role=execute]
+----
+dnf install jq yq -y
+----
 
 ==== Usage
 
-When to use each tool is based on your preferred output. The version of `yq` we use will convert `YAML` to `JSON` unless you specify to keep the output `YAML` as seen in the example below.
+When to use each tool is based on your preferred output. The version of *yq* we use will convert *YAML* to *JSON* unless you specify to keep the output *YAML* as seen in the example below.
 
-[source,bash]
+[source,json]
 ----
 $ omc get node worker-00002c77 -o json | jq '.status.conditions[]'
 {
@@ -69,22 +77,10 @@ $ omc get node worker-00002c77 -o json | jq '.status.conditions[]'
   "status": "False",
   "type": "DiskPressure"
 }
-{
-  "lastHeartbeatTime": "2025-10-13T15:23:37Z",
-  "lastTransitionTime": "2025-09-11T02:08:38Z",
-  "message": "kubelet has sufficient PID available",
-  "reason": "KubeletHasSufficientPID",
-  "status": "False",
-  "type": "PIDPressure"
-}
-{
-  "lastHeartbeatTime": "2025-10-13T15:23:37Z",
-  "lastTransitionTime": "2025-09-11T02:10:10Z",
-  "message": "kubelet is posting ready status",
-  "reason": "KubeletReady",
-  "status": "True",
-  "type": "Ready"
-}
+----
+
+[source,yaml]
+----
 $ omc get node worker-00002c77 -o yaml | yq -Y '.status.conditions[]'
 lastHeartbeatTime: "2025-10-13T15:23:37Z"
 lastTransitionTime: "2025-09-11T02:08:38Z"
@@ -100,32 +96,39 @@ reason: KubeletHasNoDiskPressure
 status: "False"
 type: DiskPressure
 ---
-lastHeartbeatTime: "2025-10-13T15:23:37Z"
-lastTransitionTime: "2025-09-11T02:08:38Z"
-message: kubelet has sufficient PID available
-reason: KubeletHasSufficientPID
-status: "False"
-type: PIDPressure
----
-lastHeartbeatTime: "2025-10-13T15:23:37Z"
-lastTransitionTime: "2025-09-11T02:10:10Z"
-message: kubelet is posting ready status
-reason: KubeletReady
-status: "True"
-type: Ready
 ----
 
 [#etcddiagintro]
-=== `etcd-ocp-diag`
+=== *etcd-ocp-diag*
 
-This python script allows you to quick identify common etcd performance errors, review statistics, and easily review when errors have occurred so that you can quickly pinpoint if the problem is your underlying disks or point you to other areas that may be causing the issues.
+This python script allows you to quickly identify common etcd performance errors and review statistics and errors that have occurred so you can quickly pinpoint issues with your underlying disk or point you to towards other areas that may be causing the issue.
 
-You can find and download `etcd-ocp-diag` from github at: link:https://github.com/cptmorgan-rh/etcd-ocp-diag-script/blob/python/etcd-ocp-diag.py[etcd-ocp-diag-script^]
+You can find and download *etcd-ocp-diag* from github at: link:https://github.com/cptmorgan-rh/etcd-ocp-diag-script/blob/python/etcd-ocp-diag.py[etcd-ocp-diag-script^]
 
 
 [#ocpinsightsintro]
-=== `ocp_insights`
+=== *ocp_insights*
 
-OpenShift LightSpeed, formerly OpenShift Insights, is a data collection tool that collects information similar to an OpenShift Must-Gather and uploads that data to Red Hat's servers for proactive analysis. When a must-gather is collected from a cluster running the Insights Operator, the latest Lightspeed Archives are collected. Using these archives along with the `ocp_insights` script, we can quickly triage a cluster to determine all of the important information in seconds to allow us to get an understand of the make up and design of the cluster along with any issues currently affecting the cluster.
+OpenShift LightSpeed, formerly OpenShift Insights, is a data collection tool that collects information similar to an OpenShift Must-Gather and uploads that data to Red Hat's servers for proactive analysis. When a must-gather is collected from a cluster running the Insights Operator, the latest Lightspeed Archives are collected. Using these archives along with the *ocp_insights* script, we can quickly triage a cluster to determine all of the important information in seconds to allow us to get an understand of the make up and design of the cluster along with any issues currently affecting the cluster.
 
-You can find and download `ocp_insights` from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/insightsarchive/ocp_insights.sh[ocp_insights^]
+You can find and download *ocp_insights* from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/insightsarchive/ocp_insights.sh[ocp_insights^]
+
+[#ovnkube]
+=== ovnkube-trace
+
+*ovnkube-trace*, is a GO based command line tool that takes a set of arguments, inspects your running OpenShift cluster and translates all of the pod IP and MAC information to perform low level *ovn-trace*, *ovs-appctl ofproto/trace* and *ovn-detrace* commands on your defined workloads.
+
+[NOTE]
+=====
+Because this lab is not taking place on a running OpenShift cluster, we will show you examples of the *ovnkube-trace* command for each exercise and actually use the lower level *ovn-trace* that *ovnkube-trace* produces.
+=====
+
+[#ovntrace]
+=== ovn-trace
+
+*ovn-trace* is used to simulate packet forwarding within an OVN logical network. We will use it to view and subsequently debug where and why decisions were made that resulted in the successful or unsuccessful delivery of your packet.
+
+[#ovnnb]
+=== ovn-nbctl
+
+The *ovn-nbctl* command allows you to interact with the running OVN Northbound Database. We will use it to view and inspect logical routrs and switchs, ACLs and other configurations that make up the SDN configuration.

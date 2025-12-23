@@ -9,27 +9,6 @@ Everyone knows it's there, but how do we debug it? When you run into an issue, h
 
 In this section of the lab, we are going to walk you through 3 scenarios and how to leverage tools like `ovnkube-trace`, `ovn-trace` and `ovn-nbctl` to identify and resolve network communication issues between internal and external resouces.
 
-
-[#thetools]
-== Lab Tools
-
-[#ovnkube]
-=== ovnkube-trace
-
-Th first tool you'll go to, `ovnkube-trace`, is a GO based command line tool that takes a set of arguments, inspects your running OpenShift cluster and translates all of the pod IP and MAC information to perform low level ovn-trace, ovs-appctl ofproto/trace and ovn-detrace commands on your defined workloads.
-
-Because this lab is not taking place on a running OpenShift cluster, we will show you examples of the `ovnkube-trace` command for each exercise and actually use the lower level `ovn-trace` that `ovnkube-trace` produces.
-
-[#ovntrace]
-=== ovn-trace
-
-Moving down a layer, `ovn-trace` is used to simulate packet forwarding within an OVN logical network. This allows you to view and subsequently debug where and why decision were made that resulted in the successful or unsuccessful delivery of your packet.
-
-[#ovnnb]
-=== ovn-nbctl
-
-The `ovn-nbctl` command allows you to interact with the running OVN Northbound Database. In this lab, we will use it to view and inspect logical routrs and switchs, ACLs and other configurations that make up the SDN configuration.
-
 [#thesetup]
 == Lab Setup
 
