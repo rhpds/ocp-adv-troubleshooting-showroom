@@ -5,6 +5,9 @@
 *** xref:module-01.adoc#yqjqintro[yq and jq - Process and parse yaml and json]
 *** xref:module-01.adoc#etcddiagintro[etcd-ocp-diag - Find etcd issue in your must-gather]
 *** xref:module-01.adoc#ocpinsightsintro[ocp_insights - Parse and view your Insights data from the Insights Operator]
+*** xref:module-01.adoc#ovnkube[ovnkube-trace]
+*** xref:module-01.adoc#ovntrace[ovn-trace]
+*** xref:module-01.adoc#ovnnb[ovn-nbctl]
 
 * xref:module-02.adoc[2. Intro to omc]
 ** xref:module-02.adoc#gettingstarted[Getting Started]
