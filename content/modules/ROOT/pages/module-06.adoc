@@ -26,63 +26,97 @@ All commands and outputs yield the same results as if this OVN-Kubernetes dump w
 
 What does our example application look like?
 
-For this lab, we will trace traffic flows between 2 frontend pods, 2 backend pods and 1 virtual machine with each set residing in their own namespace.
+For this lab, we will trace traffic flows between *2 frontend pods*, *2 backend pods* and *1 virtual machine* across 3 different namespaces and an external source.
 
-[.wrap,bash]
+[source,bash]
 ----
-NAMESPACE  NAME                              READY   STATUS     RESTARTS  AGE   IP             NODE                                    NOM NODE   READINESS
-
-backend    sitea-backend-796cf44b87-wx565    1/1     Running    0         27h   10.129.6.11    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
-
-backend    siteb-backend-5b765679b5-6wkvx    1/1     Running    0         27h   10.129.6.16    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
-
-external   virt-launcher-external-vm-tfbr4   1/1     Running    0         13m   10.129.7.5     worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     1/1
-
-frontend   sitea-frontend-8798d9cdc-sq7dk    1/1     Running    0         27h   10.129.6.17    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
-
-frontend   siteb-frontend-66f9f55ddc-97jkg   1/1     Running    0         27h   10.129.6.15    worker-5.ocpv.tamlab.rdu2.redhat.com    <none>     <none>
+NAME                              READY   STATUS    RESTARTS   AGE   IP            NODE                                   NOMINATED NODE   READINESS GATES
+sitea-frontend-8798d9cdc-77jj7    1/1     Running   0          14d   10.129.6.15   worker-5.ocpv.tamlab.rdu2.redhat.com   <none>           <none>
+siteb-frontend-66f9f55ddc-9qcwr   1/1     Running   0          14d   10.129.6.17   worker-5.ocpv.tamlab.rdu2.redhat.com   <none>           <none>
+sitea-backend-796cf44b87-l7mhb    1/1     Running   0          14d   10.129.6.13   worker-5.ocpv.tamlab.rdu2.redhat.com   <none>           <none>
+siteb-backend-5b765679b5-l4gp6    1/1     Running   0          14d   10.129.6.14   worker-5.ocpv.tamlab.rdu2.redhat.com   <none>           <none>
+virt-launcher-external-vm-x7gnx   1/1     Running   0          59m   10.129.6.209  worker-5.ocpv.tamlab.rdu2.redhat.com   <none>           1/1
 ----
 
 Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network *default/vlan530*.
 
-[.wrap,bash]
+[.wrap,console,role=execute]
 ----
-oc get pods sitea-frontend-8798d9cdc-sq7dk -o yaml | grep 'k8s.ovn.org/pod-networks'
-    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.17/23"],"mac_address":"0a:58:0a:81:06:11","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.17/23","gateway_ip":"10.129.6.1","role":"primary"}}'
-
-oc get pods siteb-frontend-66f9f55ddc-97jkg -o yaml | grep 'k8s.ovn.org/pod-networks'
-    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.15/23"],"mac_address":"0a:58:0a:81:06:0f","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.15/23","gateway_ip":"10.129.6.1","role":"primary"}}'
-
-oc get pods siteb-backend-5b765679b5-6wkvx -o yaml | grep 'k8s.ovn.org/pod-networks'
-    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.16/23"],"mac_address":"0a:58:0a:81:06:10","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.16/23","gateway_ip":"10.129.6.1","role":"primary"}}'
-
-oc get pods sitea-backend-796cf44b87-wx565 -o yaml | grep 'k8s.ovn.org/pod-networks'
-    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.6.11/23"],"mac_address":"0a:58:0a:81:06:0b","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.11/23","gateway_ip":"10.129.6.1","role":"primary"}}'
-
-oc get pods virt-launcher-external-vm-tfbr4 -o yaml | grep 'k8s.ovn.org/pod-networks'
-    k8s.ovn.org/pod-networks: '{"default":{"ip_addresses":["10.129.7.5/23"],"mac_address":"0a:58:0a:81:07:05","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.7.5/23","gateway_ip":"10.129.6.1","role":"primary"},"default/vlan530":{"ip_addresses":null,"mac_address":"02:a1:3b:00:00:15","role":"secondary"}}'
+oc get pods -n frontend sitea-frontend-8798d9cdc-77jj7 -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
 ----
+
+[.wrap,json]
+----
+{"default":{"ip_addresses":["10.129.6.15/23"],"mac_address":"0a:58:0a:81:06:0f","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.15/23","gateway_ip":"10.129.6.1","role":"primary"}}
+----
+
+[.wrap,console,role=execute]
+----
+oc get pods -n frontend siteb-frontend-66f9f55ddc-9qcwr -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
+----
+
+[.wrap,json]
+----
+{"default":{"ip_addresses":["10.129.6.17/23"],"mac_address":"0a:58:0a:81:06:11","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.17/23","gateway_ip":"10.129.6.1","role":"primary"}}
+----
+
+[.wrap,console,role=execute]
+----
+oc get pods -n backend sitea-backend-796cf44b87-l7mhb -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
+----
+
+[.wrap,json]
+----
+{"default":{"ip_addresses":["10.129.6.13/23"],"mac_address":"0a:58:0a:81:06:0d","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.13/23","gateway_ip":"10.129.6.1","role":"primary"}}
+----
+
+[.wrap,console,role=execute]
+----
+oc get pods -n backend siteb-backend-5b765679b5-l4gp6 -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
+----
+
+[.wrap,json]
+----
+{"default":{"ip_addresses":["10.129.6.14/23"],"mac_address":"0a:58:0a:81:06:0e","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.14/23","gateway_ip":"10.129.6.1","role":"primary"}}
+----
+
+[.wrap,console,role=execute]
+----
+oc get pods -n external virt-launcher-external-vm-x7gnx -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
+----
+
+[.wrap,json]
+----
+{"default":{"ip_addresses":["10.129.6.209/23"],"mac_address":"0a:58:0a:81:06:d1","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.209/23","gateway_ip":"10.129.6.1","role":"primary"},"default/vlan530":{"ip_addresses":null,"mac_address":"02:a1:3b:00:00:15","role":"secondary"}}
+----
+
 
 You can also pull the networking information of the VM directly off the Virtual Machine Instance (vmi) object.
 
-[.wrap,console]
+[.wrap,console,role=execute]
 ----
-oc get vmi -o wide
+oc get vmi -n external -o wide
+----
+
+[source,bash]
+----
 NAME          AGE   PHASE     IP             NODENAME                               READY   LIVE-MIGRATABLE   PAUSED
-
-external-vm   21m   Running   10.6.153.247   worker-5.ocpv.tamlab.rdu2.redhat.com   True    True
+external-vm   72m   Running   10.6.153.247   worker-5.ocpv.tamlab.rdu2.redhat.com   True    True
 ----
 
-[.wrap,yaml]
+[.wrap,console,role=execute]
 ----
-oc get vmi external-vm -o yaml | yq .status.interfaces
+oc get vmi -n external external-vm -o yaml | yq '.status.interfaces'
+----
+
+[source,yaml]
+----
 - infoSource: domain, guest-agent, multus-status
   interfaceName: eth0
   ipAddress: 10.6.153.247
   ipAddresses:
     - 10.6.153.247
     - 2620:52:9:1699:a1:3bff:fe00:15
-    - fe80::a1:3bff:fe00:15
   linkState: up
   mac: 02:a1:3b:00:00:15
   name: default
