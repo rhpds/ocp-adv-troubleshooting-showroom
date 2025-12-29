@@ -370,9 +370,9 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user='system:serviceacco
 
 What we see is:
 
-. The majority of activity is from *PATCH* and *LIST *commands across dozens of different namespaces
+. The majority of activity is from *PATCH* and *LIST* commands across dozens of different namespaces
 
-Based on this information, we could make a few informed deductions. 
+Based on this information, we could make a few informed deductions.
 
 1. Even though the API pool members are marked as down in the F5, millions of requests are still making it API server.
 2. We see 13% of our API traffic coming from *crunchy* / *postgress* related pods.
@@ -380,7 +380,7 @@ Based on this information, we could make a few informed deductions.
 
 The conclusion was that *Crunchy Postgres Operator* was under significant stress due to the API flapping. This lead to an unexpected influx of traffic trying to *GET*, *LIST* and *UPDATE* its owned resources.
 
-With this information, we were able to have an informated discussion with the customer and they were able to take to data to the 3rd party vendor and get the issue addressed to avoid such an API storm in the future.
+With this information, we were able to have an informated discussion with the customer and they were able to take the data to the 3rd party vendor and get the issue addressed to avoid such an API storm in the future.
 
 *How did we recover the cluster?*
 
