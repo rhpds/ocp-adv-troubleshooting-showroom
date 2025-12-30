@@ -8,6 +8,56 @@ Let us switch gears and take a look at an Openshift Virtualization use case wher
 
 The VirtualMachine can only access certain websites and external resources.
 
+For reference, we have one *NodeNetworkConfigurationPolicy* called *br-ex-localnet* on *br-ex*:
+
+[.wrap,console,role=execute]
+----
+oc get nncp br-ex-localnet -o yaml
+----
+
+[source,yaml]
+----
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  annotations:
+  name: br-ex-localnet
+spec:
+  desiredState:
+    ovn:
+      bridge-mappings:
+      - bridge: br-ex
+        localnet: br-ex-localnet
+        state: present
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+----
+
+And our VM is using a *NetworkAttachmentDefinition* called *vlan530* that specifies a *physicalNetworkName* of *br-ex-localnet*, matching the *NodeNetworkConfigurationPolicy* *spec.desiredState.ovn.bridge-mappings.localnet* field, to attach directly to the hosts physical network interface and tagged onto *vlanId* *530*. 
+
+[.wrap,console,role=execute]
+----
+oc get network-attachment-definitions -n default vlan530 -o yaml
+----
+
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vlan530
+  namespace: default
+spec:
+  config: '{
+    "name":"vlan530",
+    "type":"ovn-k8s-cni-overlay",
+    "cniVersion":"0.4.0",
+    "physicalNetworkName":"br-ex-localnet",
+    "vlanId": 530,
+    "topology":"localnet",
+    "netAttachDefName":"default/vlan530"
+    }'
+----
+
 [#debugexternalaccess]
 == Debug the Traffic Flow
 
@@ -21,9 +71,12 @@ If you think that functionality would be valuable, add your input or customer to
 [#runtrace]
 === Running the Trace
 
-From your execution environment, run the following *ovn-trace*.
+Let's craft a trace from scratch by filling in the following pieces:
 
-. *default.vlan530_external_virt-launcher-external-vm-tfbr4* -> is the OVN datapath which is a logical router or switch associated to the workload
+. *datapath* -> is the logical router or switch associated to the workload from the northbound table
+
+microflow:
+
 . *inport* -> is the OVN port for instance we are tracing from
 . *eth.src* -> source pod mac address
 . *eth.dst* -> destination router to switch (rtos) port mac address
@@ -32,9 +85,119 @@ From your execution environment, run the following *ovn-trace*.
 . *tcp.dst* -> destination port
 . *tcp.src* -> source port
 
+
+First, find the datapath by looking at the *logical switch* list:
 [.wrap,console,role=execute]
 ----
-ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-tfbr4" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.3 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
+ovn-nbctl ls-list
+----
+
+[source,console]
+----
+cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
+1524ecbe-0704-4e9f-b97d-9a09e984ef02 (cluster_udn_drenard.udn.tamlab_ovn_layer2_switch)
+4168b09e-0580-4d54-9ef2-3c5dc361a0bf (ext_worker-5.ocpv.tamlab.rdu2.redhat.com)
+26008754-5629-419b-87cb-bf9fbbf9ff7f (join)
+57b99e34-e732-4ce1-8244-eb507ee02ffe (ovs.bridge.vlan530_ovn_localnet_switch)
+8763ad07-147d-4f38-b87f-41b5c152a7bb (transit_switch)
+16ccd735-09f4-41c1-a546-2df09f22c2f7 (vlan.636.localnet_ovn_localnet_switch)
+217a444d-ef97-4d51-89d8-581d673e3cf0 (worker-5.ocpv.tamlab.rdu2.redhat.com)
+----
+
+Based on our *NNCP* and *NAD* configuration, we know *br.ex.localnet_ovn_localnet_switch* (or it's associated UUID) is the correct logical switch.
+
+Now that we know the logical switch, we can find the *switch port*, which will be the *inport*, for our virtual machine using *lsp-list* and the *name* or *UUID* of the *logical switch*:
+
+[.wrap,console,role=execute]
+----
+ovn-nbctl lsp-list  br.ex.localnet_ovn_localnet_switch
+----
+
+[source,console]
+----
+ef35b56d-78c1-4464-b53c-4c33c82cfca1 (br.ex.localnet_ovn_localnet_port)
+a213268a-3bc1-4988-80d8-7bc18f84818d (default.vlan530_external_virt-launcher-external-vm-x7gnx)
+156a0c30-938b-4295-a736-0baaa3f73d94 (default.vlan530_faatam_virt-launcher-faatam-idm1-ghrg2)
+----
+
+The last piece we need to find is the next hop address. This is the router to switch (rtos) mac address of the first hop router aka the *ovn_cluster_router*.
+
+Take a look at the logical router list:
+
+[.wrap,console,role=execute]
+----
+ovn-nbctl lr-list
+----
+
+You can see the *ovn_cluster_router*:
+
+[source,console]
+----
+9316827c-90ed-4943-bb63-1480ffbcffac (GR_worker-5.ocpv.tamlab.rdu2.redhat.com)
+07fef835-dcce-4db0-93df-5515f3dd0f49 (ovn_cluster_router)
+----
+
+You can then look at the *logical router port (lrp)* on the *ovn_cluster_router*:
+
+The 3 ports are:
+
+. *rtoj* -> router to join switch
+. *rtos* -> router to switch
+. *rtots* -> router to transit switch
+
+[.wrap,console,role=execute]
+----
+ovn-nbctl lrp-list ovn_cluster_router
+----
+
+[source,console]
+----
+9fdc9980-70d3-4806-905f-8922f2a0e0f3 (rtoj-ovn_cluster_router)
+a2954f31-f76d-4f34-af22-30cab14242ec (rtos-worker-5.ocpv.tamlab.rdu2.redhat.com)
+be24a098-250d-4a06-986d-84d623f99b2e (rtots-worker-5.ocpv.tamlab.rdu2.redhat.com)
+----
+
+To get more information on the ports, you can use the *show* command:
+
+[.wrap,console,role=execute]
+----
+ovn-nbctl show ovn_cluster_router
+----
+
+[source,console]
+----
+router 07fef835-dcce-4db0-93df-5515f3dd0f49 (ovn_cluster_router)
+    port rtoj-ovn_cluster_router
+        mac: "0a:58:64:40:00:01"
+        ipv6-lla: "fe80::858:64ff:fe40:1"
+        networks: ["100.64.0.1/16"]
+    port rtos-worker-5.ocpv.tamlab.rdu2.redhat.com
+        mac: "0a:58:0a:81:06:01"
+        ipv6-lla: "fe80::858:aff:fe81:601"
+        networks: ["10.129.6.1/23"]
+        gateway chassis: [78b54583-38a6-4270-b6c2-ba43e86c8e85]
+    port rtots-worker-5.ocpv.tamlab.rdu2.redhat.com
+        mac: "0a:58:64:58:00:0f"
+        ipv6-lla: "fe80::858:64ff:fe58:f"
+        networks: ["100.88.0.15/16"]
+----
+
+That gives us the MAC address *0a:58:0a:81:06:01* for our *eth.dst*.
+
+We can then fill in the remainder of the fields from the *VMI*, the destination IP address and some default values for TTL and ports:
+
+. *eth.src==02:a1:3b:00:00:15*
+. *ip4.src==10.6.153.247*
+. *ip4.dst==140.82.113.2*
+. *ip.ttl==64*
+. *tcp.dst==80*
+. *tcp.src==60000*
+
+Putting all of that togehter, you can run the following *ovn-trace* from your execution environment:
+
+[.wrap,console,role=execute]
+----
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
 ----
 
 When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired exteral resource.
