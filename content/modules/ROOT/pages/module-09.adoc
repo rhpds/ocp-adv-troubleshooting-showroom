@@ -8,7 +8,7 @@ Let us switch gears and take a look at an OpenShift Virtualization use case wher
 
 The VirtualMachine can only access certain websites and external resources.
 
-For reference, we have one *NodeNetworkConfigurationPolicy* called *br-ex-localnet* on *br-ex*:
+For reference, we have one *NodeNetworkConfigurationPolicy* called *br-ex-localnet* on the *br-ex* bridge interface:
 
 [.wrap,console,role=execute]
 ----
@@ -32,7 +32,7 @@ spec:
     node-role.kubernetes.io/worker: ""
 ----
 
-And our VM is using a *NetworkAttachmentDefinition* called *vlan530* that specifies a *physicalNetworkName* of *br-ex-localnet*, matching the *NodeNetworkConfigurationPolicy* *spec.desiredState.ovn.bridge-mappings.localnet* field, to attach directly to the hosts physical network interface and tagged onto *vlanId* *530*. 
+Our VM is using a *NetworkAttachmentDefinition* called *vlan530* that specifies a *physicalNetworkName* of *br-ex-localnet*, matching the *NodeNetworkConfigurationPolicy* *spec.desiredState.ovn.bridge-mappings.localnet* field, to attach directly to the hosts physical network interface and tagged onto *vlanId* *530*. 
 
 [.wrap,console,role=execute]
 ----
@@ -85,8 +85,8 @@ microflow:
 . *tcp.dst* -> destination port
 . *tcp.src* -> source port
 
-
 First, find the datapath by looking at the *logical switch* list:
+
 [.wrap,console,role=execute]
 ----
 ovn-nbctl ls-list
@@ -106,11 +106,11 @@ cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 
 Based on our *NNCP* and *NAD* configuration, we know *br.ex.localnet_ovn_localnet_switch* (or it's associated UUID) is the correct logical switch.
 
-Now that we know the logical switch, we can find the *switch port*, which will be the *inport*, for our virtual machine using *lsp-list* and the *name* or *UUID* of the *logical switch*:
+Now that we know the logical switch, we can find the *switch port*, which will act as the *inport* for our microflow. Locate the *logical switch port* (by name or UUID) of our virtual machine using *lsp-list* on the *br.ex.localnet_ovn_localnet_switch* logical switch:
 
 [.wrap,console,role=execute]
 ----
-ovn-nbctl lsp-list  br.ex.localnet_ovn_localnet_switch
+ovn-nbctl lsp-list br.ex.localnet_ovn_localnet_switch
 ----
 
 [source,console]
@@ -120,71 +120,7 @@ a213268a-3bc1-4988-80d8-7bc18f84818d (default.vlan530_external_virt-launcher-ext
 156a0c30-938b-4295-a736-0baaa3f73d94 (default.vlan530_faatam_virt-launcher-faatam-idm1-ghrg2)
 ----
 
-The last piece we need to find is the next hop address. This is the router to switch (rtos) mac address of the first hop router aka the *ovn_cluster_router*.
-
-Take a look at the logical router list:
-
-[.wrap,console,role=execute]
-----
-ovn-nbctl lr-list
-----
-
-You can see the *ovn_cluster_router*:
-
-[source,console]
-----
-9316827c-90ed-4943-bb63-1480ffbcffac (GR_worker-5.ocpv.tamlab.rdu2.redhat.com)
-07fef835-dcce-4db0-93df-5515f3dd0f49 (ovn_cluster_router)
-----
-
-You can then look at the *logical router port (lrp)* on the *ovn_cluster_router*:
-
-The 3 ports are:
-
-. *rtoj* -> router to join switch
-. *rtos* -> router to switch
-. *rtots* -> router to transit switch
-
-[.wrap,console,role=execute]
-----
-ovn-nbctl lrp-list ovn_cluster_router
-----
-
-[source,console]
-----
-9fdc9980-70d3-4806-905f-8922f2a0e0f3 (rtoj-ovn_cluster_router)
-a2954f31-f76d-4f34-af22-30cab14242ec (rtos-worker-5.ocpv.tamlab.rdu2.redhat.com)
-be24a098-250d-4a06-986d-84d623f99b2e (rtots-worker-5.ocpv.tamlab.rdu2.redhat.com)
-----
-
-To get more information on the ports, you can use the *show* command:
-
-[.wrap,console,role=execute]
-----
-ovn-nbctl show ovn_cluster_router
-----
-
-[source,console]
-----
-router 07fef835-dcce-4db0-93df-5515f3dd0f49 (ovn_cluster_router)
-    port rtoj-ovn_cluster_router
-        mac: "0a:58:64:40:00:01"
-        ipv6-lla: "fe80::858:64ff:fe40:1"
-        networks: ["100.64.0.1/16"]
-    port rtos-worker-5.ocpv.tamlab.rdu2.redhat.com
-        mac: "0a:58:0a:81:06:01"
-        ipv6-lla: "fe80::858:aff:fe81:601"
-        networks: ["10.129.6.1/23"]
-        gateway chassis: [78b54583-38a6-4270-b6c2-ba43e86c8e85]
-    port rtots-worker-5.ocpv.tamlab.rdu2.redhat.com
-        mac: "0a:58:64:58:00:0f"
-        ipv6-lla: "fe80::858:64ff:fe58:f"
-        networks: ["100.88.0.15/16"]
-----
-
-That gives us the MAC address *0a:58:0a:81:06:01* for our *eth.dst*.
-
-We can then fill in the remainder of the fields from the *VMI*, the destination IP address and some default values for TTL and ports:
+We can then fill in the remainder of the fields from the *VMI*, the destination IP address we are targeting and some default values for TTL and our source and destination ports:
 
 . *eth.src==02:a1:3b:00:00:15*
 . *ip4.src==10.6.153.247*
@@ -193,11 +129,13 @@ We can then fill in the remainder of the fields from the *VMI*, the destination 
 . *tcp.dst==80*
 . *tcp.src==60000*
 
+One difference from previous traces you will notice is that we do not set an *eth.dst* MAC address which we will discuss later in the trace analysis.
+
 Putting all of that together, you can run the following *ovn-trace* from your execution environment:
 
 [.wrap,console,role=execute]
 ----
-ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.112.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && ip4.src==10.6.153.247 && ip4.dst==140.82.112.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
 ----
 
 When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired external resource.
@@ -243,16 +181,114 @@ ct_next(ct_state=est|trk /* default (use --ct to customize) */)
     reg8[30..31] = 0;
 ----
 
-As with previous traces, we see an abrupt end with no clear indication of success or failure and we commit *ct_mark.blocked = 1* which means that the connection is no longer allowed by the policy and anything in reply will be dropped.
+If we look at the output, we can see *ls_in_acl_after_lb_eval* is evaluating *inport == @a10139399715150233253*.
 
+As with previous failures, we see an abrupt end with no clear indication of success or failure and we commit *ct_mark.blocked = 1* which means that the connection is no longer allowed by the policy and anything in reply will be dropped.
+
+[source,console]
+----
+18. ls_in_acl_after_lb_eval (northd.c:7175): reg8[30..31] == 2 && reg0[10] == 1 && (inport == @a10139399715150233253), priority 2000, uuid a20fd388
+    reg8[17] = 1;
+    ct_commit { ct_mark.blocked = 1; ct_label.obs_point_id = 0; };
+----
+
+We can also look at the *inport* *a10139399715150233253* as a *portgroup* just like we did with *outport* in previous traces.
 
 [.wrap,console,role=execute]
 ----
-ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
+ovn-nbctl find Port_Group name="a10139399715150233253"
 ----
 
 [source,console]
 ----
+_uuid               : 87422145-5e09-4d4c-be45-2690faa9482a
+acls                : [14b9c1ad-15fa-4049-96e6-84da7e674128, cce499ff-ddff-48a8-b74c-fdeb707fb685]
+external_ids        : {direction=Egress, "k8s.ovn.org/id"="br-ex-localnet-network-controller:NetpolNamespace:external:Egress", "k8s.ovn.org/name"=external, "k8s.ovn.org/owner-controller"=br-ex-localnet-network-controller, "k8s.ovn.org/owner-type"=NetpolNamespace}
+name                : a10139399715150233253
+ports               : [a213268a-3bc1-4988-80d8-7bc18f84818d]
+----
+
+From the output there are 2 pieces of important information:
+
+1. *acls* -> there are 2 *UUIDs* -> *[14b9c1ad-15fa-4049-96e6-84da7e674128, cce499ff-ddff-48a8-b74c-fdeb707fb685]*
+2. *ports* -> there is 1 *UUID* -> *[a213268a-3bc1-4988-80d8-7bc18f84818d]*
+
+You can see that the *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the portgroup is influencing our VM.
+
+Taking a look at the 2 *access control list (ACL)* objects, we can see:
+
+[source,console,role=execute]
+----
+ovn-nbctl list ACL 14b9c1ad-15fa-4049-96e6-84da7e674128
+----
+
+[source,console]
+----
+_uuid               : 14b9c1ad-15fa-4049-96e6-84da7e674128
+action              : allow
+direction           : from-lport
+external_ids        : {direction=Egress, "k8s.ovn.org/id"="br-ex-localnet-network-controller:NetpolNamespace:external:Egress:arpAllow", "k8s.ovn.org/name"=external, "k8s.ovn.org/owner-controller"=br-ex-localnet-network-controller, "k8s.ovn.org/owner-type"=NetpolNamespace, type=arpAllow}
+label               : 0
+log                 : false
+match               : "inport == @a10139399715150233253 && (arp || nd)"
+meter               : acl-logging
+name                : "NP:external:Egress"
+options             : {apply-after-lb="true"}
+priority            : 1001
+sample_est          : []
+sample_new          : []
+severity            : []
+tier                : 2
+----
+
+You can ignore the first ACL as it is matching on *arp || nd* and we are sending *tcp* requests.
+
+[source,console,role=execute]
+----
+ovn-nbctl list ACL cce499ff-ddff-48a8-b74c-fdeb707fb685
+----
+
+[source,console]
+----
+_uuid               : cce499ff-ddff-48a8-b74c-fdeb707fb685
+action              : drop
+direction           : from-lport
+external_ids        : {direction=Egress, "k8s.ovn.org/id"="br-ex-localnet-network-controller:NetpolNamespace:external:Egress:defaultDeny", "k8s.ovn.org/name"=external, "k8s.ovn.org/owner-controller"=br-ex-localnet-network-controller, "k8s.ovn.org/owner-type"=NetpolNamespace, type=defaultDeny}
+label               : 0
+log                 : false
+match               : "inport == @a10139399715150233253"
+meter               : acl-logging
+name                : "NP:external:Egress"
+options             : {apply-after-lb="true"}
+priority            : 1000
+sample_est          : []
+sample_new          : []
+severity            : []
+tier                : 2
+----
+
+Looking at the output from the second, we can see a few key points:
+
+1. *action* -> *drop*
+2. *direction* -> *to-lport*
+3. *external_ids* -> *external:Egress:defaultDeny*
+4. *match* -> *inport == @a10139399715150233253*
+
+This tells us that any traffic that is forwarded to a logical port that matches *inport == @a10139399715150233253* will be dropped due to a *defaultDeny* policy in the *external* namespace.
+
+Looking back at our setup, we know that our cluster adds a *deny-by-default* *MultiNetworkPolicy* to every new *Namespace* and that aligns to the policy above that is impacting our external communication.
+
+Now let's run a trace that is successful. 
+
+[.wrap,console,role=execute]
+----
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
+----
+
+[source,console]
+----
+# tcp,reg14=0x5,vlan_tci=0x0000,dl_src=02:a1:3b:00:00:15,dl_dst=00:00:00:00:00:00,nw_src=10.6.153.247,nw_dst=140.82.113.2,nw_tos=0,nw_ecn=0,nw_ttl=64,nw_frag=no,tp_src=60000,tp_dst=80,tcp_flags=0
+
 ingress(dp="br.ex.localnet_ovn_localnet_switch", inport="default.vlan530_external_virt-launcher-external-vm-x7gnx")
 -------------------------------------------------------------------------------------------------------------------
  0. ls_in_check_port_sec (northd.c:9437): 1, priority 50, uuid fc8d6873
@@ -341,7 +377,7 @@ If we look at the output, we can see *ls_in_acl_after_lb_eval* is evaluating *ip
 
 We can see that the *ip4.dst* subnet range *140.82.113.0/24* includes our destination *140.82.113.2*.
 
-We can also look at the *inport* *a6086215553377573259* as a *portgroup* just like we did with *outport* 
+We can also look at the *inport* *a6086215553377573259* as a *portgroup*:
 
 [.wrap,console,role=execute]
 ----
