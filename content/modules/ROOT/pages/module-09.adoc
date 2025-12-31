@@ -79,7 +79,7 @@ microflow:
 
 . *inport* -> is the OVN port for instance we are tracing from
 . *eth.src* -> source pod mac address
-. *eth.dst* -> destination router to switch (rtos) port mac address
+. *eth.dst* -> destination mac address
 . *ip4.src* -> source pod IP address
 . *ip4.dst* -> external destination address
 . *tcp.dst* -> destination port
@@ -129,7 +129,7 @@ We can then fill in the remainder of the fields from the *VMI*, the destination 
 . *tcp.dst==80*
 . *tcp.src==60000*
 
-One difference from previous traces you will notice is that we do not set an *eth.dst* MAC address which we will discuss later in the trace analysis.
+A difference from previous traces is that we do not set an *eth.dst* MAC address which we will discuss later in the trace analysis.
 
 Putting all of that together, you can run the following *ovn-trace* from your execution environment:
 
@@ -276,9 +276,11 @@ Looking at the output from the second, we can see a few key points:
 
 This tells us that any traffic that is forwarded to a logical port that matches *inport == @a10139399715150233253* will be dropped due to a *defaultDeny* policy in the *external* namespace.
 
-Looking back at our setup, we know that our cluster adds a *deny-by-default* *MultiNetworkPolicy* to every new *Namespace* and that aligns to the policy above that is impacting our external communication.
+Looking back at our xref:module-06.adoc#thenetpols[Lab Setup Network Policies], we know that the cluster has a *deny-by-default* *MultiNetworkPolicy* in every *Namespace*. That aligns to the policy above that is impacting our external communication.
 
-Now let's run a trace that is successful. 
+Now let's run a trace that is successful.
+
+We change our destination address to something that has been working: *ip4.dst==140.82.113.2*
 
 [.wrap,console,role=execute]
 ----
@@ -368,16 +370,57 @@ multicast(dp="br.ex.localnet_ovn_localnet_switch", mcgroup="_MC_unknown")
 
 We can see that the request is successful outputting to *output to "br.ex.localnet_ovn_localnet_port", type "localnet"*.
 
-If we look at the output, we can see *ls_in_acl_after_lb_eval* is evaluating *ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259*
+Unique to this output is the *multicast* broadcast:
+
+[source,console]
+----
+28. ls_in_l2_lkup (northd.c:5883): 1, priority 0, uuid 222432ad
+    outport = get_fdb(eth.dst);
+    next;
+29. ls_in_l2_unknown (northd.c:9374): outport == "none", priority 50, uuid 64d6fbdf
+    outport = "_MC_unknown";
+    output;
+
+multicast(dp="br.ex.localnet_ovn_localnet_switch", mcgroup="_MC_unknown")
+----
+
+Earlier in the lab I mentioned we were not setting a *eth.dst*. This is because the destination mac of the external resource will be unknown inside the SDN, so even if we set it, it will still be treated as unknown.
+
+You can see this when it tries to do a layer 2 lookup *get_fdb(eth.dst)* to find the outport, but gets nothing in back.
+
+This means we flood the request to the logical switch ports that have addresses set to "unknown" aka the *_MC_unknown* "multicast" group.
+
+This can seen by executing a *show* on the logical switch our VM is attached to *(br.ex.localnet_ovn_localnet_switch)*:
+
+[.wrap,console,role=execute]
+----
+ovn-nbctl show br.ex.localnet_ovn_localnet_switch
+----
+
+In it, you can see *br.ex.localnet_ovn_localnet_port* has *addresses* set to *unknown* and that is ultimately where the request went:
+
+[source,console]
+----
+switch cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
+    port default.vlan530_faatam_virt-launcher-faatam-idm1-ghrg2
+        addresses: ["02:a1:3b:00:00:2f"]
+    port default.vlan530_external_virt-launcher-external-vm-x7gnx
+        addresses: ["02:a1:3b:00:00:15"]
+    port br.ex.localnet_ovn_localnet_port
+        type: localnet
+        addresses: ["unknown"]
+----
+
+Moving on, we can see *ls_in_acl_after_lb_eval* is evaluating *ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259*
 
 [source,console]
 ----
 18. ls_in_acl_after_lb_eval (northd.c:7127): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259), priority 2001, uuid 22969843
 ----
 
-We can see that the *ip4.dst* subnet range *140.82.113.0/24* includes our destination *140.82.113.2*.
+We can see that the *ip4.dst* subnet range *140.82.113.0/24* includes our target destination address of *140.82.113.2*.
 
-We can also look at the *inport* *a6086215553377573259* as a *portgroup*:
+Looking at the *inport* *a6086215553377573259* as a *portgroup*:
 
 [.wrap,console,role=execute]
 ----
@@ -393,21 +436,21 @@ name                : a6086215553377573259
 ports               : [a213268a-3bc1-4988-80d8-7bc18f84818d]
 ----
 
-From the output there are 2 pieces of important information:
+We can see 2 pieces of important information:
 
 1. *acls* -> there are 2 *UUIDs* -> *[a2a890ed-68b4-46f2-9d72-a6f8bc82e242, e408d3fb-9869-435a-ab9a-e56186f2cc02]*
 2. *ports* -> there is 1 *UUID* -> *[a213268a-3bc1-4988-80d8-7bc18f84818d]*
 
-You can see that the *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the portgroup is influencing our VM.
+The *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the portgroup is influencing our VM.
 
-Taking a look at the 2 *access control list (ACL)* objects, we can see:
+Looking at the 2 *access control list (ACL)* objects, we can see:
 
 [source,console,role=execute]
 ----
 ovn-nbctl list ACL a2a890ed-68b4-46f2-9d72-a6f8bc82e242
 ----
 
-A *match* rule *ip4.dst == 140.82.113.0/24* to allow traffic, stemming from a *NetworkPolicy* called *egressallow-gh* in the *external* namespace.
+A *match* rule *ip4.dst == 140.82.113.0/24* that allows traffic to that range stemming from a *NetworkPolicy* called *egressallow-gh* in the *external* namespace.
 
 [source,console]
 ----
@@ -433,7 +476,7 @@ tier                : 2
 ovn-nbctl list ACL e408d3fb-9869-435a-ab9a-e56186f2cc02
 ----
 
-The second ACL has a *match* rule *ip4.dst == 8.8.8.8/32* to allow traffic, stemming from the same *NetworkPolicy* called *egressallow-gh* in the *external* namespace.
+The second ACL has a *match* rule *ip4.dst == 8.8.8.8/32* that allows traffic to that range stemming from the same *NetworkPolicy* called *egressallow-gh* in the *external* namespace.
 
 [source,console]
 ----
@@ -458,26 +501,4 @@ Looking back at the xref:module-06.adoc#thenetpols[Lab Setup Network Policies], 
 
 We also see that the *MultiNetworkPolicy* only applies to *default/vlan530* and pods with the *internet: "true"* label.
 
-[source,console]
-----
-apiVersion: k8s.cni.cncf.io/v1beta1
-kind: MultiNetworkPolicy
-metadata:
-  annotations:
-    k8s.v1.cni.cncf.io/policy-for: default/vlan530
-  name: egressallow-gh
-spec:
-    egress:
-    - to:
-      - ipBlock:
-          cidr: 140.82.113.0/24
-      - ipBlock:
-          cidr: 8.8.8.8/32
-    podSelector:
-      matchLabels:
-        internet: "true"
-    policyTypes:
-    - Egress
-----
-
-
+Based on that information, we know that our policy in blocking all external traffic by default and only allowing access to *140.82.113.0/24* and *8.8.8.8/32*.
