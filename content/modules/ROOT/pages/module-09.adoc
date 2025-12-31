@@ -1,7 +1,7 @@
 = OVN-Kubernetes - My VirtualMachine can not access most external addresses
 #:prewrap!:
 
-Let us switch gears and take a look at an Openshift Virtualization use case where we have a Virtual Machine using a secondary network interface on a VLAN.
+Let us switch gears and take a look at an OpenShift Virtualization use case where we have a Virtual Machine using a secondary network interface on a VLAN.
 
 [#theissue]
 == Issues with VirtualMachine external access 
@@ -63,7 +63,7 @@ spec:
 
 [NOTE]
 =====
-In the previous modules we provided *ovnkube-trace* examples so you see how to easily run traces in a running OpenShift cluster. As of the wiriting of this lab, the *ovnkube-trace* wrapper does not support VMs or secondary interfaces.
+In the previous modules we provided *ovnkube-trace* examples so you see how to easily run traces in a running OpenShift cluster. As of the writing of this lab, the *ovnkube-trace* wrapper does not support VMs or secondary interfaces.
 
 If you think that functionality would be valuable, add your input or customer to the feature request: https://issues.redhat.com/browse/RFE-8186[Debugging ovnkube-trace improvements - add ability to trace VMs on secondary networks]
 =====
@@ -188,114 +188,260 @@ We can then fill in the remainder of the fields from the *VMI*, the destination 
 
 . *eth.src==02:a1:3b:00:00:15*
 . *ip4.src==10.6.153.247*
-. *ip4.dst==140.82.113.2*
+. *ip4.dst==140.82.112.2*
 . *ip.ttl==64*
 . *tcp.dst==80*
 . *tcp.src==60000*
 
-Putting all of that togehter, you can run the following *ovn-trace* from your execution environment:
+Putting all of that together, you can run the following *ovn-trace* from your execution environment:
+
+[.wrap,console,role=execute]
+----
+ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.112.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
+----
+
+When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired external resource.
+
+[source,console]
+----
+ingress(dp="br.ex.localnet_ovn_localnet_switch", inport="default.vlan530_external_virt-launcher-external-vm-x7gnx")
+-------------------------------------------------------------------------------------------------------------------
+ 0. ls_in_check_port_sec (northd.c:9437): 1, priority 50, uuid fc8d6873
+    reg0[15] = check_in_port_sec();
+    next;
+ 4. ls_in_pre_acl (northd.c:6092): ip, priority 100, uuid 6aeebe54
+    reg0[0] = 1;
+    next;
+ 6. ls_in_pre_stateful (northd.c:6342): reg0[0] == 1, priority 100, uuid 516d2bfd
+    ct_next(dnat);
+
+ct_next(ct_state=est|trk /* default (use --ct to customize) */)
+---------------------------------------------------------------
+ 7. ls_in_acl_hint (northd.c:6437): !ct.new && ct.est && !ct.rpl && ct_mark.blocked == 0, priority 4, uuid cdda5685
+    reg0[8] = 1;
+    reg0[10] = 1;
+    next;
+10. ls_in_acl_action (northd.c:7335): 1, priority 0, uuid 21f3b456
+    reg8[16] = 0;
+    reg8[17] = 0;
+    reg8[18] = 0;
+    next;
+20. ls_in_acl_after_lb_action (northd.c:7346): reg8[30..31] == 0, priority 500, uuid 2ad8154b
+    reg8[30..31] = 1;
+    next(18);
+20. ls_in_acl_after_lb_action (northd.c:7346): reg8[30..31] == 1, priority 500, uuid 2b82ad72
+    reg8[30..31] = 2;
+    next(18);
+18. ls_in_acl_after_lb_eval (northd.c:7175): reg8[30..31] == 2 && reg0[10] == 1 && (inport == @a10139399715150233253), priority 2000, uuid a20fd388
+    reg8[17] = 1;
+    ct_commit { ct_mark.blocked = 1; ct_label.obs_point_id = 0; };
+    next;
+20. ls_in_acl_after_lb_action (northd.c:7319): reg8[17] == 1, priority 1000, uuid e3c8afab
+    reg8[16] = 0;
+    reg8[17] = 0;
+    reg8[18] = 0;
+    reg8[30..31] = 0;
+----
+
+As with previous traces, we see an abrupt end with no clear indication of success or failure and we commit *ct_mark.blocked = 1* which means that the connection is no longer allowed by the policy and anything in reply will be dropped.
+
 
 [.wrap,console,role=execute]
 ----
 ovn-trace --no-leader-only  --db unix:/var/run/ovn/ovnsb_db.sock br.ex.localnet_ovn_localnet_switch 'inport=="default.vlan530_external_virt-launcher-external-vm-x7gnx" && eth.src==02:a1:3b:00:00:15 && eth.dst==0a:58:0a:81:06:01 && ip4.src==10.6.153.247 && ip4.dst==140.82.113.2 && ip.ttl==64 && tcp.dst==80 && tcp.src==60000'
 ----
 
-When the *ovn-trace* runs, you get a full accounting of how that packet would traverse the SDN and where it would exit to hit the desired exteral resource.
-
 [source,console]
 ----
-ingress(dp="br.ex.localnet_ovn_localnet_switch", inport="default.vlan530_external_virt-launcher-external-vm-tfbr4")
+ingress(dp="br.ex.localnet_ovn_localnet_switch", inport="default.vlan530_external_virt-launcher-external-vm-x7gnx")
 -------------------------------------------------------------------------------------------------------------------
- 0. ls_in_check_port_sec (northd.c:9399): 1, priority 50, uuid fc8d6873
+ 0. ls_in_check_port_sec (northd.c:9437): 1, priority 50, uuid fc8d6873
     reg0[15] = check_in_port_sec();
     next;
- 4. ls_in_pre_acl (northd.c:6054): ip, priority 100, uuid 6aeebe54
+ 4. ls_in_pre_acl (northd.c:6092): ip, priority 100, uuid 6aeebe54
     reg0[0] = 1;
     next;
- 6. ls_in_pre_stateful (northd.c:6304): reg0[0] == 1, priority 100, uuid 516d2bfd
+ 6. ls_in_pre_stateful (northd.c:6342): reg0[0] == 1, priority 100, uuid 516d2bfd
     ct_next(dnat);
 
-ct_next(ct_state=new|trk)
--------------------------
- 7. ls_in_acl_hint (northd.c:6363): ct.new && !ct.est, priority 7, uuid bd0a37b0
-    reg0[7] = 1;
-    reg0[9] = 1;
-    reg0[1] = 1;
+ct_next(ct_state=est|trk /* default (use --ct to customize) */)
+---------------------------------------------------------------
+ 7. ls_in_acl_hint (northd.c:6437): !ct.new && ct.est && !ct.rpl && ct_mark.blocked == 0, priority 4, uuid cdda5685
+    reg0[8] = 1;
+    reg0[10] = 1;
     next;
- 8. ls_in_acl_eval (northd.c:7480): ip && !ct.est, priority 1, uuid 59afb818
-    next;
-10. ls_in_acl_action (northd.c:7297): 1, priority 0, uuid 21f3b456
+10. ls_in_acl_action (northd.c:7335): 1, priority 0, uuid 21f3b456
     reg8[16] = 0;
     reg8[17] = 0;
     reg8[18] = 0;
     next;
-20. ls_in_acl_after_lb_action (northd.c:7308): reg8[30..31] == 0, priority 500, uuid 2ad8154b
+20. ls_in_acl_after_lb_action (northd.c:7346): reg8[30..31] == 0, priority 500, uuid 2ad8154b
     reg8[30..31] = 1;
     next(18);
-20. ls_in_acl_after_lb_action (northd.c:7308): reg8[30..31] == 1, priority 500, uuid 2b82ad72
+20. ls_in_acl_after_lb_action (northd.c:7346): reg8[30..31] == 1, priority 500, uuid 2b82ad72
     reg8[30..31] = 2;
     next(18);
-18. ls_in_acl_after_lb_eval (northd.c:7065): reg8[30..31] == 2 && reg0[7] == 1 && (ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259), priority 2001, uuid 1e1df3e7
+18. ls_in_acl_after_lb_eval (northd.c:7127): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259), priority 2001, uuid 22969843
     reg8[16] = 1;
     next;
-20. ls_in_acl_after_lb_action (northd.c:7276): reg8[16] == 1, priority 1000, uuid a00e31d8
+20. ls_in_acl_after_lb_action (northd.c:7314): reg8[16] == 1, priority 1000, uuid a00e31d8
     reg8[16] = 0;
     reg8[17] = 0;
     reg8[18] = 0;
     reg8[30..31] = 0;
     next;
-21. ls_in_stateful (northd.c:8292): reg0[1] == 1 && reg0[13] == 0, priority 100, uuid d386eaaf
-    ct_commit { ct_mark.blocked = 0; ct_mark.allow_established = reg0[20]; ct_label.acl_id = reg2[16..31]; };
-    next;
-28. ls_in_l2_lkup (northd.c:5845): 1, priority 0, uuid 222432ad
+28. ls_in_l2_lkup (northd.c:5883): 1, priority 0, uuid 222432ad
     outport = get_fdb(eth.dst);
     next;
-29. ls_in_l2_unknown (northd.c:9336): outport == "none", priority 50, uuid 64d6fbdf
+29. ls_in_l2_unknown (northd.c:9374): outport == "none", priority 50, uuid 64d6fbdf
     outport = "_MC_unknown";
     output;
 
 multicast(dp="br.ex.localnet_ovn_localnet_switch", mcgroup="_MC_unknown")
 -------------------------------------------------------------------------
 
-    egress(dp="br.ex.localnet_ovn_localnet_switch", inport="default.vlan530_external_virt-launcher-external-vm-tfbr4", outport="br.ex.localnet_ovn_localnet_port")
+    egress(dp="br.ex.localnet_ovn_localnet_switch", inport="default.vlan530_external_virt-launcher-external-vm-x7gnx", outport="br.ex.localnet_ovn_localnet_port")
     --------------------------------------------------------------------------------------------------------------------------------------------------------------
-         2. ls_out_pre_acl (northd.c:5906): ip && outport == "br.ex.localnet_ovn_localnet_port", priority 110, uuid b92df973
+         2. ls_out_pre_acl (northd.c:5944): ip && outport == "br.ex.localnet_ovn_localnet_port", priority 110, uuid bf10c02c
             next;
-         3. ls_out_pre_lb (northd.c:5906): ip && outport == "br.ex.localnet_ovn_localnet_port", priority 110, uuid 2c58ff66
+         3. ls_out_pre_lb (northd.c:5944): ip && outport == "br.ex.localnet_ovn_localnet_port", priority 110, uuid 9ee8a726
             next;
-         5. ls_out_acl_hint (northd.c:6363): ct.new && !ct.est, priority 7, uuid 90b5da92
-            reg0[7] = 1;
-            reg0[9] = 1;
-            reg0[1] = 1;
+         5. ls_out_acl_hint (northd.c:6437): !ct.new && ct.est && !ct.rpl && ct_mark.blocked == 0, priority 4, uuid cfae0de0
+            reg0[8] = 1;
+            reg0[10] = 1;
             next;
-         6. ls_out_acl_eval (northd.c:7482): ip && !ct.est, priority 1, uuid 5a76004e
-            next;
-         8. ls_out_acl_action (northd.c:7308): reg8[30..31] == 0, priority 500, uuid 9ba0e4eb
+         8. ls_out_acl_action (northd.c:7346): reg8[30..31] == 0, priority 500, uuid 9ba0e4eb
             reg8[30..31] = 1;
             next(6);
-         6. ls_out_acl_eval (northd.c:7482): ip && !ct.est, priority 1, uuid 5a76004e
-            next;
-         8. ls_out_acl_action (northd.c:7308): reg8[30..31] == 1, priority 500, uuid a72c3c38
+         8. ls_out_acl_action (northd.c:7346): reg8[30..31] == 1, priority 500, uuid a72c3c38
             reg8[30..31] = 2;
             next(6);
-         6. ls_out_acl_eval (northd.c:7482): ip && !ct.est, priority 1, uuid 5a76004e
-            next;
-         8. ls_out_acl_action (northd.c:7297): 1, priority 0, uuid 2e305a31
+         8. ls_out_acl_action (northd.c:7335): 1, priority 0, uuid 2e305a31
             reg8[16] = 0;
             reg8[17] = 0;
             reg8[18] = 0;
             reg8[30..31] = 0;
             next;
-        10. ls_out_stateful (northd.c:8297): reg0[1] == 1 && reg0[13] == 0, priority 100, uuid aa3d0cd1
-            ct_commit { ct_mark.blocked = 0; ct_mark.allow_established = reg0[20]; ct_label.acl_id = reg2[16..31]; };
-            next;
-        11. ls_out_check_port_sec (northd.c:5866): 1, priority 0, uuid a87e1d41
+        11. ls_out_check_port_sec (northd.c:5904): 1, priority 0, uuid a87e1d41
             reg0[15] = check_out_port_sec();
             next;
-        12. ls_out_apply_port_sec (northd.c:5874): 1, priority 0, uuid 7e9dcb6d
+        12. ls_out_apply_port_sec (northd.c:5912): 1, priority 0, uuid 7e9dcb6d
             output;
             /* output to "br.ex.localnet_ovn_localnet_port", type "localnet" */
 ----
 
+We can see that the request is successful outputting to *output to "br.ex.localnet_ovn_localnet_port", type "localnet"*.
+
+If we look at the output, we can see *ls_in_acl_after_lb_eval* is evaluating *ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259*
+
+[source,console]
+----
+18. ls_in_acl_after_lb_eval (northd.c:7127): reg8[30..31] == 2 && reg0[8] == 1 && (ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259), priority 2001, uuid 22969843
+----
+
+We can see that the *ip4.dst* subnet range *140.82.113.0/24* includes our destination *140.82.113.2*.
+
+We can also look at the *inport* *a6086215553377573259* as a *portgroup* just like we did with *outport* 
+
+[.wrap,console,role=execute]
+----
+ovn-nbctl find Port_Group name="a6086215553377573259"
+----
+
+[source,console]
+----
+_uuid               : 47add0e0-a59a-4aca-94b0-047bf42c6c10
+acls                : [a2a890ed-68b4-46f2-9d72-a6f8bc82e242, e408d3fb-9869-435a-ab9a-e56186f2cc02]
+external_ids        : {"k8s.ovn.org/id"="br-ex-localnet-network-controller:NetworkPolicy:external:egressallow-gh", "k8s.ovn.org/name"="external:egressallow-gh", "k8s.ovn.org/owner-controller"=br-ex-localnet-network-controller, "k8s.ovn.org/owner-type"=NetworkPolicy}
+name                : a6086215553377573259
+ports               : [a213268a-3bc1-4988-80d8-7bc18f84818d]
+----
+
+From the output there are 2 pieces of important information:
+
+1. *acls* -> there are 2 *UUIDs* -> *[a2a890ed-68b4-46f2-9d72-a6f8bc82e242, e408d3fb-9869-435a-ab9a-e56186f2cc02]*
+2. *ports* -> there is 1 *UUID* -> *[a213268a-3bc1-4988-80d8-7bc18f84818d]*
+
+You can see that the *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the portgroup is influencing our VM.
+
+Taking a look at the 2 *access control list (ACL)* objects, we can see:
+
+[source,console,role=execute]
+----
+ovn-nbctl list ACL a2a890ed-68b4-46f2-9d72-a6f8bc82e242
+----
+
+A *match* rule *ip4.dst == 140.82.113.0/24* to allow traffic, stemming from a *NetworkPolicy* called *egressallow-gh* in the *external* namespace.
+
+[source,console]
+----
+_uuid               : a2a890ed-68b4-46f2-9d72-a6f8bc82e242
+action              : allow-related
+direction           : from-lport
+external_ids        : {direction=Egress, gress-index="0", ip-block-index="0", "k8s.ovn.org/id"="br-ex-localnet-network-controller:NetworkPolicy:external:egressallow-gh:Egress:0:None:0", "k8s.ovn.org/name"="external:egressallow-gh", "k8s.ovn.org/owner-controller"=br-ex-localnet-network-controller, "k8s.ovn.org/owner-type"=NetworkPolicy, port-policy-protocol=None}
+label               : 0
+log                 : false
+match               : "ip4.dst == 140.82.113.0/24 && inport == @a6086215553377573259"
+meter               : acl-logging
+name                : "NP:external:egressallow-gh:Egress:0"
+options             : {apply-after-lb="true"}
+priority            : 1001
+sample_est          : []
+sample_new          : []
+severity            : []
+tier                : 2
+----
+
+[source,console,role=execute]
+----
+ovn-nbctl list ACL e408d3fb-9869-435a-ab9a-e56186f2cc02
+----
+
+The second ACL has a *match* rule *ip4.dst == 8.8.8.8/32* to allow traffic, stemming from the same *NetworkPolicy* called *egressallow-gh* in the *external* namespace.
+
+[source,console]
+----
+_uuid               : e408d3fb-9869-435a-ab9a-e56186f2cc02
+action              : allow-related
+direction           : from-lport
+external_ids        : {direction=Egress, gress-index="0", ip-block-index="1", "k8s.ovn.org/id"="br-ex-localnet-network-controller:NetworkPolicy:external:egressallow-gh:Egress:0:None:1", "k8s.ovn.org/name"="external:egressallow-gh", "k8s.ovn.org/owner-controller"=br-ex-localnet-network-controller, "k8s.ovn.org/owner-type"=NetworkPolicy, port-policy-protocol=None}
+label               : 0
+log                 : false
+match               : "ip4.dst == 8.8.8.8/32 && inport == @a6086215553377573259"
+meter               : acl-logging
+name                : "NP:external:egressallow-gh:Egress:0"
+options             : {apply-after-lb="true"}
+priority            : 1001
+sample_est          : []
+sample_new          : []
+severity            : []
+tier                : 2
+----
+
+Looking back at the xref:module-06.adoc#thenetpols[Lab Setup Network Policies], the *MultiNetworkPolicy* *ipBlock* entries correspond to the *match* strings in the *ACL*.  
+
+We also see that the *MultiNetworkPolicy* only applies to *default/vlan530* and pods with the *internet: "true"* label.
+
+[source,console]
+----
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: default/vlan530
+  name: egressallow-gh
+spec:
+    egress:
+    - to:
+      - ipBlock:
+          cidr: 140.82.113.0/24
+      - ipBlock:
+          cidr: 8.8.8.8/32
+    podSelector:
+      matchLabels:
+        internet: "true"
+    policyTypes:
+    - Egress
+----
 
 

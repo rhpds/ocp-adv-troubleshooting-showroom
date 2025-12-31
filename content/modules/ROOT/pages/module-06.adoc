@@ -124,6 +124,9 @@ oc get vmi -n external external-vm -o yaml | yq '.status.interfaces'
   queueCount: 1
 ----
 
+[#thenetpols]
+=== Network Policies
+
 We also know that our cluster has some default *NetworkPolicies* and *MultiNetworkPolicies* that get applied to every new *Namespace*.
 
 [source,yaml]
