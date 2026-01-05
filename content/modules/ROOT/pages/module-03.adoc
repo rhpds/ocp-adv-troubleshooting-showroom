@@ -242,7 +242,7 @@ The *--customer_memory* option returns the memory usage of each *Customer Namesp
 .Viewing Cluster Memory Usage
 [.wrap,console,role=execute]
 ----
-ocp_insights.py --customer_memory --file ./Cluster_2/insights.tar.gz
+ocp_insights.py --customer_memory --file ./Cluster_2/insights.tar.gz | grep -m1 'Customer Namespace Memory Usage' -A73
 ----
 
 [source,bash]
