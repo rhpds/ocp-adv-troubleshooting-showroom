@@ -22,7 +22,7 @@ In this module we will utilize a python script to analyze the etcd pod logs in a
 .Understanding etcd-ocp-diag.py
 [.wrap,console,role=execute]
 ----
-cd ~/module4/
+cd ~/Module4/
 ----
 
 [.wrap,console,role=execute]
