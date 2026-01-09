@@ -22,7 +22,7 @@ In this module we will utilize a python script to analyze the etcd pod logs in a
 .Understanding etcd-ocp-diag.py
 [.wrap,console,role=execute]
 ----
-cd ~/module4/
+cd ~/Module4/
 ----
 
 [.wrap,console,role=execute]
@@ -331,7 +331,8 @@ Date: 00:07
 POD                            COUNT      MAX_TIME
 etcd-master0-openshift         479        7130.0045ms
 etcd-master1-openshift         463        4976.1788ms
-etcd-master2-openshift         475        4981.3866ms
+etcd-master2-openshift         475
+...
 ----
 
 Debugging etcd can be complex and there are often a handful of potential root causes. If you find a customer cluster that is showing signs of etcd performance issues, the best course of action is to open a support ticket to engage with our experts. You can also determine next steps by reviewing our detailed etcd debugging article found at https://access.redhat.com/articles/6271341
@@ -361,7 +362,32 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl
 
 [.wrap,console,role=execute]
 ----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-17
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-17
+----
+
+[.wrap,console,role=execute]
+----
 etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-17 --compare
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-17
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-17 --compare
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18
 ----
 
 [.wrap,console,role=execute]

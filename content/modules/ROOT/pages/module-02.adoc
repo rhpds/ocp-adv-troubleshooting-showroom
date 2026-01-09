@@ -30,7 +30,7 @@ https://github.com/gmeghnag/omc
 
 [.wrap,console,role=execute]
 ----
-omc use module2-demo-must-gather.tar.gz
+omc use must-gather.local
 ----
 
 [source,bash]
