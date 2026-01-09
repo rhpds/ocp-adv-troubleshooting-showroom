@@ -1,7 +1,7 @@
 = Intro to omc
 :prewrap!:
 
-In this module we will at a subset of the features in omc that allow you to quickly review an OpenShift Must-Gather. *omc* has similar sub-commands as the *oc* client, such as *get* and *describe*, so we will not cover them directly. Instead we will focus on some of the handy built-in *omc* specific commands to get at harder to find information.
+In this module we will at a subset of the features in omc that allow you to quickly review an OpenShift Must-Gather. *omc* and the *oc* client have common sub-commands like *get* and *describe*, so we will not cover them directly. Instead we will focus on some of the handy *omc* specific commands to get at harder to find and interpret information.
 
 [#gettingstarted]
 == Using the omc *use* command
@@ -53,7 +53,7 @@ omc get clusterversion
 [source,bash]
 ----
 NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
-version   4.18.30   True        False         8m      Cluster version is 4.18.300
+version   4.18.30   True        False         8m      Cluster version is 4.18.30
 ----
 
 Like with *oc*, you can use *-o yaml* to print out addition information about the object:
@@ -291,6 +291,11 @@ rendered-worker-40c4ec5da61bfe22cb638e0699876a42   a51e963bdc11e1b49404d111c94e6
 omc machine-config diff rendered-master-1acb4208fc6aef31cf85cb429bb918f7 rendered-worker-40c4ec5da61bfe22cb638e0699876a42
 ----
 
+[NOTE]
+=====
+You can *:q* twice to close out and exit from the split screen *vim-diff*.
+=====
+
 [#node-logs]
 == Using the omc *node-logs* command
 . The *node-logs* command lists the node-logs collected from the OpenShift *control-plane* nodes and are in the *must-gather*.
@@ -304,7 +309,7 @@ omc node-logs
 
 [source,bash]
 ----
-The following node services logs are available to be read:
+The following node service logs are available to be displayed:
 - NetworkManager
 - crio
 - kubelet

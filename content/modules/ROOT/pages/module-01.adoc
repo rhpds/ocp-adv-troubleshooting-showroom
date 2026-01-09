@@ -1,7 +1,6 @@
 = Tools of the trade
 
-These are some of the many Community Created Tools available to speed up debugging, issue resolution and problem identification when analyzing issues with an OpenShift cluster. Red Hat does not maintain and/or provide support on these tools. Please see each projects GitHub page, if available, for assistance.
-
+These are some of the many Community Created Tools available to speed up debugging, issue resolution and problem identification when analyzing issues with an OpenShift cluster. Red Hat does not maintain and/or provide support on all of these tools. Please see each projects GitHub page, if available, for assistance.
 
 [#intro]
 == Tools we will use
@@ -131,4 +130,4 @@ Because this lab is not taking place on a running OpenShift cluster, we will sho
 [#ovnnb]
 === ovn-nbctl
 
-The *ovn-nbctl* command allows you to interact with the running OVN Northbound Database. We will use it to view and inspect logical routrs and switchs, ACLs and other configurations that make up the SDN configuration.
+The *ovn-nbctl* command allows you to interact with the running OVN Northbound Database. We will use it to view and inspect logical routers and switches, ACLs and other configurations that make up the SDN configuration.
