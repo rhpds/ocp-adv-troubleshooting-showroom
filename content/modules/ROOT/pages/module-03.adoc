@@ -3,7 +3,7 @@
 
 OpenShift Lightspeed (Insights) is a free tool that runs on your OpenShift cluster that collects a specific data set every 2 hours, anonymizes it, and then sends it to Red Hat to be reviewed. The archives are stored on *SupportShell* allowing Support Engineers and Technical Account Managers to review that data.
 
-In this module we will be reviewing how to look at a script that parses an *OpenShift Lightspeed (Insights)* archive to allow you to proactively analyze a cluster.
+In this module we will be reviewing how to leverage a tool to parse an *OpenShift Lightspeed (Insights)* archive and proactively analyze any OpenShift cluster.
 
 You can find more details on OpenShift Lightspeed (Insights) and the entire remote health monitoring package in our documentation: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/support/remote-health-monitoring-with-connected-clusters[About remote health monitoring]
 
@@ -187,7 +187,7 @@ machine-approver                          4.15.57  True       False        False
 machine-config                            4.15.57  True       False        False
 marketplace                               4.15.57  True       False        False
 monitoring                                4.15.57  True       False        False
-network                                   4.15.57  True       True         False     DaemonSet "/openshift-multus/multus" is not available (awaiting 1 nodes) DaemonSet "/openshift-multus/network-metrics...
+network                                   4.15.57  True       True         False     DaemonSet "/openshift-multus/multus" is not available (awaiting 1 nodes) DaemonSet "/openshift-multus/network-metrics..."
 node-tuning                               4.15.57  True       False        False
 openshift-apiserver                       4.15.57  True       False        False
 openshift-controller-manager              4.15.57  True       False        False

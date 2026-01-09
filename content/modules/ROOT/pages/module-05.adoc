@@ -9,7 +9,7 @@ The hardware of our 3 control plane nodes has reached end of life and we will be
 
 OpenShift 4.16.36
 
-I removed the first old master node and the API became unaccessable. I believe our cluster is having issues running with just two masters.
+I removed the first old master node and the API became inaccessible. I believe our cluster is having issues running with just two masters.
 ************************************************
 
 [#theapi]
@@ -41,7 +41,7 @@ If the API is not available, you can collect the audit logs manually under */var
 [#explore]
 == Explore the *kubectl-dev_tool audit* command
 
-Lets take a look at the *kubectl-dev_tool audit* subcommand by running it with the *-h* flag to look at the help screen.
+Let's take a look at the *kubectl-dev_tool audit* subcommand by running it with the *-h* flag to look at the help screen.
 
 On this screen, you will find 5 examples to give you some understanding of how to use the tool.
 
@@ -59,7 +59,7 @@ Let's run a command against the *kube-apiserver* and see what kind of informatio
 
 [.wrap,console,role=execute]
 ----
-cd ~/Module5/module5-must-gather-audit-log/data/tmp.nTGcWFOdf5/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-b9694710390d7e99f1c26959025d6399f6fb5e9809ae49a336a9a6b3dad1b565/
+cd ~/Module5/module5-must-gather-audit-log/quay-io-openshift-release-dev-ocp-v4-0-art-dev-sha256-c413593a46a302b8fab6ffa3f2f993b0110c2c84ced3dd399cedb4c66c0c99f7/
 ----
 
 Depending on the amount of data and the complexity of the search, it can take some time to process.
@@ -150,7 +150,7 @@ After that, you will see the returned data set.
 195895x        metrics.k8s.io/pods
 ----
 
-Similarily, you can run the same command, using *--by=user*.
+Similarly, you can run the same command, using *--by=user*.
 
 [.wrap,console,role=execute]
 ----
@@ -206,7 +206,7 @@ Our top users from the previous command were *horizontal-pod-autoscaler*, *endpo
 158628x        system:serviceaccount:kyverno:kyverno-reports-controller
 ----
 
-Again, none of those stick out as glaring issues, but lets dig into the top resources. For this we can use the *--resource=* flag, in addition to *--by=* and *-o top* to down on a specific resource.
+Again, none of those stick out as glaring issues, but let's dig into the top resources. For this we can use the *--resource=* flag, in addition to *--by=* and *-o top* to down on a specific resource.
 
 [.wrap,console,role=execute]
 ----
@@ -380,11 +380,11 @@ Based on this information, we could make a few informed deductions.
 
 The conclusion was that *Crunchy Postgres Operator* was under significant stress due to the API flapping. This lead to an unexpected influx of traffic trying to *GET*, *LIST* and *UPDATE* its owned resources.
 
-With this information, we were able to have an informated discussion with the customer and they were able to take the data to the 3rd party vendor and get the issue addressed to avoid such an API storm in the future.
+With this information, we were able to have an informed discussion with the customer and they were able to take the data to the 3rd party vendor and get the issue addressed to avoid such an API storm in the future.
 
 *How did we recover the cluster?*
 
-With no way of shutting down workloads or disabling the *Operator*, we had to get creative to stabalize the *Control Plane*.
+With no way of shutting down workloads or disabling the *Operator*, we had to get creative to stabilize the *Control Plane*.
 
 We applied 2 *iptables* rules on all of the *worker* nodes in the cluster to drop traffic to port 6443 on both the *FORWARD* and *OUTPUT* chains.
 

@@ -3,21 +3,22 @@
 
 The brain of any good Kubernetes cluster is etcd (pronounced et-see-dee), an open source, distributed, consistent key-value store for shared configuration, service discovery, and scheduler coordination of distributed systems or clusters of machines.
 
-As the primary datastore of Kubernetes, etcd stores and replicates all Kubernetes cluster state. Since it is a critical component of a Kubernetes cluster it is important that etcd has a reliable approach to its configuration and management and is hosted on hardware that is able to support it's rigorous demands. When etcd is experiencing performance issues, then entire cluster suffers and can become unstable and unusable.
+As the primary datastore of Kubernetes, etcd stores and replicates all Kubernetes cluster state. Since it is a critical component of a Kubernetes cluster it is important that etcd has a reliable approach to its configuration and management and is hosted on hardware that is able to support its rigorous demands. When etcd is experiencing performance issues, then entire cluster suffers and can become unstable and unusable.
 
 In this module we will utilize a python script to analyze the etcd pod logs in an OpenShift must-gather to help identify common errors and correlate those errors to specific time frames.
 
 [#gettingstarted]
 == etcd-ocp-diag.py
-. With this python script we will be able to identify common errors in the etc pod logs including:
-** "Apply Request Took Too Long" - etcd took longer than expected to apply the request.
-** "Failed to Send Out Heartbeat" - The etcd node took longer than expected to send out a heart beat.
-** "Lost Leader" and "Elected Leader" - The node hasn't heard from the leader in a set period causing an election
-** "wal: Sync Duration" - The Write Ahead Log Sync Duration took too long.
-** "The Clock Difference Against Peer" - The Peers have too large of a clock difference/
-** "Server is Likely Overloaded" - This error is a direct result of disk performance per etcd docs.
-** "Sending Buffer is Full" - The sending buffer for etcd raft messages is full due to slowness of other nodes.
-** and more.
+With this python script we will be able to identify common errors in the etc pod logs including:
+
+* "Apply Request Took Too Long" - etcd took longer than expected to apply the request.
+* "Failed to Send Out Heartbeat" - The etcd node took longer than expected to send out a heart beat.
+* "Lost Leader" and "Elected Leader" - The node hasn't heard from the leader in a set period causing an election
+* "wal: Sync Duration" - The Write Ahead Log Sync Duration took too long.
+* "The Clock Difference Against Peer" - The Peers have too large of a clock difference/
+* "Server is Likely Overloaded" - This error is a direct result of disk performance per etcd docs.
+* "Sending Buffer is Full" - The sending buffer for etcd raft messages is full due to slowness of other nodes.
+* and more.
 
 .Understanding etcd-ocp-diag.py
 [.wrap,console,role=execute]
@@ -60,7 +61,7 @@ options:
 [#commonerrors]
 == Common Errors
 
-When investigating potential *etcd* performance issues, we first need to establish which errors are ocurring in the *etcd* pods. To do this we utilize the *--errors* option of the *etcd-ocp-diag.py* script.
+When investigating potential *etcd* performance issues, we first need to establish which errors are occurring in the *etcd* pods. To do this we utilize the *--errors* option of the *etcd-ocp-diag.py* script.
 
 Comparing these two clusters below we can see that both have errors for *Apply Request Took Too Long* which is a great indicator of performance issues but we also see *leader is overloaded likely from slow disk*, and in the second cluster we see *leader elections* which is a potential sign of major issues.
 
@@ -341,7 +342,7 @@ Debugging etcd can be complex and there are often a handful of potential root ca
 == Lab Scenarios
 
 === Scenario 1
-The Customer reports cluster performance was bad around midnight from 2025-11-17 into 2025-11-18. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the *errors* and *stats* for the etcd cluster. Next look for any *overloaded* messages using the *--overloaded* flag. Finally, look at the *Took Too Long* messages using the *--ttl* option and compare them using *--date* and *--compare* to see if it's on Node or all of the Nodes.
+The Customer reports cluster performance was bad around midnight from *2025-11-17* into *2025-11-18*. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the *errors* and *stats* for the etcd cluster. Next look for any *overloaded* messages using the *--overloaded* flag. Finally, look at the *Took Too Long* messages using the *--ttl* option and compare them using *--date* and *--compare* to see if it's on Node or all of the Nodes.
 
 
 .Scenario 1
@@ -367,7 +368,7 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-
 
 [.wrap,console,role=execute]
 ----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-17
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-18
 ----
 
 [.wrap,console,role=execute]
@@ -398,7 +399,7 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18 -
 === Scenario 2
 The customer reported a couple errors popped up on the cluster, they had a few connection issues, and then it went back to normal. They need someone to look into the cluster and see what they can find.
 
-Like in the previous scenario, lets take a look at the *stats* and *errors, and then try to pinpoint when the issue happened and where the customer can investigate next.
+Like in the previous scenario, let's take a look at the *stats* and *errors, and then try to pinpoint when the issue happened and where the customer can investigate next.
 
 .Scenario 2
 [.wrap,console,role=execute]
