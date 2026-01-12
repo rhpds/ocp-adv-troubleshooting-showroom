@@ -342,12 +342,7 @@ Debugging etcd can be complex and there are often a handful of potential root ca
 == Lab Scenarios
 
 === Scenario 1
-The Customer reports cluster performance was bad around midnight from *2025-11-17* into *2025-11-18* on a cluster that is hosted in VMware on a Shared Datastore. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the *errors* and *stats* for the etcd cluster. Next look for any *overloaded* messages using the *--overloaded* flag. After confirming if the disk is overloaded, we are going to look to see if we had any Leader issues as a result of the disk performance problems. Finally, look at the *Took Too Long* messages using the *--ttl* option and compare them using *--date* and *--compare* to see if it's on Node or all of the Nodes.
-
-[TIP]
-=====
-The following commands will look very similar, but the purpose of these commands is to show that an event took place that had a major effect on the etcd cluster which resulted in significant slow performance, `apply request took too long` errors with extremely high completion times, numerous `leader failed to send out heartbeat on time; took too long, leader is overloaded likely from slow disk` messages , and `lost leader` and `leader election` errors.
-=====
+The Customer reports cluster performance was bad around midnight from *2025-11-17* into *2025-11-18* on a cluster that is hosted in VMware on a Shared Datastore. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the *errors* and *stats* for the etcd cluster. We are going to start by determing how often and how bad the *apply request, took too long* occured and their maximum time. From there we need to determine the impact that these extremely high *took too long* messages are having on the cluster by looking for *overloaded* messages using the *--overloaded* flag. After confirming if the disk is overloaded, we are going to look to see if we had any Leader issues as a result of the disk performance problems.
 
 .Scenario 1
 [.wrap,console,role=execute]
@@ -358,21 +353,6 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --errors
 [.wrap,console,role=execute]
 ----
 etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --stats
-----
-
-[.wrap,console,role=execute]
-----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-17
-----
-
-[.wrap,console,role=execute]
-----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-18
-----
-
-[.wrap,console,role=execute]
-----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --election --date 2025-11-18
 ----
 
 [.wrap,console,role=execute]
@@ -393,6 +373,21 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18
 [.wrap,console,role=execute]
 ----
 etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18 --compare
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-17
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-11-18
+----
+
+[.wrap,console,role=execute]
+----
+etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --election --date 2025-11-18
 ----
 
 === Scenario 2
