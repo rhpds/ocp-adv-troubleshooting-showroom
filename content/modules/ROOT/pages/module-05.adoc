@@ -1,3 +1,4 @@
+
 = What is overloading my API?
 :prewrap!:
 
@@ -99,7 +100,7 @@ The first thing you want to do is narrow down and define a time range for the is
 Find the newest audit log timestamp looking at the newest *audit.log* file.
 [.wrap,console,role=execute]
 ----
-tail -n 1 cluster-master-0[1-3].dmz-audit.log
+tail -n 1 ./audit_logs/kube-apiserver/cluster-master-0[1-3].dmz-audit.log
 ----
 
 Find the oldest audit log timestamp looking at the oldest *audit.log* file.
