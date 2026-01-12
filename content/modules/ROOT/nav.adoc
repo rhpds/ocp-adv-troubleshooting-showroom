@@ -27,6 +27,7 @@
 ** xref:module-03.adoc#events[Namespace Events]
 ** xref:module-03.adoc#customermemory[Customer Namespace Memory]
 ** xref:module-03.adoc#etcd_metrics[etcd Metrics]
+** xref:module-03.adoc#node_logs[Control Plane Logs]
 ** xref:module-03.adoc#alloutput[Additional Script Output]
 ** xref:module-03.adoc#labs[Lab Scenarios]
 
