@@ -2,30 +2,12 @@
 type: showroom
 
 # Set the left column width to 30%
-<<<<<<< HEAD
-default_width: 30
-=======
 default_width: 50
->>>>>>> c1c0c147f5727c53f60c142b24cece8f5d4c41c1
 # Persist the URL state so browser refresh doesn't reset the UI
 persist_url_state: true
 
 tabs:
-<<<<<<< HEAD
-  # Vertical split terminals
-  - name: Bastion
-    path: /wetty
-    port: 443
-    secondary_name: Bastion
-    secondary_path: /terminal2
-    secondary_port: 443
-
-  # External page
-  # - name: Llamastack Docs
-  #   url: 'https://llama-stack.readthedocs.io/en/latest/'
-=======
   # Single terminal
   - name: Bastion
     path: /wetty
     port: 443
->>>>>>> c1c0c147f5727c53f60c142b24cece8f5d4c41c1
