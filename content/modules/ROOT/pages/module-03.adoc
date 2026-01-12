@@ -657,7 +657,7 @@ ocp_insights.py --file ./Cluster_2/insights.tar.gz
 ----
 
 === Scenario 3
-The customer reports the cluster is very unstable, multiple cluster operators are down, and they need help immediately. Review the control-plane nodes and take note the Creation Dates, review the numerous errors in the cluster operators and pay specific attention to the reasons, look at the failing pods, and the namespace events, and finally review the etcd_metrics and see if you can spot a major issue.
+The customer reports the cluster is very unstable, multiple cluster operators are down, and they need help immediately. Review the control-plane nodes and take note the Creation Dates, review the numerous errors in the cluster operators and pay specific attention to the reasons, look at the failing pods, and the namespace events and the timestamps of the events, and finally review the etcd_metrics and see if you can spot a major issue.
 
 .Scenario 3
 [.wrap,console,role=execute]

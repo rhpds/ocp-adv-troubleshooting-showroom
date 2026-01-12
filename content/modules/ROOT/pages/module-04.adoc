@@ -419,7 +419,7 @@ etcd-ocp-diag.py --path ./Cluster_3/must-gather.local/ --ttl --date 2025-12-03
 === Scenario 3
 This is a tricky situation. Checking the *--stats* we can see etcd node 2 and 3 are experiencing significant performance issues but node 1 is running as expected.
 
-In this scenario we will need to look a range and a pattern to then help narrow down why these nodes are having such high performance issues. Look for a pattern starting on *2025-12-08* and going into *2025-12-09*.
+In this scenario we will need to look for a range and a pattern to then help narrow down why these nodes are having such high performance issues. Look for a pattern starting on *2025-12-08* and going into *2025-12-09* that will help narrow down and pin point exactly when the issue is occuring and to help predict and identify the next occurance.
 
 .Scenario 3
 [.wrap,console,role=execute]
