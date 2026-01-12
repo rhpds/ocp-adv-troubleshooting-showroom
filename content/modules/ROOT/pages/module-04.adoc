@@ -342,7 +342,7 @@ Debugging etcd can be complex and there are often a handful of potential root ca
 == Lab Scenarios
 
 === Scenario 1
-The Customer reports cluster performance was bad around midnight from *2025-11-17* into *2025-11-18* on a cluster that is hosted in VMware on a Shared Datastore. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the *errors* and *stats* for the etcd cluster. Next look for any *overloaded* messages using the *--overloaded* flag. Finally, look at the *Took Too Long* messages using the *--ttl* option and compare them using *--date* and *--compare* to see if it's on Node or all of the Nodes.
+The Customer reports cluster performance was bad around midnight from *2025-11-17* into *2025-11-18* on a cluster that is hosted in VMware on a Shared Datastore. They had jobs fail, connectivity issues, and are not sure what the cause is. Look at the *errors* and *stats* for the etcd cluster. Next look for any *overloaded* messages using the *--overloaded* flag. After confirming if the disk is overloaded, we are going to look to see if we had any Leader issues as a result of the disk performance problems. Finally, look at the *Took Too Long* messages using the *--ttl* option and compare them using *--date* and *--compare* to see if it's on Node or all of the Nodes.
 
 [TIP]
 =====
@@ -358,11 +358,6 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --errors
 [.wrap,console,role=execute]
 ----
 etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --stats
-----
-
-[.wrap,console,role=execute]
-----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl
 ----
 
 [.wrap,console,role=execute]
@@ -383,11 +378,6 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --lost_leader --date 2025
 [.wrap,console,role=execute]
 ----
 etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --election --date 2025-11-18
-----
-
-[.wrap,console,role=execute]
-----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-17 --compare
 ----
 
 [.wrap,console,role=execute]
@@ -413,7 +403,7 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --ttl --date 2025-11-18 -
 === Scenario 2
 The customer reported a couple errors popped up on the cluster, they had a few connection issues, and then it went back to normal. They need someone to look into the cluster and see what they can find.
 
-Like in the previous scenario, let's take a look at the *stats* and *errors, and then try to pinpoint when the issue happened and where the customer can investigate next.
+Like in the previous scenario, let's take a look at the *stats* and *errors*, and then try to pinpoint when the issue happened and where the customer can investigate next.
 
 .Scenario 2
 [.wrap,console,role=execute]
