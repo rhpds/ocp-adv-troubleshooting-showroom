@@ -372,11 +372,6 @@ etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --overloaded --date 2025-
 
 [.wrap,console,role=execute]
 ----
-etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --lost_leader --date 2025-11-18
-----
-
-[.wrap,console,role=execute]
-----
 etcd-ocp-diag.py --path ./Cluster_2/must-gather.local/ --election --date 2025-11-18
 ----
 
