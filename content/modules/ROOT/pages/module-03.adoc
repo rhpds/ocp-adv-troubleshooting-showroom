@@ -27,23 +27,28 @@ ocp_insights.py -h
 
 [source,bash]
 ----
-usage: ocp_insights.py [-h] [--id ID] [--file FILE] [--alerts] [--customer_memory] [--etcd_metrics] [--events] [--list] [--extract] [--cluster_info] [--node_info] [--cluster_operators]
+ocp_insights.py --help
+usage: ocp_insights.py [-h] [--id ID] [--file FILE] [--alerts] [--customer_memory] [--etcd_metrics] [--events] [--list] [--extract] [--cluster_info] [--node_info] [--cluster_operators] [--remote] [--server SERVER] [--node_logs NODE_NAME]
 
 OpenShift Insights Cluster Report.
 
 options:
-  -h, --help           show this help message and exit
-  --id ID              ClusterID of a connected cluster used to find all connected Clusters
-  --file FILE          Use a specific Insights Archive File; must specify full path.
-  --alerts             Prints out Alerts in valid JSON
-  --customer_memory    Prints Customer Namespace memory usage.
-  --etcd_metrics       Prints etcd Slow Apply metrics for all Insights Archives for the cluster.
-  --events             Prints namespace events if they exist.
-  --list               List available archives for a specific cluster. Must be used with --id option. Can be combined with --extract.
-  --extract            Extract archive for a specific cluster to user home directory. Must be used with --id option. Can be combined with --list to select which archive to extract.
-  --cluster_info       Prints only cluster information (ID, name, version, platform, network, encryption, etc.).
-  --node_info          Prints only node information (name, status, role, version, OS, CPU, memory).
-  --cluster_operators  Prints only cluster operator information (name, version, status).
+  -h, --help            show this help message and exit
+  --id ID               ClusterID of a connected cluster used to find all connected Clusters
+  --file FILE           Use a specific Insights Archive File; must specify full path.
+  --alerts              Prints out Alerts in valid JSON
+  --customer_memory     Prints Customer Namespace memory usage.
+  --etcd_metrics        Prints etcd Slow Apply metrics for all Insights Archives for the cluster.
+  --events              Prints namespace events if they exist.
+  --list                List available archives for a specific cluster. Must be used with --id option. Can be combined with --extract.
+  --extract             Extract archive for a specific cluster to user's home directory. Must be used with --id option. Can be combined with --list to select which archive to extract.
+  --cluster_info        Prints only cluster information (ID, name, version, platform, network, encryption, etc.).
+  --node_info           Prints only node information (name, status, role, version, OS, CPU, memory).
+  --cluster_operators   Prints only cluster operator information (name, version, status).
+  --remote              Connect to remote server to perform analysis
+  --server SERVER       Remote server to connect to (overrides default). Use with --remote option.
+  --node_logs NODE_NAME
+                        Print logs for a master node. Provide the full node name (FQDN). Master nodes only.
 ----
 
 [#whatisoutput]
@@ -75,6 +80,7 @@ options:
 ** Namespace Events^
 ** Alerts in JSON^
 ** Customer Namespace Memory Usage^
+** Control-Plane Node Error Logs^
 
 * ^ Indicates an additional flag is needed to view the data.
 
@@ -342,6 +348,32 @@ ocp_insights.py --etcd_metrics --file ./Cluster_4/insights.tar.gz
 etcd-ocpmstr1.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,7
 etcd-ocpmstr2.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,1568
 etcd-ocpmstr3.openshift.example.com,Mon Dec 22 12:59:37 PM UTC 2025,181506
+----
+
+[#node_logs]
+== Control-Plane Node Logs
+The Insights Operator collects Control Plane node logs that follow the following substrings: link:https://github.com/openshift/insights-operator/blob/master/pkg/gatherers/clusterconfig/gather_node_logs.go#L23-L36[Control Plane Node Logs]
+
+Reviewing these logs can be helpful to understand any potential failure happening on the Control Plane nodes allowing you to quickly identify and narrow down any issues.
+
+.Viewing Control Plane Logs
+[.wrap,console,role=execute]
+----
+ocp_insights.py --file Cluster_4/insights.tar.gz --node_logs ocpmstr1.openshift.example.com
+
+Node Logs for: ocpmstr1.openshift.example.com
+================================================================================
+Dec 09 05:45:42.865541 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:45:42.865519    2743 log.go:32] "ContainerStatus from runtime service failed" err="rpc error: code = NotFound desc = could not find container \"e4ddc0cccb0810f9151de5a685b32203aa4d2da65a293312637b4319b2d5bf6d\": container with ID starting with e4ddc0cccb0810f9151de5a685b32203aa4d2da65a293312637b4319b2d5bf6d not found: ID does not exist" containerID="e4ddc0cccb0810f9151de5a685b32203aa4d2da65a293312637b4319b2d5bf6d"
+Dec 09 05:45:42.865865 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:45:42.865847    2743 log.go:32] "ContainerStatus from runtime service failed" err="rpc error: code = NotFound desc = could not find container \"3880f1b1f78d7dc0e92d05003f4c8b89306882b48435812afa595d390ecad271\": container with ID starting with 3880f1b1f78d7dc0e92d05003f4c8b89306882b48435812afa595d390ecad271 not found: ID does not exist" containerID="3880f1b1f78d7dc0e92d05003f4c8b89306882b48435812afa595d390ecad271"
+Dec 09 05:46:35.557704 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:46:35.557659    2743 prober.go:240] "Unable to write all bytes from execInContainer" err="short write" expectedBytes=39168 actualBytes=10240
+Dec 09 05:47:35.583757 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:47:35.583731    2743 prober.go:240] "Unable to write all bytes from execInContainer" err="short write" expectedBytes=39168 actualBytes=10240
+Dec 09 05:47:36.196500 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:47:36.196468    2743 log.go:32] "ContainerStatus from runtime service failed" err="rpc error: code = NotFound desc = could not find container \"b2e93c0ddaf39f460c1ec556dd9cd08a6f860a69c0dc8c8dc03d914661a9880a\": container with ID starting with b2e93c0ddaf39f460c1ec556dd9cd08a6f860a69c0dc8c8dc03d914661a9880a not found: ID does not exist" containerID="b2e93c0ddaf39f460c1ec556dd9cd08a6f860a69c0dc8c8dc03d914661a9880a"
+Dec 09 05:47:36.196881 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:47:36.196830    2743 log.go:32] "ContainerStatus from runtime service failed" err="rpc error: code = NotFound desc = could not find container \"6e3fc4a4935538bf5761bfdcc4e19f12d276381ca5a766617c67e828d1290cac\": container with ID starting with 6e3fc4a4935538bf5761bfdcc4e19f12d276381ca5a766617c67e828d1290cac not found: ID does not exist" containerID="6e3fc4a4935538bf5761bfdcc4e19f12d276381ca5a766617c67e828d1290cac"
+Dec 09 05:47:36.197244 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:47:36.197218    2743 log.go:32] "ContainerStatus from runtime service failed" err="rpc error: code = NotFound desc = could not find container \"b03c2767e27a93a9f1f7c037fb5d667b20e12b457aebc7756ff9e10d4653d22a\": container with ID starting with b03c2767e27a93a9f1f7c037fb5d667b20e12b457aebc7756ff9e10d4653d22a not found: ID does not exist" containerID="b03c2767e27a93a9f1f7c037fb5d667b20e12b457aebc7756ff9e10d4653d22a"
+Dec 09 05:48:35.538461 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:48:35.538417    2743 prober.go:240] "Unable to write all bytes from execInContainer" err="short write" expectedBytes=39168 actualBytes=10240
+Dec 09 05:49:35.544008 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:49:35.543968    2743 prober.go:240] "Unable to write all bytes from execInContainer" err="short write" expectedBytes=39168 actualBytes=10240
+Dec 09 05:50:35.544143 ocpmstr1.openshift.example.com kubenswrapper[2743]: E1209 05:50:35.544108    2743 prober.go:240] "Unable to write all bytes from execInContainer" err="short write" expectedBytes=39168 actualBytes=10240
+...
 ----
 
 [#alloutput]
