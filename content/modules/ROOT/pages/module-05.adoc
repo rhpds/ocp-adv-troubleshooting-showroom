@@ -111,7 +111,9 @@ In our case, the incident took place from:
 
 [source,bash]
 ----
-*2025-09-08T14:15:00Z* to *2025-09-08T15:34:57Z*
+2025-09-08T14:15:00Z 
+to
+2025-09-08T15:34:57Z
 ----
 
 [TIP]
@@ -135,7 +137,7 @@ The first thing you will see is a log outlining the *count* (number of records),
 
 [source,bash]
 ----
-count: 4714125, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.999222s
+count: 3994302, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00, duration: 1h19m56.999222s
 ----
 
 After that, you will see the returned data set.
@@ -144,14 +146,14 @@ After that, you will see the returned data set.
 ----
 487532x              v1/endpoints
 442694x              v1/configmaps
-384736x              authorization.k8s.io/v1/subjectaccessreviews
 362910x              v1/persistentvolumeclaims
 338418x              v1/persistentvolumes
 328024x              v1/secrets
 320234x              discovery.k8s.io/endpointslices
 279757x              v1/pods
-202521x              authentication.k8s.io/v1/selfsubjectreviews
 195895x              metrics.k8s.io/pods
+181994x              coordination.k8s.io/leases
+148746x              apps/deployments
 ----
 
 Similarly, you can run the same command, using *--by=user* and we can adjust *-otop=15* to see a larger list of users.
@@ -163,27 +165,29 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop=15 --after
 
 [source,bash]
 ----
-506725x              system:serviceaccount:kube-system:horizontal-pod-autoscaler
-298083x              system:serviceaccount:kube-system:endpointslicemirroring-controller
-268994x              system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
+506707x              system:serviceaccount:kube-system:horizontal-pod-autoscaler
+298071x              system:serviceaccount:kube-system:endpointslicemirroring-controller
 184530x              system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
-158628x              system:serviceaccount:kyverno:kyverno-reports-controller
-105195x              system:serviceaccount:openshift-monitoring:metrics-server
-89860x               system:serviceaccount:d6af69-test:ha-postgres-crunchydb-instance
-87200x               system:serviceaccount:db4642-dev:pay-transparency-dev-crunchy-instance
-82254x               system:serviceaccount:e52f12-dev:pg-272ed005-crunchy-instance
-81997x               system:serviceaccount:d6af69-dev:ha-postgres-crunchydb-instance
+158611x              system:serviceaccount:kyverno:kyverno-reports-controller
+89842x               system:serviceaccount:d6af69-test:ha-postgres-crunchydb-instance
+87176x               system:serviceaccount:db4642-dev:pay-transparency-dev-crunchy-instance
+82224x               system:serviceaccount:e52f12-dev:pg-272ed005-crunchy-instance
+81991x               system:serviceaccount:d6af69-dev:ha-postgres-crunchydb-instance
 78016x               system:serviceaccount:openshift-infra:serviceaccount-pull-secrets-controller[openshift.io/image-registry-pull-secrets_legacy-token-secrets-controller]
-48891x               system:serviceaccount:openshift-example-crunchy:pgo
-47755x               system:serviceaccount:openshift-machine-config-operator:machine-config-operator
-46651x               system:serviceaccount:c57ee7-dev:dev-crunchy-postgres-instance
-42646x               system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
+48879x               system:serviceaccount:openshift-example-crunchy:pgo
+47722x               system:serviceaccount:openshift-machine-config-operator:machine-config-operator
+46633x               system:serviceaccount:c57ee7-dev:dev-crunchy-postgres-instance
+41531x               system:node:cluster-app-109.dmz
+41342x               system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
+40934x               system:serviceaccount:openshift-example-integration:strimzi-cluster-operator
 ----
 
 [#thedata]
 == Evaluate and dig deeper
 
-Based on the above data, there is nothing glaringly obvious that is wrong with the cluster, but we can see that the API received *4,714,125* requests over an *80* minute period. That translates to almost *1000* API requests per second.
+Based on the above data, there is nothing glaringly obvious that is wrong with the cluster, but we can see that the API received *3,994,302* resource requests and another 719,823 access review requests (removed via scrubbing) over this *80* minute period. That translates to almost *1000* API requests per second.
+
+At it's peak, the cluster was exceeding 1200 API requests per second.
 
 Let's dig a little deeper.
 
@@ -192,28 +196,9 @@ Let's dig a little deeper.
 When evaluating the data, always factor in things like the total number of requests, time period and the number of nodes.
 ====
 
-Our top resources from the previous command were *endpoints*, *configmaps*, *subjectaccessreviews*, *persistentvolumeclaims*, *persistentvolumes* and *secrets*:
+Our top resources from the *--by=resource* command were *endpoints*, *configmaps*, *subjectaccessreviews*, *persistentvolumeclaims*, *persistentvolumes* and *secrets*:
 
-[source,bash]
-----
-487532x        v1/endpoints
-442694x        v1/configmaps
-384736x        authorization.k8s.io/v1/subjectaccessreviews
-362910x        v1/persistentvolumeclaims
-338418x        v1/persistentvolumes
-328024x        v1/secrets
-----
-
-Our top users from the previous command were *horizontal-pod-autoscaler*, *endpointslicemirroring-controller*, *openshift-apiserver-sa*, *pgo[postgrescluster-controller]* and *kyverno-reports-controller*.
-
-[source,bash]
-----
-506725x        system:serviceaccount:kube-system:horizontal-pod-autoscaler
-298083x        system:serviceaccount:kube-system:endpointslicemirroring-controller
-268994x        system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
-184530x        system:serviceaccount:openshift-example-crunchy:pgo[postgrescluster-controller]
-158628x        system:serviceaccount:kyverno:kyverno-reports-controller
-----
+Our top users from the *--by=user* command were *horizontal-pod-autoscaler*, *endpointslicemirroring-controller*, *openshift-apiserver-sa*, *pgo[postgrescluster-controller]* and *kyverno-reports-controller*.
 
 Again, none of those stick out as glaring issues, but let's dig into the top resources. For this we can use the *--resource=* flag, in addition to *--by=* and *-o top* to focus in on a specific resource.
 
@@ -222,7 +207,7 @@ Again, none of those stick out as glaring issues, but let's dig into the top res
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=endpoints -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see the *endpoint* activity is spread out, but you can also see the top consumers are *crunchy* / *postgres* instances from different namespaces.
+We can see the *endpoint* activity is spread out, but the top consumers are *crunchy* / *postgres* instances from different namespaces.
 
 [source,bash]
 ----
@@ -244,7 +229,7 @@ count: 487532, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource=configmaps --by=user -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see the *configmap* activity is spread out.
+We can see the *configmap* activity is spread out, but *crunchy* / *postgres* is there again.
 
 [source,bash]
 ----
@@ -261,17 +246,12 @@ count: 442694, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 5389x                system:node:cluster-app-102.dmz
 ----
 
-[NOTE]
-====
-The processing of *subjectaccessreviews* is very slow and does not yield anything useful in this case, so we will skip it.
-====
-
 [.wrap,console,role=execute]
 ----
 kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --resource='persistentvolumeclaims' -otop --by=user --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
 ----
 
-We can see a high number of *persistentvolumeclaims* activity across all nodes in the cluster, as well as from *crunchy*.
+We can see a high number of *persistentvolumeclaims* activity across all nodes in the cluster, as well as from *crunchy* / *postgres*.
 
 [source,bash]
 ----
@@ -332,9 +312,9 @@ count: 328024, first: 2025-09-08T10:15:00-04:00, last: 2025-09-08T11:34:56-04:00
 4350x                system:node:cluster-app-103.dmz
 ----
 
-Evaluating the output, the most common theme across all of the data points has been activity from *crunchy* / *postgress*. If you refer back to the original *--by=user* output, there was no obvious single user, but 7 of the top 15 users driving API load were *crunchy* / *postgress* related. If we add them all up, a conservative estimate, without secondary and follow-on factors, is 621,383 of 4,714,125 requests, totalling 13.1% of API traffic.
+Evaluating the output, the most common theme across all of the data points has been activity from *crunchy* / *postgress*. If you refer back to the original *--by=user* output, there was no obvious single user, but 7 of the top 15 users driving API load were *crunchy* / *postgress* related. If we add them all up, a conservative estimate, without secondary and follow-on factors, is 621,275 of 3,994,302 requests, totalling 15.55% of API traffic.
 
-Given that *crunchy* / *postgress* are databases, we can hypothesize the high level of activity taking place against *PersistentVolumes* and *PersistentVolumeClaims* is also related.
+Given that *crunchy* / *postgress* are databases, we can hypothesize the high number of requests against the *PersistentVolumes* and *PersistentVolumeClaims* is also related.
 
 Let's take a look at one of the users and see what they are doing. You can do this by passing in the *--user=* flag along with *--by=verb* and *-o top*.
 
@@ -354,9 +334,7 @@ Top 10 "PATCH" (of 90224 total hits):
   89454x [  44.05581ms] [200-89453] /api/v1/namespaces/d6af69-test/endpoints/ha-postgres-crunchydb-ha                                 [system:serviceaccount:d6af69-test:ha-postgres-crunchydb-instance]
 ----
 
-What we see is interesting:
-
-. The majority of activity is from *PATCH* commands on endpoints
+What we see is that the majority of activity is from *PATCH* commands on the endpoints objects.
 
 Lets take a look at our most active *node*:
 
@@ -381,31 +359,15 @@ Top 10 "WATCH" (of 11163 total hits):
      98x [7m22.541479775s] [200-97]  /api/v1/namespaces/0fad32-tools/configmaps?allowWatchBookmarks=true&fieldSelector=metadata.name%3Dcas-shipit-db-cas-postgres-cluster-pgbackrest&resourceVersion=15895104263&timeout=6m58s&timeoutSeconds=418&watch=true [system:node:cluster-app-109.dmz]
 ----
 
-What we see is:
+What we see is that the majority of activity is from *GET* and *WATCH* commands on *PersistentVolumes* and *PersistentVolumeClaims* and other resources across dozens of different *Namespaces*.
 
-. The majority of activity is from *GET* and *WATCH* commands on *PersistentVolumes* and *PersistentVolumeClaims* and other resources across dozens of different *Namespaces*.
-
-[NOTE]
-====
-This command takes a long time to run, so feel free to keep reading.
-
-[.wrap,console,role=execute]
-----
-kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --user='system:serviceaccount:openshift-example-crunchy:pgo' --by=verb -otop --after 2025-09-08T14:15:00Z --before 2025-09-08T15:34:57Z
-----
-====
-
-What we see from *openshift-example-crunchy:pgo* is:
-
-. The majority of activity is from *PATCH* and *LIST* commands across dozens of different namespaces
-
-Based on this information, we could make a few informed deductions.
+You could continue to analyze more resources and users, but at this point based on the reviewed information, we were able to make an informed theory.
 
 1. Even though the API pool members are flapping up and down, millions of requests are still making it API server.
-2. We see 13% of our API traffic coming from *crunchy* / *postgress* related pods.
-3. We see another 14.9% of our API traffic coming from *PersistentVolumes* and *PersistentVolumeClaims*.
+2. We see 15%+ of our API traffic coming from *crunchy* / *postgress* related pods.
+3. We see another 17%+ of our API traffic coming from *PersistentVolumes* and *PersistentVolumeClaims*.
 
-The conclusion was that *Crunchy Postgres Operator* was behaving abnormally due to the API flapping. This lead to an unexpected burst of traffic trying to *GET*, *LIST* and *UPDATE* its owned resources.
+The conclusion was that the *Crunchy Postgres Operator* was behaving abnormally due to the API flapping. This lead to an unexpected surge of traffic trying to *GET*, *LIST* and *UPDATE* its owned resources.
 
 With this information, we were able to have an informed discussion with the customer and they were able to take the data to the 3rd party vendor and get the issue addressed to avoid such an API storm in the future.
 
