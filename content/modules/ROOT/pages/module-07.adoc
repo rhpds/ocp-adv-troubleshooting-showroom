@@ -110,8 +110,7 @@ Let's start by running the following 2 commands to look at the list of *logical 
 ovn-nbctl lr-list
 ----
 
-Logical Router objects, defined by a UUID and name.
-
+.Logical Router objects, defined by a UUID and name.
 [source,console]
 ----
 9316827c-90ed-4943-bb63-1480ffbcffac (GR_worker-5.ocpv.tamlab.rdu2.redhat.com)
@@ -123,8 +122,7 @@ Logical Router objects, defined by a UUID and name.
 ovn-nbctl ls-list
 ----
 
-Logical Switch objects, defined by a UUID and name.
-
+.Logical Switch objects, defined by a UUID and name.
 [source,console]
 ----
 cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
@@ -146,8 +144,7 @@ Because a cluster is going to have a lot of ports, we focus in with a *grep* on 
 ovn-nbctl lsp-list worker-5.ocpv.tamlab.rdu2.redhat.com | grep 'siteb\|sitea\|network-policy-demo-monitor\|external'
 ----
 
-Logical Switch Port objects, defined by UUID and name, where the name maps to a running pod within the cluster.
-
+.Logical Switch Port objects, defined by UUID and name, where the name maps to pod
 [source,console]
 ----
 0d633506-aad3-4136-a1bf-70f86eed3a9d (backend_sitea-backend-796cf44b87-l7mhb)
@@ -158,9 +155,9 @@ d22f7f6b-31c0-49e1-a81d-d5c7197885b7 (frontend_siteb-frontend-66f9f55ddc-9qcwr)
 8a80737e-7db1-4558-ab46-0b2e65440a7d (network-policy-demo-monitor_monitor-956f5b8d7-gkmnn)
 ----
 
-Now that we have taken a look and validated our LS, LR and LSP objects, we can come back to our trace. You can see traffic going to *outport == @a3640229366109469754* before it is marked as dropped.
+Now that we have taken a look and validated our *logical switch*, *logical router* and *logical switch port* objects, we can come back to our trace. You can see traffic going to *outport == @a3640229366109469754* before it is marked as dropped.
 
-Each *outport* corresponds to a *portgroup* and get created for every unqiue *NetworkPolicy* in your cluster. Every pod selected by the *podSelector* of that *NetworkPolicy* is added to the *portgroup* port list.
+Each *outport* corresponds to a *portgroup* and one is created for every unqiue *NetworkPolicy* in your cluster. Every pod selected by the *podSelector* of that *NetworkPolicy* is added to the *portgroup* port list.
 
 Let's take a look at our promlematic *portgroup*.
 
@@ -183,7 +180,7 @@ From the output there are 2 pieces of important information:
 1. *acls* -> there are 2 *UUIDs* -> *[0cbe6f52-9cf1-4584-9237-7c23f65c82f1, 1fdd654d-f251-4e58-b4ce-d57804f1ba9b]*
 2. *ports* -> there are 2 *UUIDs* -> *[3db761b5-3239-426b-8ba7-7d8aea2b12e9, d22f7f6b-31c0-49e1-a81d-d5c7197885b7]*
 
-What you will notice is that the 2 *ports* *UUIDs* correspond to the *UUIDs* of the *logical switch port* entries for the 2 *frontend* pods from the *lsp-list* output above. This confirms that the portgroup is influencing our 2 pods.
+What you will notice is that the 2 *ports* *UUIDs* correspond to the *UUIDs* of the *logical switch port* entries for the 2 *frontend* pods from the *lsp-list* output above. This confirms that the *portgroup* is influencing our 2 pods.
 
 Next, lets take a look at the 2 *access control list (ACL)* objects.
 
@@ -235,7 +232,7 @@ severity            : []
 tier                : 2
 ----
 
-You can see that the second ACL, *1fdd654d-f251-4e58-b4ce-d57804f1ba9b*, is matching on *arp || nd*, we can ignore it as we are sending *tcp* requests.
+You can see that the second ACL, *1fdd654d-f251-4e58-b4ce-d57804f1ba9b*, is matching on *arp || nd*, so we can ignore it as we are sending *tcp* requests.
 
 Focusing in on the output from the first ACL *0cbe6f52-9cf1-4584-9237-7c23f65c82f1*, we can see a few key points:
 
@@ -330,12 +327,14 @@ ct_lb_mark /* default (use --ct to customize) */
 
 If we take it a step further, we can take a look at our new *ls_out_acl_eval* with *ip4.src == {$a16799780576945479038} && outport == @a3002123605838622674*.
 
-The *ip4.src* is a hash corresponding to an address set of pods:
+The *ip4.src* is a hash corresponding to an *address set*:
 
 [.wrap,console,role=execute]
 ----
 ovn-nbctl list address_set a16799780576945479038
 ----
+
+On the *address_set* you can see the *addresses* list, which contains the IPs of our 2 frontend pods.
 
 [source,console]
 ----
@@ -354,12 +353,14 @@ ovn-nbctl list address_set
 ----
 =====
 
-The *outport*, like above, corresponds to a *portgroup*. Upon inspection, you can see that this *portgroup* comes from our new *NetworkPolicy* -> *NetworkPolicy:frontend:allow-same-namespace*.
+The *outport*, like above, corresponds to a *portgroup*.
 
 [.wrap,console,role=execute]
 ----
 ovn-nbctl find Port_Group  name="a3002123605838622674"
 ----
+
+Upon inspection, you can see that this *portgroup* comes from our new *NetworkPolicy* -> *NetworkPolicy:frontend:allow-same-namespace*.
 
 [source,console]
 ----
@@ -370,12 +371,14 @@ name                : a3002123605838622674
 ports               : [3db761b5-3239-426b-8ba7-7d8aea2b12e9, d22f7f6b-31c0-49e1-a81d-d5c7197885b7]
 ----
 
-On that portgroup, a new *ACL* exists. This *ACL* now has *allow-related* for any *to-lport* traffic that matches the *ip4.src* and outport for our pods in the *frontend* *Namespace*.
+On that portgroup, a new *ACL* exists.
 
 [.wrap,console,role=execute]
 ----
 ovn-nbctl list ACL 1a4a5833-d2f1-4391-a4e6-439acb31910a
 ----
+
+This *ACL* now has *allow-related* for any *to-lport* traffic that matches the *ip4.src* and outport for our pods in the *frontend* *Namespace*.
 
 [source,console]
 ----

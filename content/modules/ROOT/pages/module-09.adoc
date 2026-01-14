@@ -34,7 +34,7 @@ spec:
 
 Our VM is using a *NetworkAttachmentDefinition* called *vlan530* that specifies a *physicalNetworkName* of *br-ex-localnet*, matching the *NodeNetworkConfigurationPolicy* *spec.desiredState.ovn.bridge-mappings.localnet* field, to attach directly to the hosts physical network interface and tagged onto *vlanId* *530*. 
 
-[.wrap,console,role=execute]
+[source,yaml]
 ----
 oc get network-attachment-definitions -n default vlan530 -o yaml
 ----

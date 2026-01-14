@@ -133,7 +133,7 @@ ct_lb_mark /* default (use --ct to customize) */
     reg8[30..31] = 0;
 ----
 
-This time we see an abrupt end to the trace after we commit *ct_mark.blocked = 1* to drop traffic.
+This time we see an abrupt end to the trace after we commit *ct_mark.blocked = 1* to drop traffic. Looks the same as the last issue, but is it?
 
 [#analyzetrace]
 === Analyzing the Trace

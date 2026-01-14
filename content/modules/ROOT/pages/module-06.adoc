@@ -40,7 +40,12 @@ virt-launcher-external-vm-x7gnx   1/1     Running   0          59m   10.129.6.20
 
 Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network *default/vlan530*.
 
-[.wrap,console,role=execute]
+[NOTE]
+=====
+The oc commands do not run, they are just for reference and to show some examples of yq parsing to get the information we need from a running cluster.
+=====
+
+[source,bash]
 ----
 oc get pods -n frontend sitea-frontend-8798d9cdc-77jj7 -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
 ----
@@ -50,7 +55,7 @@ oc get pods -n frontend sitea-frontend-8798d9cdc-77jj7 -o yaml | yq '.metadata.a
 {"default":{"ip_addresses":["10.129.6.15/23"],"mac_address":"0a:58:0a:81:06:0f","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.15/23","gateway_ip":"10.129.6.1","role":"primary"}}
 ----
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 oc get pods -n frontend siteb-frontend-66f9f55ddc-9qcwr -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
 ----
@@ -60,7 +65,7 @@ oc get pods -n frontend siteb-frontend-66f9f55ddc-9qcwr -o yaml | yq '.metadata.
 {"default":{"ip_addresses":["10.129.6.17/23"],"mac_address":"0a:58:0a:81:06:11","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.17/23","gateway_ip":"10.129.6.1","role":"primary"}}
 ----
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 oc get pods -n backend sitea-backend-796cf44b87-l7mhb -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
 ----
@@ -70,7 +75,7 @@ oc get pods -n backend sitea-backend-796cf44b87-l7mhb -o yaml | yq '.metadata.an
 {"default":{"ip_addresses":["10.129.6.13/23"],"mac_address":"0a:58:0a:81:06:0d","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.13/23","gateway_ip":"10.129.6.1","role":"primary"}}
 ----
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 oc get pods -n backend siteb-backend-5b765679b5-l4gp6 -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
 ----
@@ -80,7 +85,7 @@ oc get pods -n backend siteb-backend-5b765679b5-l4gp6 -o yaml | yq '.metadata.an
 {"default":{"ip_addresses":["10.129.6.14/23"],"mac_address":"0a:58:0a:81:06:0e","gateway_ips":["10.129.6.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.129.6.1"},{"dest":"172.30.0.0/16","nextHop":"10.129.6.1"},{"dest":"169.254.0.5/32","nextHop":"10.129.6.1"},{"dest":"100.64.0.0/16","nextHop":"10.129.6.1"}],"ip_address":"10.129.6.14/23","gateway_ip":"10.129.6.1","role":"primary"}}
 ----
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 oc get pods -n external virt-launcher-external-vm-x7gnx -o yaml | yq '.metadata.annotations.["k8s.ovn.org/pod-networks"]'
 ----
@@ -93,7 +98,7 @@ oc get pods -n external virt-launcher-external-vm-x7gnx -o yaml | yq '.metadata.
 
 You can also pull the networking information of the VM directly off the Virtual Machine Instance (vmi) object.
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 oc get vmi -n external -o wide
 ----
@@ -104,7 +109,7 @@ NAME          AGE   PHASE     IP             NODENAME                           
 external-vm   72m   Running   10.6.153.247   worker-5.ocpv.tamlab.rdu2.redhat.com   True    True
 ----
 
-[.wrap,console,role=execute]
+[source,bash]
 ----
 oc get vmi -n external external-vm -o yaml | yq '.status.interfaces'
 ----
@@ -293,6 +298,19 @@ To confirm your environment is up, run the following command which will print an
 [source,console,role=execute]
 ----
 ovn-nbctl show
+----
+
+[source,console]
+----
+(ovs-offline) [lab-user@rhel9 ModuleOVN]$ ovn-nbctl show
+switch cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
+    port default.vlan530_faatam_virt-launcher-faatam-idm1-ghrg2
+        addresses: ["02:a1:3b:00:00:2f"]
+    port default.vlan530_external_virt-launcher-external-vm-x7gnx
+        addresses: ["02:a1:3b:00:00:15"]
+    port br.ex.localnet_ovn_localnet_port
+        type: localnet
+        addresses: ["unknown"]
 ----
 
 Now that we know what the demo environment looks like and you have started the OVN environment, let's get into the first exercise! If you have any issues or questions, let us know.
