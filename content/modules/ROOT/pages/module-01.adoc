@@ -45,9 +45,9 @@ In order to use the *kubectl-dev_tool* you need to collect audit logs from the p
 
 ==== Installation
 
-*jq* and *yq* are provided by most Package Managers
+*jq* and *yq* are provided by most Package Managers. *yq* for Red Hat Enterprise Linux is located in the EPEL repository.
 
-.Example
+.This is an example - kubectl-dev_tool is already installed - no need to run this
 [source,console,role=execute]
 ----
 dnf install jq yq -y
