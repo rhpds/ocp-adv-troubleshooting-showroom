@@ -53,6 +53,7 @@
 ** xref:module-06.adoc#thesetup[Lab Setup]
 *** xref:module-06.adoc#theapplication[The Demo Application]
 *** xref:module-06.adoc#environmentsetup[Setup the OVN Environment]
+*** xref:module-06.adoc#environmentreset[Resetting the OVN Environment]
 
 * xref:module-07.adoc[7. OVN-Kubernetes - My pods can not communicate in the same namespace]
 ** xref:module-07.adoc#theissue[Issues with pod communication in a namespace]

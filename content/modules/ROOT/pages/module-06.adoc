@@ -314,3 +314,12 @@ switch cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 ----
 
 Now that we know what the demo environment looks like and you have started the OVN environment, let's get into the first exercise! If you have any issues or questions, let us know.
+
+[#environmentreset]
+=== Resetting the OVN Environment
+
+If the showroom environment gets closed or reset, the OVN environment will shutdown.
+
+You can easily reset it as follows:
+
+
