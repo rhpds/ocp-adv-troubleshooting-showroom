@@ -4,9 +4,9 @@
 [#theissue]
 == Issues with pod communication in a namespace
 
-I have multiple pods running in the same namespace, but they can not communicate with eachother.
+I have multiple pods running in the same namespace, but they cannot communicate with each other.
 
-When *sitea-frontend-8798d9cdc-sq7dk* or *siteb-frontend-66f9f55ddc-97jkg* in the *frontend* namespace try to reach eachother, communication just hangs.
+When *sitea-frontend-8798d9cdc-sq7dk* or *siteb-frontend-66f9f55ddc-97jkg* in the *frontend* namespace try to reach each other, communication just hangs.
 
 [#debugnspodtopod]
 == Debug the Traffic Flow
@@ -21,9 +21,9 @@ To trace the path with *ovnkube-trace*, simply pass in the *-src-namespace*, *-s
 ----
 =====
 
-What does *ovnkube-trace* do and how is it going to help us determine why our pods can not communicate?
+What does *ovnkube-trace* do and how is it going to help us determine why our pods cannot communicate?
 
-It is a wrapper tool that takes the CLI inputs, looks at your cluster, gets all of the IP and MAC information and builds an *ovn-trace* command to actually trace the trafic flow.
+It is a wrapper tool that takes the CLI inputs, looks at your cluster, gets all of the IP and MAC information and builds an *ovn-trace* command to actually trace the traffic flow.
 
 [#firsttrace]
 === Running the First Trace
@@ -87,7 +87,7 @@ ct_lb_mark /* default (use --ct to customize) */
 [#analyzefirsttrace]
 === Analyzing the Trace
 
-What we see is an abrupt end with no clear indication of sucess or failure.
+What we see is an abrupt end with no clear indication of success or failure.
 
 Focusing in, you can see that during *ls_out_acl_eval* we commit *ct_mark.blocked = 1*.
 
@@ -135,9 +135,9 @@ cc63f8ab-f7ff-4906-a15b-fb7b24c62eb2 (br.ex.localnet_ovn_localnet_switch)
 217a444d-ef97-4d51-89d8-581d673e3cf0 (worker-5.ocpv.tamlab.rdu2.redhat.com)
 ----
 
-From the output, you will notice one of the logical switches, *worker-5.ocpv.tamlab.rdu2.redhat.com* is the switch we used in our *ovn-trace*. So lets take a closer look at that switch by listing at the attached *logical switch ports (lsp)*.
+From the output, you will notice one of the logical switches, *worker-5.ocpv.tamlab.rdu2.redhat.com* is the switch we used in our *ovn-trace*. So let's take a closer look at that switch by listing at the attached *logical switch ports (lsp)*.
 
-Because a cluster is going to have a lot of ports, we focus in with a *grep* on our specifc pods. If you are interested, feel free to run the command again without the grep to see the full list.
+Because a cluster is going to have a lot of ports, we focus in with a *grep* on our specific pods. If you are interested, feel free to run the command again without the grep to see the full list.
 
 [source,console,role=execute]
 ----
@@ -157,9 +157,9 @@ d22f7f6b-31c0-49e1-a81d-d5c7197885b7 (frontend_siteb-frontend-66f9f55ddc-9qcwr)
 
 Now that we have taken a look and validated our *logical switch*, *logical router* and *logical switch port* objects, we can come back to our trace. You can see traffic going to *outport == @a3640229366109469754* before it is marked as dropped.
 
-Each *outport* corresponds to a *portgroup* and one is created for every unqiue *NetworkPolicy* in your cluster. Every pod selected by the *podSelector* of that *NetworkPolicy* is added to the *portgroup* port list.
+Each *outport* corresponds to a *portgroup* and one is created for every unique *NetworkPolicy* in your cluster. Every pod selected by the *podSelector* of that *NetworkPolicy* is added to the *portgroup* port list.
 
-Let's take a look at our promlematic *portgroup*.
+Let's take a look at our problematic *portgroup*.
 
 [source,console,role=execute]
 ----
@@ -182,7 +182,7 @@ From the output there are 2 pieces of important information:
 
 What you will notice is that the 2 *ports* *UUIDs* correspond to the *UUIDs* of the *logical switch port* entries for the 2 *frontend* pods from the *lsp-list* output above. This confirms that the *portgroup* is influencing our 2 pods.
 
-Next, lets take a look at the 2 *access control list (ACL)* objects.
+Next, let's take a look at the 2 *access control list (ACL)* objects.
 
 [source,console,role=execute]
 ----
@@ -268,7 +268,7 @@ spec:
 
 [NOTE]
 =====
-Because this is a static lab, we can not directly demonstrate the resolution of the issue. So you can see the difference, we have included the output and analysis of a successful trace after applying the above *NetworkPolicy*.
+Because this is a static lab, we cannot directly demonstrate the resolution of the issue. So you can see the difference, we have included the output and analysis of a successful trace after applying the above *NetworkPolicy*.
 =====
 
 Looking at the new trace, focusing in on the same *egress* section, there are 2 key differences.

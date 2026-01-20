@@ -213,7 +213,7 @@ From the output there are 2 pieces of important information:
 1. *acls* -> there are 2 *UUIDs* -> *[14b9c1ad-15fa-4049-96e6-84da7e674128, cce499ff-ddff-48a8-b74c-fdeb707fb685]*
 2. *ports* -> there is 1 *UUID* -> *[a213268a-3bc1-4988-80d8-7bc18f84818d]*
 
-You can see that the *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the portgroup is influencing our VM.
+You can see that the *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the *portgroup* is influencing our VM.
 
 Taking a look at the 2 *access control list (ACL)* objects, we can see:
 
@@ -441,7 +441,7 @@ We can see 2 pieces of important information:
 1. *acls* -> there are 2 *UUIDs* -> *[a2a890ed-68b4-46f2-9d72-a6f8bc82e242, e408d3fb-9869-435a-ab9a-e56186f2cc02]*
 2. *ports* -> there is 1 *UUID* -> *[a213268a-3bc1-4988-80d8-7bc18f84818d]*
 
-The *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the portgroup is influencing our VM.
+The *port* *UUID* correspond to the *UUID* of the *logical switch port* entry for *default.vlan530_external_virt-launcher-external-vm-x7gnx* which confirms the *portgroup* is influencing our VM.
 
 Looking at the 2 *access control list (ACL)* objects, we can see:
 

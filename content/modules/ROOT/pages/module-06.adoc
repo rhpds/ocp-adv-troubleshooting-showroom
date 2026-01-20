@@ -16,7 +16,7 @@ In this section of the lab, we are going to walk you through 3 scenarios and how
 =====
 This lab is not using a running OpenShift Cluster.
 
-The following scenarios we're deployed into a running OpenShift Cluster and a backup of the OVN and OVS databases, along with flows and interfaces, were restored into this demo environment.
+The following scenarios were deployed into a running OpenShift Cluster and a backup of the OVN and OVS databases, along with flows and interfaces, were restored into this demo environment.
 
 All commands and outputs yield the same results as if this OVN-Kubernetes dump was running in an OpenShift Cluster.
 =====
@@ -38,7 +38,7 @@ siteb-backend-5b765679b5-l4gp6    1/1     Running   0          14d   10.129.6.14
 virt-launcher-external-vm-x7gnx   1/1     Running   0          59m   10.129.6.209  worker-5.ocpv.tamlab.rdu2.redhat.com   <none>           1/1
 ----
 
-Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using seconday networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network *default/vlan530*.
+Now that we know what the application looks like, what other information do we need? The output above gives us our pod IPs, but we also need MAC addresses and to check if any of our containers or VMs are using secondary networks. From the output below, we can see all of our IP and MAC information and that our external virtual machine is connected to a secondary network *default/vlan530*.
 
 [NOTE]
 =====
@@ -318,8 +318,83 @@ Now that we know what the demo environment looks like and you have started the O
 [#environmentreset]
 === Resetting the OVN Environment
 
-If the showroom environment gets closed or reset, the OVN environment will shutdown.
+If the showroom environment gets closed or reset, the OVS environment will shutdown.
 
-You can easily reset it as follows:
+You can easily reset it following these 4 steps.
 
+Stop the existing environment to cleanup all of the resources.
 
+[source,console,role=execute]
+----
+/home/lab-user/ModuleOVN/ovs-dbg/bin/ovs-offline -w /home/lab-user/ModuleOVN/ovs-offline stop
+----
+
+[source,console]
+----
+Offline OVS Debugging stopped
+*****************************
+----
+
+Ensure you are back in the *ModuleOVN* directory.
+
+[source,console,role=execute]
+----
+cd ~/ModuleOVN/
+----
+
+[source,console]
+----
+[lab-user@rhel9 ModuleOVN]$
+----
+
+Re-extract the ovs-offline repository.
+
+[source,console,role=execute]
+----
+tar zxvf ovs-offline.tgz
+----
+
+[source,console]
+----
+ovs-offline/
+ovs-offline/restore_flows/
+ovs-offline/restore_flows/do_restore.sh
+ovs-offline/restore_flows/br-ex.groups.dump
+ovs-offline/restore_flows/br-ex.flows.dump
+ovs-offline/restore_flows/br-int.groups.dump
+ovs-offline/restore_flows/br-int.flows.dump
+ovs-offline/restore_flows/restore.sh
+ovs-offline/var-run/
+ovs-offline/ovnkube-node-vv8p4_ovs.db
+ovs-offline/db/
+ovs-offline/db/ovs/
+ovs-offline/db/ovs/ovnkube-node-vv8p4_ovs.db
+ovs-offline/db/ovn_nb/
+ovs-offline/db/ovn_nb/ovnnb_db.db
+ovs-offline/db/ovn_sb/
+ovs-offline/db/ovn_sb/ovnsb_db.db
+ovs-offline/ovnnb_db.db
+ovs-offline/ovnsb_db.db
+----
+
+Start the OVS environment.
+
+[source,console,role=execute]
+----
+/home/lab-user/ModuleOVN/ovs-dbg/bin/ovs-offline -w /home/lab-user/ModuleOVN/ovs-offline start
+----
+
+[source,console]
+----
+Starting container ovsdb-server-ovn_nb
+4b5cc986ee085e84422417f3ac9f07aab296a099cf84d1e880500fcf7f028768
+Starting container ovsdb-server-ovn_sb
+1d07be31060f7ea64e4f2dd059ac1670e9933f5ec4c525dd45c9e37d0dd782ef
+Starting container ovsdb-server-ovs
+0804b5568c438c4dae2490aed4ead22b333cee73eba9fa991148f61a3e81c665
+Starting container ovs-vswitchd
+154738531b7e6ed856a8fe5538adaec54880339b17c84c0dca46fd946c5eb015
+
+Offline OVS Debugging started
+******************************
+----

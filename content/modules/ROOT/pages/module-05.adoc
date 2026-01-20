@@ -187,7 +187,7 @@ kubectl-dev_tool audit -f 'audit_logs/kube-apiserver' --by=user -otop=15 --after
 
 Based on the above data, there is nothing glaringly obvious that is wrong with the cluster, but we can see that the API received *3,994,302* resource requests and another 719,823 access review requests (removed via scrubbing) over this *80* minute period. That translates to almost *1000* API requests per second.
 
-At it's peak, the cluster was exceeding 1200 API requests per second.
+At its peak, the cluster was exceeding 1200 API requests per second.
 
 Let's dig a little deeper.
 
@@ -383,7 +383,7 @@ iptables -I FORWARD -p tcp --dport 6443 -j DROP
 iptables -I OUTPUT -p tcp --dport 6443 -j DROP
 ----
 
-This blocked both the *kubelet* and running *Pods* from sending traffic across the SDN and to the API and allowed for the API to stabalize and recover.
+This blocked both the *kubelet* and running *Pods* from sending traffic across the SDN and to the API and allowed for the API to stabilize and recover.
 
 Once the API was healthy, we removed the *iptables* rules in blocks of 5 nodes, allowing them to come back and workloads to fully recover.
 
