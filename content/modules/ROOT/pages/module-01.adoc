@@ -110,7 +110,7 @@ You can find and download *etcd-ocp-diag* from github at: link:https://github.co
 
 OpenShift LightSpeed, formerly OpenShift Insights, is a data collection tool that collects information similar to an OpenShift Must-Gather and uploads that data to Red Hat's servers for proactive analysis. When a must-gather is collected from a cluster running the Insights Operator, the latest Lightspeed Archives are collected. Using these archives along with the *ocp_insights* script, we can quickly triage a cluster to determine all of the important information in seconds to allow us to get an understand of the make up and design of the cluster along with any issues currently affecting the cluster.
 
-You can find and download *ocp_insights* from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/insightsarchive/ocp_insights.sh[ocp_insights^]
+You can find and download *ocp_insights* from github at: link:https://github.com/cptmorgan-rh/ocp_insights/blob/main/ocp_insights.py[ocp_insights^]
 
 [#ovnkube]
 === ovnkube-trace
